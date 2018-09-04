@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+        integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+
+  <script src="https://unpkg.com/vue"></script>
+
+  <!-- Necessary includes for LocusZoom.js -->
+  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.vendor.min.js" type="application/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.app.min.js" type="application/javascript"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.css" type="text/css"/>
+
+  <script src="util/dalliance-tabix-reader.js" type="application/javascript"></script>
+
+  <title>LocusZoom.js ~ Plot your own Tabixed Data</title>
+
+  <style>
+    body {
+      background-color: #FAFAFA;
+      margin: 0px 20px;
+    }
+
+    img {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .placeholder-plot {
+      width:100%;
+      height:400px;
+      border-style: dashed;
+    }
+  </style>
+
+</head>
+
+<body>
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 style="margin-top: 1em;"><strong>LocusZoom.js</strong></h1>
+
+      <h3 style="color: #777">Using LZ.js without an API</h3>
+
+      <hr>
+
+      <h2>Instructions</h2>
+      <div>
+        This is a demonstration of loading GWAS results via the web browser, fetching only the data required for that
+        region.
+        It relies on three assumptions:
+        <ol>
+          <li>Your data has been stored in a compressed format, and indexed using Tabix. The index must be in the same
+            path
+            with the suffix <em>.tbi</em></li>
+          <li>The data is hosted in a place that is reachable by web browser (eg local files or a service such as S3)</li>
+          <li>The host location supports byte range requests. (<a
+              href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
+            to check</a>)
+          </li>
+        </ol>
+
+        If you are serving GWAS results from a file on your local machine, note that you will need a local development
+        server. Many popular options do not support range requests; if you have installed node.js, the
+        <a href="https://www.npmjs.com/package/http-server">http-server</a> is one option.
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div id="lz-plot" class="lz-container-responsive">
+        <div class="placeholder-plot" style="display:table;">
+          <span class="text-center" style="display: table-cell; vertical-align:middle">Please add a GWAS track to continue</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div id="choose-gwas"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <footer style="text-align: center;">
+        &copy; Copyright 2018 <a href="https://github.com/statgen">The University of Michigan Center for Statistical
+        Genetics</a><br>
+      </footer>
+    </div>
+  </div>
+
+  <!-- More bootstrap boilerplate -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+  <script src="dist/gwasChooser.umd.min.js"></script>
+  <!-- TODO: Switch from library to app build mechanism- will require moving more code into deeper components -->
+  <script src="util/main.js"></script>
+</div>
+
+</body>
+</html>
