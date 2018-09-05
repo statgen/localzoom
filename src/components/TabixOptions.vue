@@ -43,7 +43,7 @@ export default {
         </option>
       </select>
     </label>
-    <button class="button button-primary" @click="sendOptions">Accept options</button>
+    <button class="btn btn-primary" @click="sendOptions">Accept options</button>
   </div>
 </template>
 

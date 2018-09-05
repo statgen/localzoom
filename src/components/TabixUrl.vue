@@ -36,7 +36,7 @@ export default {
   -->
 <div>
   <input type="url" v-model.trim="url" size="100" placeholder="Specify a URL">
-  <button class="button-primary" @click="addSource">Add</button>
+  <button class="btn-primary" @click="addSource">Add</button>
   <p id="validation-message">{{validationMessage}}</p>
 </div>
 </template>
