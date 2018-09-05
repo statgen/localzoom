@@ -1,7 +1,6 @@
 <template>
   <div>
     <region-picker v-if="selections.length"></region-picker>
-    <!-- Always show: list of connected datasets, option to add one -->
     <h3>Your studies</h3>
     <studies-vlist :items="selections"></studies-vlist>
 

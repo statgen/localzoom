@@ -1,4 +1,6 @@
 /* global gwasChooser, LocusZoom, Vue */
+// import { REGEX_MARKER } from './constants';
+
 Vue.config.productionTip = false;
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
@@ -23,14 +25,12 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     normalizeResponse(data) {
         const self = this;
         return data.map((row) => {
-            // TODO: Handle ref alt in future; Not every file will have this information.
             const fields = row.split(self.params.delimiter);
 
             const marker = fields[self.params.marker_col - 1];
-            const epacts_pattern = /(\d+):(\d+)_(.+)\/(.+)/; // TODO: Not all chrom numeric
-            const simple_pattern = /(\d+):(\d+)/;
+            const epacts_pattern = /(?:chr)?(.+):(\d+)_?(\w+)?\/?([^_]+)?_?(.*)?/;
 
-            const match = marker.match(epacts_pattern) || marker.match(simple_pattern);
+            const match = marker.match(epacts_pattern);
             if (!match) {
                 // eslint-disable-next-line no-throw-literal
                 throw 'Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt';
@@ -72,12 +72,11 @@ function createPlot(name, reader, params = {}) {
 
     // Second, specify what kind of information to display. This demo uses a pre-defined set of
     // panels with common display options.
-    // TODO: add panel title
     const layout = LocusZoom.Layouts.get('plot', 'standard_association', {
         state: {
             chr: '10',
-            start: 124002126,
-            end: 124402126,
+            start: 123802119,
+            end: 124202119,
         },
     });
     layout.panels[0].title = { text: name };

@@ -35,7 +35,7 @@ export default {
     TODO: Not every server supports range requests. Validate request before connecting reader.
   -->
 <div>
-  <input type="url" v-model.trim="url" size="100" placeholder="Specify a URL">
+  <input type="url" v-model.trim="url" placeholder="Specify a URL">
   <button class="btn-primary" @click="addSource">Add</button>
   <p id="validation-message">{{validationMessage}}</p>
 </div>

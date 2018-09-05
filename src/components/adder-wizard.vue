@@ -6,7 +6,8 @@
       <div class="modal-wrapper">
         <div class="modal-container">
           <div class="modal-header">
-            <h3>Add a GWAS</h3><button class="pull-right" @click="$emit('close')">X</button>
+            <h3>Add a GWAS</h3><button class="pull-right" aria-label="close"
+                                       @click="$emit('close')">X</button>
           </div>
 
           <div class="modal-body">
@@ -15,13 +16,15 @@
               <!--Workflow stage 1: "pick a dataset to add" -->
               <div v-if="!adderMode">
                 <p>How would you like to load your data?</p>
-                <button class="btn btn-info" @click="adderMode = 'file'">
-                  Local file
-                </button>
-                or
-                <button class="btn btn-info" @click="adderMode = 'url'">
-                  Remote URL
-                </button>
+                <div class="text-center">
+                  <button class="btn btn-info" @click="adderMode = 'file'">
+                    Local file
+                  </button><br>
+                  or<br>
+                  <button class="btn btn-info" @click="adderMode = 'url'">
+                    Remote URL
+                  </button>
+                </div>
               </div>
               <div v-else-if="adderMode === 'file'">
                 <tabix-file @connected="connectReader"></tabix-file>

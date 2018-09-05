@@ -7,8 +7,8 @@
 </template>
 
 <script>
-const SINGLE_MARKER_PATTERN = /(\d+):(\d+)/;
-const RANGE_PATTERN = /(\d+):(\d+)-(\d+)/;
+import { REGEX_MARKER, REGEX_REGION } from '../../util/constants';
+
 export default {
     name: 'region-picker',
     props: {
@@ -30,8 +30,8 @@ export default {
         },
         selectRegion() {
             this.validationMessage = '';
-            const range_match = this.region.match(RANGE_PATTERN);
-            const single_match = this.region.match(SINGLE_MARKER_PATTERN);
+            const range_match = this.region.match(REGEX_REGION);
+            const single_match = this.region.match(REGEX_MARKER);
 
             let chr;
             let start;
