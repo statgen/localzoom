@@ -38,6 +38,7 @@
               <tabix-options @connected="connectParser"></tabix-options>
             </div>
             <div v-else-if="currentPage === 'accept_options'">
+              <label>Name: <input class="form-control" type="text" v-model="previewName"></label>
               <!-- Workflow stage 3: Add to plot (TODO: In future, add a preview mode) -->
               <button class="btn btn-primary" @click="sendOptions">
                 Add to plot
@@ -78,7 +79,8 @@ export default {
     methods: {
         connectReader(reader, name) {
             this.previewReader = reader;
-            this.previewName = name;
+            // LZ tooltip templates break if the data source name has special chars; strip
+            this.previewName = name.replace(/[^A-Za-z0-9_]/g, '_');
 
             this.currentPage = 'select_options';
         },

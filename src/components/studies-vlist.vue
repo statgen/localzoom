@@ -27,6 +27,6 @@ export default {
 
 <style scoped>
   li {
-    list-style-type: none;
+    word-break: break-all;
   }
 </style>

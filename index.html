@@ -49,23 +49,28 @@
 
       <h2>Instructions</h2>
       <div>
-        This is a demonstration of loading GWAS results via the web browser, fetching only the data required for that
-        region.
-        It relies on three assumptions:
+        This is a demonstration of loading GWAS results via the web browser, fetching only the data
+        required for that region. It relies on four assumptions:
         <ol>
-          <li>Your data has been stored in a compressed format, and indexed using Tabix. The index must be in the same
-            path
-            with the suffix <em>.tbi</em></li>
-          <li>The data is hosted in a place that is reachable by web browser (eg local files or a service such as S3)</li>
-          <li>The host location supports byte range requests. (<a
+          <li>Your data has been stored in a compressed format, and indexed using Tabix. The index
+            must be in the same path, with the suffix <em>.tbi</em></li>
+          <li>The data is hosted in a place that is reachable by web browser (eg local files or a
+            service such as S3)</li>
+          <li>If using a remote URL, the host location must support byte range requests. (<a
               href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
             to check</a>)
           </li>
+          <li>Your file contains two key columns of information: a SNP marker in the format
+            <code>chr:pos_ref/alt</code>, and a p-value (or -log10 pvalue) for each row.
+            <em>Client-side plots cannot be generated from rsIDs.</em></li>
         </ol>
 
-        If you are serving GWAS results from a file on your local machine, note that you will need a local development
-        server. Many popular options do not support range requests; if you have installed node.js, the
-        <a href="https://www.npmjs.com/package/http-server">http-server</a> is one option.
+        <p>This service is designed to efficiently fetch only the data needed for the plot region of
+        interest. Therefore, it cannot generate summary views that would require processing the
+          entire file (eg Manhattan plots).</p>
+
+        <p>LD and overlay information is based on <strong>build GRCh37</strong>. Exercise caution
+          when interpreting plots based on a GWAS with positions from a different build.</p>
       </div>
     </div>
   </div>
