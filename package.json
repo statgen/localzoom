@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build --target lib --name gwasChooser --watch src/app.vue",
+    "watch": "vue-cli-service build --target lib --name gwasChooser --watch src/App.vue",
+    "build": "vue-cli-service build --target lib --name gwasChooser src/App.vue",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
   },
