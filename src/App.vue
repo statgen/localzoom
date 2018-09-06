@@ -13,9 +13,9 @@
 </template>
 
 <script>
-import AdderWizard from './components/adder-wizard.vue';
-import RegionPicker from './components/region-picker.vue';
-import StudiesVlist from './components/studies-vlist.vue';
+import AdderWizard from './components/AdderWizard.vue';
+import RegionPicker from './components/RegionPicker.vue';
+import StudiesVlist from './components/StudiesVlist.vue';
 
 // eslint-disable-next-line no-unused-vars
 export default {

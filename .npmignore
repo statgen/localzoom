@@ -1,0 +1,23 @@
+# Directories to ignore
+.DS_Store/
+.idea/
+.backup/
+tmp/
+scratch/
+
+# Config
+.npmrc
+.travis.yml
+.nvmrc
+.editorconfig
+.eslint*
+
+# Test/coverage
+tests/
+coverage/
+
+# Shell scripts
+*.sh
+
+# Credentials
+.pgpass

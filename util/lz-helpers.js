@@ -1,5 +1,5 @@
 /* global LocusZoom */
-import { REGEX_MARKER } from '../util/constants';
+import { REGEX_MARKER } from './constants';
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
