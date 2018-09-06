@@ -26,9 +26,8 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
         const self = this;
         return data.map((row) => {
             const fields = row.split(self.params.delimiter);
-
             const marker = fields[self.params.marker_col - 1];
-            const epacts_pattern = /(?:chr)?(.+):(\d+)_?(\w+)?\/?([^_]+)?_?(.*)?/;
+            const epacts_pattern = /(?:chr)?(.+):(\d+)[_:]?(\w+)?[/:|]?([^_]+)?_?(.*)?/;
 
             const match = marker.match(epacts_pattern);
             if (!match) {
@@ -36,15 +35,18 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
                 throw 'Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt';
             }
 
+            const [chr, pos, ref, alt] = match.slice(1);
+            const ref_alt = (ref && alt) ? `_${ref}/${alt}` : '';
+
             const pvalue_raw = +fields[self.params.pvalue_col - 1];
             const log_pval = self.params.is_log_p ? pvalue_raw : -Math.log10(pvalue_raw);
 
             return {
-                chromosome: match[1],
-                position: +match[2],
-                ref_allele: match[3] || null, // Simple markers may not provide variant info
+                chromosome: chr,
+                position: +pos,
+                ref_allele: ref || null, // Simple markers may not provide variant info
                 log_pvalue: log_pval, // TODO: Improve handling of very small pvalues
-                variant: marker,
+                variant: `${chr}:${pos}${ref_alt}`, // Standard marker format expected by LZ APIs
             };
         });
     },
