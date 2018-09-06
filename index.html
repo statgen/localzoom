@@ -6,13 +6,14 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
         integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 
-  <script src="https://unpkg.com/vue"></script>
+  <link rel="stylesheet" href="dist/css/app.css">
 
   <!-- Necessary includes for LocusZoom.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.css" type="text/css"/>
   <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.vendor.min.js" type="application/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.app.min.js" type="application/javascript"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.css" type="text/css"/>
 
+  <!-- TODO: Move to app bundle -->
   <script src="util/dalliance-tabix-reader.js" type="application/javascript"></script>
 
   <title>LocusZoom.js ~ Plot your own Tabixed Data</title>
@@ -98,17 +99,10 @@
       </footer>
     </div>
   </div>
-
-  <!-- More bootstrap boilerplate -->
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-
-  <!-- Vue built assets -->
-  <script src="dist/gwasChooser.umd.min.js"></script>
-  <link rel="stylesheet" href="dist/gwasChooser.css">
-  <!-- TODO: Switch from library to app build mechanism- will require moving more code into deeper components -->
-  <script src="util/main.js"></script>
 </div>
+
+<script src="dist/js/chunk-vendors.js"></script>
+<script src="dist/js/app.js"></script>
 
 </body>
 </html>

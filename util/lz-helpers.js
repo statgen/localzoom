@@ -1,7 +1,5 @@
-/* global gwasChooser, LocusZoom, Vue */
-// import { REGEX_MARKER } from './constants';
-
-Vue.config.productionTip = false;
+/* global LocusZoom */
+import { REGEX_MARKER } from '../util/constants';
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
@@ -27,9 +25,8 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
         return data.map((row) => {
             const fields = row.split(self.params.delimiter);
             const marker = fields[self.params.marker_col - 1];
-            const epacts_pattern = /(?:chr)?(.+):(\d+)[_:]?(\w+)?[/:|]?([^_]+)?_?(.*)?/;
 
-            const match = marker.match(epacts_pattern);
+            const match = marker.match(REGEX_MARKER);
             if (!match) {
                 // eslint-disable-next-line no-throw-literal
                 throw 'Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt';
@@ -113,17 +110,4 @@ function addPlotPanel(name, reader, options = {}) {
     window.plot.addPanel(layout);
 }
 
-// eslint-disable-next-line no-unused-vars
-const app = new Vue({ render: h => h(gwasChooser) })
-    .$mount('#choose-gwas');
-
-// LocusZoom exists outside the Vue instance, and responds to controls via event listeners
-app.$on('config-ready', (name, reader, options) => {
-    if (!window.plot) {
-        createPlot(name, reader, options);
-    } else {
-        addPlotPanel(name, reader, options);
-    }
-});
-
-app.$on('select-range', state => window.plot.applyState(state));
+export { createPlot, addPlotPanel };

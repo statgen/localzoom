@@ -47,7 +47,7 @@ export default {
   </div>
 </template>
 
-<style>
+<style scoped>
   .number-field {
     width: 4em;
   }
