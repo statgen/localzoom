@@ -49,7 +49,7 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     },
 });
 
-function createPlot(name, reader, params = {}) {
+function createPlot(selector, name, reader, params = {}) {
     params.id_field = 'variant';
 
     const apiBase = 'https://portaldev.sph.umich.edu/api/v1/';
@@ -81,18 +81,16 @@ function createPlot(name, reader, params = {}) {
     layout.panels[0].title = { text: name };
 
     // Last, draw the plot in the div for this page
-    //   Using window.x ensures that a reference to the plot is available via the JS console
-    //  for debugging
-    window.plot = LocusZoom.populate('#lz-plot', data_sources, layout);
-    window.data_sources = data_sources;
+    const plot = LocusZoom.populate(selector, data_sources, layout);
+    return [plot, data_sources];
 }
 
-function addPlotPanel(name, reader, options = {}) {
+function addPlotPanel(plot, data_sources, name, reader, options = {}) {
     options.id_field = 'variant';
     // TODO: cleanup globals usage
     // Add a GWAS to the plot
     const namespace = `assoc_${name}`;
-    window.data_sources.add(namespace, ['TabixAssociationLZ', {
+    data_sources.add(namespace, ['TabixAssociationLZ', {
         tabix_reader: reader,
         params: options,
     }]);
@@ -107,7 +105,7 @@ function addPlotPanel(name, reader, options = {}) {
         y_index: -1,
     };
     const layout = LocusZoom.Layouts.get('panel', 'association', mods);
-    window.plot.addPanel(layout);
+    plot.addPanel(layout);
 }
 
 export { createPlot, addPlotPanel };

@@ -30,9 +30,19 @@
     }
 
     .placeholder-plot {
-      width:100%;
-      height:400px;
+      width: 100%;
+      height: 400px;
       border-style: dashed;
+    }
+
+    .collapse-open::before {
+      content: "-";
+      margin-right:10px;
+    }
+
+    .collapse-closed::before {
+      content: "+";
+      margin-right:10px;
     }
   </style>
 
@@ -48,30 +58,40 @@
 
       <hr>
 
-      <h2>Instructions</h2>
-      <div>
-        This is a demonstration of loading GWAS results via the web browser, fetching only the data
-        required for that region. It relies on four assumptions:
-        <ol>
-          <li>Your data has been stored in a compressed format, and indexed using Tabix. The index
-            must be in the same path, with the suffix <em>.tbi</em></li>
-          <li>The data is hosted in a place that is reachable by web browser (eg local files or a
-            service such as S3)</li>
-          <li>If using a remote URL, the host location must support byte range requests. (<a
-              href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
-            to check</a>)
-          </li>
-          <li>Your file contains two key columns of information: a SNP marker in the format
-            <code>chr:pos_ref/alt</code>, and a p-value (or -log10 pvalue) for each row.
-            <em>Client-side plots cannot be generated from rsIDs.</em></li>
-        </ol>
+      <div class="card">
+        <div class="card-header">
+          <h3>
+            <a id="instructions-header" class="collapse-closed">Instructions</a>
+          </h3>
+        </div>
+        <div id="instructions-text" class="card-body card-text d-none"
+             aria-labelledby="instructions-header">
+          This is a demonstration of loading GWAS results via the web browser, fetching only the
+          data
+          required for that region. It relies on four assumptions:
+          <ol>
+            <li>Your data has been stored in a compressed format, and indexed using Tabix. The index
+              must be in the same path, with the suffix <em>.tbi</em></li>
+            <li>The data is hosted in a place that is reachable by web browser (eg local files or a
+              service such as S3)
+            </li>
+            <li>If using a remote URL, the host location must support byte range requests. (<a
+                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
+              to check</a>)
+            </li>
+            <li>Your file contains two key columns of information: a SNP marker in the format
+              <code>chr:pos_ref/alt</code>, and a p-value (or -log10 pvalue) for each row.
+              <em>Client-side plots cannot be generated from rsIDs.</em></li>
+          </ol>
 
-        <p>This service is designed to efficiently fetch only the data needed for the plot region of
-        interest. Therefore, it cannot generate summary views that would require processing the
-          entire file (eg Manhattan plots).</p>
+          <p>This service is designed to efficiently fetch only the data needed for the plot region
+            of
+            interest. Therefore, it cannot generate summary views that would require processing the
+            entire file (eg Manhattan plots).</p>
 
-        <p>LD and overlay information is based on <strong>build GRCh37</strong>. Exercise caution
-          when interpreting plots based on a GWAS with positions from a different build.</p>
+          <p>LD and overlay information is based on <strong>build GRCh37</strong>. Exercise caution
+            when interpreting plots based on a GWAS with positions from a different build.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -94,15 +114,24 @@
   <div class="row">
     <div class="col-md-12">
       <footer style="text-align: center;">
-        &copy; Copyright 2018 <a href="https://github.com/statgen">The University of Michigan Center for Statistical
+        &copy; Copyright 2018 <a href="https://github.com/statgen">The University of Michigan Center
+        for Statistical
         Genetics</a><br>
       </footer>
     </div>
   </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script src="dist/js/chunk-vendors.js"></script>
 <script src="dist/js/app.js"></script>
+
+<script type="application/javascript">
+  $('#instructions-header').click(function() {
+      $(this).toggleClass('collapse-open').toggleClass('collapse-closed');
+      $('#instructions-text').toggleClass('d-none');
+  });
+</script>
 
 </body>
 </html>
