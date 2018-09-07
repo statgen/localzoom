@@ -1,16 +1,18 @@
 <script>
 export default {
-    name: 'TabixOptions',
+    name: 'ParserOptions',
     data() {
         return {
             delimiter_options: [
                 ['\t', 'Tab'],
                 [' ', 'Space'],
                 [',', 'Comma'],
+                ['\u{1F984}', 'UDFF (\u{1F984})'],
             ],
             marker_col: 4,
             pvalue_col: 5,
             is_log_p: false,
+            // TODO: For tabix files, delimiter is ALWAYS a tab. For other files, all bets are off.
             delimiter: '\t',
         };
     },

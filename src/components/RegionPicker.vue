@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import { REGEX_MARKER, REGEX_REGION } from '../../util/constants';
+import { REGEX_MARKER, REGEX_REGION } from '../util/constants';
 
 export default {
     name: 'region-picker',

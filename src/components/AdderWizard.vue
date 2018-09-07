@@ -35,7 +35,7 @@
             </div>
             <div v-else-if="currentPage === 'select_options'">
               <!-- Workflow stage 2: select parser options -->
-              <tabix-options @connected="connectParser"></tabix-options>
+              <parser-options @connected="connectParser"></parser-options>
             </div>
             <div v-else-if="currentPage === 'accept_options'">
               <label>Name: <input class="form-control" type="text" v-model="previewName"></label>
@@ -57,8 +57,8 @@
 </template>
 
 <script>
+import ParserOptions from './ParserOptions.vue';
 import TabixFile from './TabixFile.vue';
-import TabixOptions from './TabixOptions.vue';
 import TabixUrl from './TabixUrl.vue';
 
 export default {
@@ -99,7 +99,7 @@ export default {
     components: {
         TabixUrl,
         TabixFile,
-        TabixOptions,
+        ParserOptions,
     },
 };
 </script>

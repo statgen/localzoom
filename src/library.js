@@ -7,7 +7,7 @@ import AdderWizard from './components/AdderWizard.vue';
 import RegionPicker from './components/RegionPicker.vue';
 import StudiesVlist from './components/StudiesVlist.vue';
 import TabixFile from './components/TabixFile.vue';
-import TabixOptions from './components/TabixOptions.vue';
+import ParserOptions from './components/ParserOptions.vue';
 import TabixUrl from './components/TabixUrl.vue';
 
-export { AdderWizard, RegionPicker, StudiesVlist, TabixFile, TabixOptions, TabixUrl };
+export { AdderWizard, RegionPicker, StudiesVlist, TabixFile, ParserOptions, TabixUrl };

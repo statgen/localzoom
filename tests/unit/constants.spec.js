@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { REGEX_MARKER, REGEX_REGION } from '../../util/constants';
+import { REGEX_MARKER, REGEX_REGION } from '../../src/util/constants';
 
 
 describe('REGEX_MARKER', () => {
