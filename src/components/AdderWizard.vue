@@ -35,7 +35,9 @@
             </div>
             <div v-else-if="currentPage === 'select_options'">
               <!-- Workflow stage 2: select parser options -->
-              <parser-options @connected="connectParser"></parser-options>
+              <parser-options :chr_col="readerChrCol" :pos_col="readerPosCol"
+                              :column_titles="readerHeaders"
+                              @connected="connectParser"></parser-options>
             </div>
             <div v-else-if="currentPage === 'accept_options'">
               <label>Name: <input class="form-control" type="text" v-model="previewName"></label>
@@ -67,27 +69,37 @@ export default {
         return {
             // Pages: select_source, select_options, accept_options
             currentPage: 'select_source',
+            readerHeaders: null,
             // Which type of "add a gwas" reader to select: file, url, or null
             adderMode: null,
-            // Track choices made by a user. This is for the current preview mode (many readers can
-            // be connected, so clear after each panel has been added)
+            // Track choices made by a user, and coordinate between components
             previewReader: null,
             previewName: null,
             previewParserOptions: {},
         };
+    },
+    watch: {
+        previewReader() {
+            // Uses a watcher to resolve async value fetch
+            this.previewReader.fetchHeader((rows, err) => {
+                // This wizard assumes all files are tabix (tab delimited)
+                this.readerHeaders = rows[rows.length - 1].replace(/^#+/g, '').split('\t');
+            });
+        },
+    },
+    computed: {
+        readerChrCol() { return this.previewReader.colSeq; },
+        readerPosCol() { return this.previewReader.colStart; },
     },
     methods: {
         connectReader(reader, name) {
             this.previewReader = reader;
             // LZ tooltip templates break if the data source name has special chars; strip
             this.previewName = name.replace(/[^A-Za-z0-9_]/g, '_');
-
             this.currentPage = 'select_options';
         },
         connectParser(params) {
-            // TODO: Create a "preview mode" UI (before using LZ plot)
             this.previewParserOptions = params;
-
             this.currentPage = 'accept_options';
         },
         sendOptions() {
@@ -123,7 +135,7 @@ export default {
   }
 
   .modal-container {
-    width: 300px;
+    width: 600px;
     margin: 0px auto;
     padding: 20px 30px;
     background-color: #fff;
