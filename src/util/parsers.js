@@ -16,10 +16,10 @@ import { REGEX_MARKER } from '@/util/constants';
  */
 function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col, is_log_p = true, delimiter = '\t' } = {}) {
     // Column IDs should be 0-indexed (computer friendly)
-    if (marker_col && chr_col && pos_col) {
+    if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
     }
-    if (!(marker_col || (chr_col && pos_col))) {
+    if (!(marker_col !== undefined || (chr_col !== undefined && pos_col !== undefined))) {
         throw new Error('Must specify how to locate marker');
     }
 
@@ -29,7 +29,7 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
         let pos;
         let ref;
         let alt;
-        if (marker_col) {
+        if (marker_col !== undefined) {
             const marker = fields[marker_col];
             const match = marker.match(REGEX_MARKER);
             if (!match) {
@@ -37,8 +37,8 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
                 throw new Error('Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt');
             }
             [chr, pos, ref, alt] = match.slice(1);
-        } else if (chr_col && pos_col) {
-            chr = fields[chr_col];
+        } else if (chr_col !== undefined && pos_col !== undefined) {
+            chr = fields[chr_col].replace(/^chr/g, '');
             pos = fields[pos_col];
             ref = fields[ref_col];
             alt = fields[alt_col];

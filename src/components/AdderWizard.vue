@@ -36,7 +36,7 @@
             <div v-else-if="currentPage === 'select_options'">
               <!-- Workflow stage 2: select parser options -->
               <parser-options :chr_col="readerChrCol" :pos_col="readerPosCol"
-                              :column_titles="readerHeaders"
+                              :column_titles="readerHeaders" :sample_data="readerDataRow"
                               @connected="connectParser"></parser-options>
             </div>
             <div v-else-if="currentPage === 'accept_options'">
@@ -49,8 +49,6 @@
             <div v-else class="text-error">
               You have reached this page in error. Please report this message to our developers.
             </div>
-          </div>
-          <div class="modal-footer">
           </div>
         </div>
       </div>
@@ -69,7 +67,8 @@ export default {
         return {
             // Pages: select_source, select_options, accept_options
             currentPage: 'select_source',
-            readerHeaders: null,
+            readerHeaders: [],
+            readerDataRow: '',
             // Which type of "add a gwas" reader to select: file, url, or null
             adderMode: null,
             // Track choices made by a user, and coordinate between components
@@ -80,16 +79,34 @@ export default {
     },
     watch: {
         previewReader() {
-            // Uses a watcher to resolve async value fetch
+            // Uses a watcher to resolve async value fetch.
+            // Not every tabix file represents column header data in the same way: in some, it's
+            //  the last line with a comment (meta) character. In others, there is no meta char, so
+            //  we use the last line that was skipped
+            // Fetch 25 rows of data. The last skipped line is assumed to be column headers;
+            //  the last total line is assumed to be data.
+            // This wizard assumes all files are tabix (tab delimited)
+
+            if (!this.previewReader.skip) {
+                // No lines skipped, grab last "true" header
+                this.previewReader.fetchHeader((rows, err) => {
+                    // TODO: Incorporate proper meta char
+                    this.readerHeaders = rows[rows.length - 1].replace(/^#+/g, '').split('\t');
+                });
+            }
             this.previewReader.fetchHeader((rows, err) => {
-                // This wizard assumes all files are tabix (tab delimited)
-                this.readerHeaders = rows[rows.length - 1].replace(/^#+/g, '').split('\t');
-            });
+                // Read data (and last-ditch attempt to find headers, if necessary)
+                if (this.previewReader.skip) {
+                    // TODO: Incorporate proper meta char
+                    this.readerHeaders = rows[this.previewReader.skip - 1].replace(/^#+/g, '').split('\t');
+                }
+                this.readerDataRow = rows[rows.length - 1]; // Give line parser a raw string
+            }, { nLines: 25, metaOnly: false });
         },
     },
     computed: {
-        readerChrCol() { return this.previewReader.colSeq; },
-        readerPosCol() { return this.previewReader.colStart; },
+        readerChrCol() { return this.previewReader.colSeq - 1; },
+        readerPosCol() { return this.previewReader.colStart - 1; },
     },
     methods: {
         connectReader(reader, name) {
@@ -135,7 +152,9 @@ export default {
   }
 
   .modal-container {
-    width: 600px;
+    width: 800px;
+    height: 75%;
+    overflow-y: auto;
     margin: 0px auto;
     padding: 20px 30px;
     background-color: #fff;
