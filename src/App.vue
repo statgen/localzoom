@@ -4,7 +4,7 @@
     <h3>Your studies</h3>
     <studies-vlist :items="selections"></studies-vlist>
 
-    <button class="btn btn-primary mx-auto-auto"
+    <button class="btn btn-info mx-auto-auto"
             @click="showModal = true">Add a dataset</button>
 
     <adder-wizard v-if="showModal"
