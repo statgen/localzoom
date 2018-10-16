@@ -55,6 +55,7 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
             chromosome: chr,
             position: +pos,
             ref_allele: ref,
+            alt_allele: alt,
             log_pvalue: log_pval,
             variant: `${chr}:${pos}${ref_alt}`,
         };

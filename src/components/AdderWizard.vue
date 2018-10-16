@@ -6,48 +6,114 @@
       <div class="modal-wrapper">
         <div class="modal-container">
           <div class="modal-header">
-            <h3>Add a GWAS</h3><button class="pull-right" aria-label="close"
-                                       @click="$emit('close')">X</button>
+            <h3>Select file options...</h3>
+            <button class="pull-right" aria-label="close"
+                    @click="$emit('close')">X
+            </button>
           </div>
-
           <div class="modal-body">
-            <!-- TODO: Improve state management/ transition code -->
-            <div v-if="currentPage === 'select_source'">
-              <!--Workflow stage 1: "pick a dataset to add" -->
-              <div v-if="!adderMode">
-                <p>How would you like to load your data?</p>
-                <div class="text-center">
-                  <button class="btn btn-info" @click="adderMode = 'file'">
-                    Local file
-                  </button><br>
-                  or<br>
-                  <button class="btn btn-info" @click="adderMode = 'url'">
-                    Remote URL
-                  </button>
+            <label>
+              Dataset Label: <input class="form-control" type="text" v-model="file_name">
+            </label>
+            <div>
+              <h4>Select field columns</h4>
+              <strong class="mr-3">Where to find variant identifiers:</strong>
+              <div class="form-check form-check-inline">
+                <input id="s1" type="radio" name="source" class="form-check-input"
+                       value="columns" v-model="variant_spec_type">
+                <label for="s1" class="form-check-label">Specific columns</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input id="s2" type="radio" name="source" class="form-check-input"
+                       value="marker" v-model="variant_spec_type">
+                <label for="s2" class="form-check-label">Marker</label>
+              </div>
+              <div v-if="variant_spec_type === 'marker'" class="form-group row">
+                <label for="vs-marker" class="col-sm-2">Marker</label>
+                <div class="col-sm-4">
+                  <select id="vs-marker" v-model="marker_col" class="form-control">
+                    <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                      {{ item }}
+                    </option>
+                  </select>
                 </div>
               </div>
-              <div v-else-if="adderMode === 'file'">
-                <tabix-file @connected="connectReader"></tabix-file>
+              <div v-else>
+                <div class="form-group row">
+                  <label for="vs-chr" class="col-sm-2">Chromosome</label>
+                  <div class="col-sm-4">
+                    <select id="vs-chr" v-model="chr_col" disabled class="form-control">
+                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                  <label for="vs-pos" class="col-sm-2">Position</label>
+                  <div class="col-sm-4">
+                    <select id="vs-pos" v-model="pos_col" disabled class="form-control">
+                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label for="vs-ref" class="col-sm-2">Ref allele</label>
+                  <div class="col-sm-4">
+                    <select id="vs-ref" v-model="ref_col" class="form-control">
+                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                  <label for="vs-alt" class="col-sm-2">Alt allele</label>
+                  <div class="col-sm-4">
+                    <select id="vs-alt" v-model="alt_col" class="form-control">
+                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div v-else-if="adderMode === 'url'">
-                <tabix-url @connected="connectReader"></tabix-url>
+              <div class="form-group row">
+                <label for="vs-pval" class="col-sm-2">P-value column</label>
+                <div class="col-sm-4">
+                  <select id="vs-pval" v-model="pvalue_col" class="form-control">
+                    <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                      {{ item }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                      <input v-model="is_log_p" type="checkbox" class="form-check-input">Uses
+                      -log(p)
+                    </label>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div v-else-if="currentPage === 'select_options'">
-              <!-- Workflow stage 2: select parser options -->
-              <parser-options :chr_col="readerChrCol" :pos_col="readerPosCol"
-                              :column_titles="readerHeaders" :sample_data="readerDataRow"
-                              @connected="connectParser"></parser-options>
-            </div>
-            <div v-else-if="currentPage === 'accept_options'">
-              <label>Name: <input class="form-control" type="text" v-model="previewName"></label>
-              <!-- Workflow stage 3: Add to plot (TODO: In future, add a preview mode) -->
-              <button class="btn btn-primary" @click="sendOptions">
-                Add to plot
-              </button>
-            </div>
-            <div v-else class="text-error">
-              You have reached this page in error. Please report this message to our developers.
+
+              <h4>Preview</h4>
+              <div class="row">
+                <div class="card card-body bg-light">
+                  <div v-if="isValid && preview.error">
+                    <span class="text-danger">{{ preview.error }}</span>
+                  </div>
+                  <div v-else-if="isValid">
+                    Variant: {{ preview.variant }}<br>
+                    -log(p): {{ preview.log_pvalue }}
+                  </div>
+                  <div v-else>
+                    Please select options to continue
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <button class="btn btn-primary" @click="sendOptions">Accept options</button>
+              </div>
             </div>
           </div>
         </div>
@@ -57,78 +123,117 @@
 </template>
 
 <script>
-import ParserOptions from './ParserOptions.vue';
-import TabixFile from './TabixFile.vue';
-import TabixUrl from './TabixUrl.vue';
+import makeParser from '../util/parsers';
 
 export default {
     name: 'adder-wizard',
+    props: ['file_reader', 'file_name'],
     data() {
         return {
             // Pages: select_source, select_options, accept_options
-            currentPage: 'select_source',
-            readerHeaders: [],
-            readerDataRow: '',
-            // Which type of "add a gwas" reader to select: file, url, or null
-            adderMode: null,
-            // Track choices made by a user, and coordinate between components
-            previewReader: null,
-            previewName: null,
-            previewParserOptions: {},
+            column_titles: [],
+            sample_data: '',
+
+            // Configuration options for variant data
+            variant_spec_type: 'columns', // Which UI format to show
+            // Individual form field options
+            marker_col: null,
+            ref_col: null,
+            alt_col: null,
+            pvalue_col: null,
+            is_log_p: false,
         };
     },
     watch: {
-        previewReader() {
-            // Uses a watcher to resolve async value fetch.
-            // Not every tabix file represents column header data in the same way: in some, it's
-            //  the last line with a comment (meta) character. In others, there is no meta char, so
-            //  we use the last line that was skipped
-            // Fetch 25 rows of data. The last skipped line is assumed to be column headers;
-            //  the last total line is assumed to be data.
-            // This wizard assumes all files are tabix (tab delimited)
+        file_reader: {
+            immediate: true,
+            handler() {
+                // Uses a watcher to resolve async value fetch.
+                // Not every tabix file represents column header data in the same way: in some, it's
+                //  the last line with a comment (meta) character. In others, there is no meta
+                //   char, so we use the last line that was skipped
+                // Fetch 25 rows of data. The last skipped line is assumed to be column headers;
+                //  the last total line is assumed to be data.
+                // This wizard assumes all files are tabix (tab delimited)
 
-            if (!this.previewReader.skip) {
-                // No lines skipped, grab last "true" header
-                this.previewReader.fetchHeader((rows, err) => {
-                    // TODO: Incorporate proper meta char
-                    this.readerHeaders = rows[rows.length - 1].replace(/^#+/g, '').split('\t');
-                });
-            }
-            this.previewReader.fetchHeader((rows, err) => {
-                // Read data (and last-ditch attempt to find headers, if necessary)
-                if (this.previewReader.skip) {
-                    // TODO: Incorporate proper meta char
-                    this.readerHeaders = rows[this.previewReader.skip - 1].replace(/^#+/g, '').split('\t');
+                if (!this.file_reader.skip) {
+                    // No lines skipped, grab last "true" header
+                    this.file_reader.fetchHeader((rows, err) => {
+                        // TODO: Incorporate proper meta char
+                        this.column_titles = rows[rows.length - 1].replace(/^#+/g, '')
+                            .split('\t');
+                    });
                 }
-                this.readerDataRow = rows[rows.length - 1]; // Give line parser a raw string
-            }, { nLines: 25, metaOnly: false });
+                this.file_reader.fetchHeader((rows, err) => {
+                    // Read data (and last-ditch attempt to find headers, if necessary)
+                    if (this.file_reader.skip) {
+                        // TODO: Incorporate proper meta char
+                        this.column_titles = rows[this.file_reader.skip - 1].replace(/^#+/g, '')
+                            .split('\t');
+                    }
+                    this.sample_data = rows[rows.length - 1]; // Give line parser a raw string
+                }, {
+                    nLines: 25,
+                    metaOnly: false,
+                });
+            },
         },
     },
     computed: {
-        readerChrCol() { return this.previewReader.colSeq - 1; },
-        readerPosCol() { return this.previewReader.colStart - 1; },
+        chr_col() {
+            return this.file_reader.colSeq - 1;
+        },
+        pos_col() {
+            return this.file_reader.colStart - 1;
+        },
+        variantSpec() {
+            // Only provide a value if the variant description is minimally complete
+            const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
+            if (this.variant_spec_type === 'marker' && marker_col !== null) {
+                return { marker_col };
+            } else if (pos_col !== null && chr_col !== null) {
+                // Ref and alt are optional
+                return {
+                    chr_col,
+                    pos_col,
+                    ref_col,
+                    alt_col,
+                };
+            }
+            return {};
+        },
+        parserOptions() {
+            const { pvalue_col, is_log_p } = this;
+            return Object.assign({}, this.variantSpec, {
+                pvalue_col,
+                is_log_p,
+            });
+        },
+        isValid() {
+            const hasVariant = Object.keys(this.variantSpec).length !== 0;
+            const hasP = this.pvalue_col !== null;
+            return hasVariant && hasP;
+        },
+        parser() {
+            if (this.isValid) {
+                return makeParser(this.parserOptions);
+            }
+            return () => {
+            };
+        },
+        preview() {
+            try {
+                return this.parser(this.sample_data);
+            } catch (e) {
+                return { error: 'Could not parse column contents' };
+            }
+        },
     },
     methods: {
-        connectReader(reader, name) {
-            this.previewReader = reader;
-            // LZ tooltip templates break if the data source name has special chars; strip
-            this.previewName = name.replace(/[^A-Za-z0-9_]/g, '_');
-            this.currentPage = 'select_options';
-        },
-        connectParser(params) {
-            this.previewParserOptions = params;
-            this.currentPage = 'accept_options';
-        },
         sendOptions() {
-            const { previewName, previewReader, previewParserOptions } = this;
-            this.$emit('config-ready', previewName, previewReader, Object.assign({}, previewParserOptions));
+            this.$emit('config-ready', Object.assign({}, this.parserOptions));
             this.$emit('close');
         },
-    },
-    components: {
-        TabixUrl,
-        TabixFile,
-        ParserOptions,
     },
 };
 </script>
@@ -153,7 +258,7 @@ export default {
 
   .modal-container {
     width: 800px;
-    height: 75%;
+    height: 85%;
     overflow-y: auto;
     margin: 0px auto;
     padding: 20px 30px;
@@ -184,6 +289,7 @@ export default {
   .modal-enter {
     opacity: 0;
   }
+
   .modal-leave-active {
     opacity: 0;
   }

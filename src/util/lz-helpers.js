@@ -35,6 +35,8 @@ function createPlot(selector, name, reader, params = {}) {
             tabix_reader: reader,
             params,
         }])
+        .add('credset', ['CredibleSetLZ',
+            { params: { fields: { log_pvalue: 'assoc:log_pvalue' }, threshold: 0.95 } }])
         .add('ld', ['LDLZ', { url: `${apiBase}pair/LD/` }])
         .add('gene', ['GeneLZ', {
             url: `${apiBase}annotation/genes/`,
