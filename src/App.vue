@@ -2,30 +2,35 @@
   <div>
     <region-picker v-if="studyCount"></region-picker>
 
-    <tabix-file @connected="connectReader"></tabix-file>
-    <adder-wizard v-if="showModal"
-                  :file_reader="fileReader"
-                  :file_name.sync="fileName"
-                  @config-ready="sendConfig" @close="showModal = false"></adder-wizard>
-
-    <div class="row">
-      <div class="col-md-12">
-        <span class="form-control-static">Plot features: </span>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" id="show-catalog" v-model="hasCatalog">
-          <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
+    <div v-if="!studyCount">
+      <tabix-file @connected="connectReader" class="float-left"></tabix-file>
+      <adder-wizard v-if="showModal"
+              :file_reader="fileReader"
+              :file_name.sync="fileName"
+              @config-ready="sendConfig" @close="showModal = false"></adder-wizard>
+      <bs-dropdown text="Plot options"  variant="info"
+                   class="float-right">
+        <div class="px-3">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="show-catalog" v-model="hasCatalog">
+            <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="show-credible-set"
+                   v-model="hasCredibleSets">
+            <label class="form-check-label" for="show-credible-set">Credible sets</label>
+          </div>
         </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="checkbox" id="show-credible-set"
-                 v-model="hasCredibleSets">
-          <label class="form-check-label" for="show-credible-set">Credible sets</label>
-        </div>
-      </div>
+      </bs-dropdown>
     </div>
   </div>
 </template>
 
 <script>
+
+import bsDropdown from 'bootstrap-vue/es/components/dropdown/dropdown';
+import bsDropdownItem from 'bootstrap-vue/es/components/dropdown/dropdown-item';
+
 import AdderWizard from './components/AdderWizard.vue';
 import TabixFile from './components/TabixFile.vue';
 import RegionPicker from './components/RegionPicker.vue';
@@ -62,11 +67,14 @@ export default {
         },
         sendConfig(options) {
             // This particular app captures reader options for display, then relays them to the plot
+            this.studyCount += 1;
             this.$root.$emit('config-ready', this.fileName, this.fileReader, options);
             this.reset();
         },
     },
     components: {
+        bsDropdown,
+        bsDropdownItem,
         AdderWizard,
         RegionPicker,
         TabixFile,
