@@ -11,11 +11,11 @@ const app = new Vue({ render: h => h(App) })
 // LocusZoom exists outside the Vue instance, and responds to controls via event listeners
 //  References to the plot and data_sources objects will be deliberately attached to root to
 //  facilitate debugging
-app.$on('config-ready', (name, reader, options) => {
+app.$on('config-ready', (name, reader, parser_options) => {
     if (!window.plot) {
-        [window.plot, window.data_sources] = createPlot('#lz-plot', name, reader, options);
+        [window.plot, window.data_sources] = createPlot('#lz-plot', name, reader, parser_options);
     } else {
-        addPlotPanel(window.plot, window.data_sources, name, reader, options);
+        addPlotPanel(window.plot, window.data_sources, name, reader, parser_options);
     }
 });
 

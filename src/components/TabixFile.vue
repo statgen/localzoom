@@ -44,6 +44,6 @@ export default {
   <label class="btn btn-primary" for="file-picker">Select a file...</label>
     <input id="file-picker" type="file" style="opacity: 0;"
            multiple accept="application/gzip,.tbi" @change="addSource($event)">
-  <div id="validation-message">{{validationMessage}}</div>
+  <span id="validation-message">{{validationMessage}}</span>
 </div>
 </template>

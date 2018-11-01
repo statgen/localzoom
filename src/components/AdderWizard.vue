@@ -12,70 +12,67 @@
             </button>
           </div>
           <div class="modal-body">
-            <label>
-              Dataset Label: <input class="form-control" type="text" v-model="file_name">
-            </label>
             <div>
-              <h4>Select field columns</h4>
-              <strong class="mr-3">Where to find variant identifiers:</strong>
-              <div class="form-check form-check-inline">
-                <input id="s1" type="radio" name="source" class="form-check-input"
-                       value="columns" v-model="variant_spec_type">
-                <label for="s1" class="form-check-label">Specific columns</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input id="s2" type="radio" name="source" class="form-check-input"
-                       value="marker" v-model="variant_spec_type">
-                <label for="s2" class="form-check-label">Marker</label>
-              </div>
-              <div v-if="variant_spec_type === 'marker'" class="form-group row">
-                <label for="vs-marker" class="col-sm-2">Marker</label>
-                <div class="col-sm-4">
-                  <select id="vs-marker" v-model="marker_col" class="form-control">
-                    <option v-for="(item, index) in column_titles" :value="index" :key="index">
-                      {{ item }}
-                    </option>
-                  </select>
+              <div class="form-group row">
+                <label for="display_name" class="col-sm-3">Dataset Label</label>
+                <div class="col-sm-9">
+                  <input id="display_name" class="form-control" type="text" v-model="file_name">
                 </div>
               </div>
-              <div v-else>
-                <div class="form-group row">
-                  <label for="vs-chr" class="col-sm-2">Chromosome</label>
-                  <div class="col-sm-4">
-                    <select id="vs-chr" v-model="chr_col" disabled class="form-control">
-                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
-                        {{ item }}
-                      </option>
-                    </select>
+
+              <bs-tabs v-model="variant_spec_tab">
+                <bs-tab title="Variant from columns" class="pt-3">
+                  <div class="form-group row">
+                    <label for="vs-chr" class="col-sm-2">Chromosome</label>
+                    <div class="col-sm-4">
+                      <select id="vs-chr" v-model="chr_col" disabled class="form-control">
+                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                          {{ item }}
+                        </option>
+                      </select>
+                    </div>
+                    <label for="vs-pos" class="col-sm-2">Position</label>
+                    <div class="col-sm-4">
+                      <select id="vs-pos" v-model="pos_col" disabled class="form-control">
+                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                          {{ item }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                  <label for="vs-pos" class="col-sm-2">Position</label>
-                  <div class="col-sm-4">
-                    <select id="vs-pos" v-model="pos_col" disabled class="form-control">
-                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
-                        {{ item }}
-                      </option>
-                    </select>
+                  <div class="form-group row">
+                    <label for="vs-ref" class="col-sm-2">Ref allele</label>
+                    <div class="col-sm-4">
+                      <select id="vs-ref" v-model="ref_col" class="form-control">
+                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                          {{ item }}
+                        </option>
+                      </select>
+                    </div>
+                    <label for="vs-alt" class="col-sm-2">Alt allele</label>
+                    <div class="col-sm-4">
+                      <select id="vs-alt" v-model="alt_col" class="form-control">
+                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                          {{ item }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <div class="form-group row">
-                  <label for="vs-ref" class="col-sm-2">Ref allele</label>
-                  <div class="col-sm-4">
-                    <select id="vs-ref" v-model="ref_col" class="form-control">
-                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
-                        {{ item }}
-                      </option>
-                    </select>
+                </bs-tab>
+                <bs-tab title="Variant from marker" class="pt-3">
+                  <div class="form-group row">
+                    <label for="vs-marker" class="col-sm-2">Marker</label>
+                    <div class="col-sm-4">
+                      <select id="vs-marker" v-model="marker_col" class="form-control">
+                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                          {{ item }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                  <label for="vs-alt" class="col-sm-2">Alt allele</label>
-                  <div class="col-sm-4">
-                    <select id="vs-alt" v-model="alt_col" class="form-control">
-                      <option v-for="(item, index) in column_titles" :value="index" :key="index">
-                        {{ item }}
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+                </bs-tab>
+              </bs-tabs>
+
               <div class="form-group row">
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
@@ -85,17 +82,19 @@
                     </option>
                   </select>
                 </div>
-                <div class="col-sm-6">
-                  <div class="form-check form-check-inline">
-                    <label class="form-check-label">
-                      <input v-model="is_log_p" type="checkbox" class="form-check-input">Uses
-                      -log(p)
-                    </label>
+                <div class="col-sm-2">
+                  <label for="is_log_p" class="form-check-label" style="white-space: nowrap">
+                    Uses <em>-log<sub>10</sub>(p)</em>
+                  </label>
+                </div>
+                <div class="col-sm-4">
+                  <div class="form-check float-left">
+                    <input id="is_log_p" v-model="is_log_p"
+                           type="checkbox" class="form-check-input">
                   </div>
                 </div>
               </div>
 
-              <h4>Preview</h4>
               <div class="row">
                 <div class="card card-body bg-light">
                   <div v-if="isValid && preview.error">
@@ -103,16 +102,19 @@
                   </div>
                   <div v-else-if="isValid">
                     Variant: {{ preview.variant }}<br>
-                    -log(p): {{ preview.log_pvalue }}
+                    -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
                   </div>
                   <div v-else>
-                    Please select options to continue
+                    Please select options to preview parsed data
                   </div>
                 </div>
               </div>
 
-              <div class="row">
-                <button class="btn btn-primary" @click="sendOptions">Accept options</button>
+              <div class="row mt-3">
+                <button class="btn btn-primary ml-auto"
+                        :disabled="!isValid" @click="sendOptions">
+                  Accept options
+                </button>
               </div>
             </div>
           </div>
@@ -123,6 +125,9 @@
 </template>
 
 <script>
+import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
+import bsTab from 'bootstrap-vue/es/components/tabs/tab';
+
 import makeParser from '../util/parsers';
 
 export default {
@@ -135,7 +140,7 @@ export default {
             sample_data: '',
 
             // Configuration options for variant data
-            variant_spec_type: 'columns', // Which UI format to show
+            variant_spec_tab: 0, // 0 = columns, 1 = marker
             // Individual form field options
             marker_col: null,
             ref_col: null,
@@ -189,7 +194,7 @@ export default {
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_type === 'marker' && marker_col !== null) {
+            if (this.variant_spec_tab === 1 && marker_col !== null) {
                 return { marker_col };
             } else if (pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
@@ -234,6 +239,10 @@ export default {
             this.$emit('config-ready', Object.assign({}, this.parserOptions));
             this.$emit('close');
         },
+    },
+    components: {
+        bsTab,
+        bsTabs,
     },
 };
 </script>

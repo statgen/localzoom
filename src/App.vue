@@ -6,13 +6,14 @@
       <tabix-file @connected="connectReader" class="float-left"></tabix-file>
       <adder-wizard v-if="showModal"
               :file_reader="fileReader"
-              :file_name.sync="fileName"
+              :file_name.sync="displayName"
               @config-ready="sendConfig" @close="showModal = false"></adder-wizard>
       <bs-dropdown text="Plot options"  variant="info"
                    class="float-right">
         <div class="px-3">
           <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="show-catalog" v-model="hasCatalog">
+            <input class="form-check-input" type="checkbox" id="show-catalog"
+                   v-model="hasCatalog">
             <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
           </div>
           <div class="form-check form-check-inline">
@@ -47,7 +48,7 @@ export default {
 
             // Temporary state
             fileReader: null,
-            fileName: null,
+            sourceName: null,
 
             hasCatalog: false,
             hasCredibleSets: false,
@@ -57,18 +58,20 @@ export default {
         reset() {
             // Reset state in the component
             this.fileReader = null;
-            this.fileName = null;
+            this.sourceName = null;
+            this.displayName = null;
         },
         connectReader(reader, name) {
             this.fileReader = reader;
+            this.displayName = name;
             // LZ tooltip templates break if the data source name has special chars; strip
-            this.fileName = name.replace(/[^A-Za-z0-9_]/g, '_');
+            this.sourceName = name;
             this.showModal = true;
         },
         sendConfig(options) {
             // This particular app captures reader options for display, then relays them to the plot
             this.studyCount += 1;
-            this.$root.$emit('config-ready', this.fileName, this.fileReader, options);
+            this.$root.$emit('config-ready', this.sourceName, this.fileReader, options);
             this.reset();
         },
     },
