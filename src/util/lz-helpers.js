@@ -15,7 +15,7 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
         return new Promise((resolve, reject) => {
             self.reader.fetch(state.chr, state.start, state.end, (data, err) => {
                 if (err) {
-                    reject(err);
+                    reject(new Error('Could not read requested region. This may indicate an error with the .tbi index.'));
                 }
                 resolve(data);
             });
@@ -37,7 +37,7 @@ function sourceName(display_name) {
 }
 
 /**
- * Create customized layout(s) that reflect the desired set of plotting options
+ * Create customized panel layout(s) that include functionality from all of the features selected.
  * @param {string} source_label
  * @param annotations
  * @return {*[]}
@@ -66,7 +66,7 @@ function createAssocLayout(
     const assoc_layer = assoc_panel.data_layers[2];
     const assoc_tooltip = assoc_layer.tooltip;
 
-    const dash_extra = []; // Build the Display options widget & add to dashboard
+    const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
         dash_extra.push({
             type: 'display_options',
