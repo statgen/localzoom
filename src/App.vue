@@ -1,9 +1,9 @@
 <template>
   <div>
-    <region-picker v-if="studyCount"></region-picker>
+    <region-picker v-if="studyCount" class="float-left mr-3"></region-picker>
 
-    <div v-if="!studyCount">
-      <tabix-file @connected="connectReader" class="float-left"></tabix-file>
+    <div v-if="studyCount < maxStudies">
+      <tabix-file @connected="connectReader" class="float-left mr-3"></tabix-file>
       <adder-wizard v-if="showModal"
               :file_reader="fileReader"
               :file_name.sync="displayName"
@@ -45,13 +45,14 @@ export default {
             showModal: false,
             // Many GWAS selections can be added. Track a list of chosen GWASs (by filename)
             studyCount: 0,
+            maxStudies: 3,
 
             // Temporary state
             fileReader: null,
             displayName: null,
 
-            hasCatalog: true,
-            hasCredibleSets: true,
+            hasCatalog: false,
+            hasCredibleSets: false,
         };
     },
     methods: {

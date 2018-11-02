@@ -46,6 +46,7 @@ function createAssocLayout(
     source_label,
     annotations = { credible_sets: false, gwas_catalog: true },
 ) {
+    const new_panels = [];
     const source_name = sourceName(source_label);
 
     // Other namespaces won't be overridden; they will be reused as is.
@@ -59,10 +60,7 @@ function createAssocLayout(
         id: `association_${source_name}`,
         title: { text: source_label },
         namespace,
-        unnamespaced: true,
     });
-    const new_panels = [assoc_panel];
-
     const assoc_layer = assoc_panel.data_layers[2];
     const assoc_tooltip = assoc_layer.tooltip;
 
@@ -83,26 +81,29 @@ function createAssocLayout(
     const fields_extra = [];
     if (annotations.credible_sets) {
         // Grab the options object from a pre-existing layout
-        const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { unnamespaced: true, namespace });
+        const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
         dash_extra[0].options.push(...basis.dashboard.components.pop().options);
         fields_extra.push('{{namespace[credset]}}posterior_prob', '{{namespace[credset]}}contrib_fraction', '{{namespace[credset]}}is_member');
         assoc_tooltip.html += '<br>Posterior probability: <strong>{{{{namespace[credset]}}posterior_prob|scinotation}}</strong><br>';
     }
     if (annotations.gwas_catalog) {
         // Grab the options object from a pre-existing layout
-        const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { unnamespaced: true, namespace });
+        const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
         dash_extra[0].options.push(...basis.dashboard.components.pop().options);
         fields_extra.push('{{namespace[catalog]}}rsid', '{{namespace[catalog]}}trait', '{{namespace[catalog]}}log_pvalue');
         assoc_tooltip.html += '{{#if {{namespace[catalog]}}rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
-        new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
-            id: `catalog_${source_name}`,
-            namespace,
-            unnamespaced: true,
-        }));
     }
     assoc_layer.fields.push(...fields_extra);
     assoc_panel.dashboard.components.push(...dash_extra);
 
+    // After all custom options added, run mods through Layouts.get once more to apply namespacing
+    new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
+    if (annotations.gwas_catalog) {
+        new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
+            id: `catalog_${source_name}`,
+            namespace,
+        }));
+    }
     return new_panels;
 }
 
@@ -147,7 +148,7 @@ function createPlot(
 
     // Add data tracks, then make sure genes are shown on plot
     const panel_layouts = preparePanels(data_sources, source_options, plot_options);
-    panel_layouts.push(LocusZoom.Layouts.get('panel', 'genes', { unnamespaced: true, proportional_height: 0.5 }));
+    panel_layouts.push(LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }));
     const layout = LocusZoom.Layouts.get('plot', 'standard_association', {
         state: plot_options.state,
         panels: panel_layouts,
@@ -171,10 +172,12 @@ function createPlot(
     return [plot, data_sources];
 }
 
-function addPanels(plot, data_sources, source_options, parser_options) {
-    // TODO: Add to a specific position in the list?
-    const layout = preparePanels(plot, data_sources, source_options, parser_options);
-    layout.forEach(panel => plot.addPanel(panel));
+function addPanels(plot, data_sources, source_options, plot_options) {
+    const layout = preparePanels(data_sources, source_options, plot_options);
+    layout.forEach((panel) => {
+        panel.y_index = -1; // Make sure genes track is always the last one
+        plot.addPanel(panel);
+    });
 }
 
 export { createPlot, sourceName, addPanels };
