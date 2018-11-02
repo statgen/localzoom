@@ -132,6 +132,13 @@ import makeParser from '../util/parsers';
 
 export default {
     name: 'adder-wizard',
+    mounted() {
+        document.body.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                this.$emit('close');
+            }
+        });
+    },
     props: ['file_reader', 'file_name'],
     data() {
         return {

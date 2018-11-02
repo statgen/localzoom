@@ -1,14 +1,15 @@
 <template>
   <div>
-    <region-picker v-if="studyCount" class="float-left mr-3"></region-picker>
-
     <div v-if="studyCount < maxStudies">
       <tabix-file @connected="connectReader" class="float-left mr-3"></tabix-file>
       <adder-wizard v-if="showModal"
-              :file_reader="fileReader"
-              :file_name.sync="displayName"
-              @config-ready="sendConfig" @close="showModal = false"></adder-wizard>
-      <bs-dropdown text="Plot options"  variant="info"
+                    :file_reader="fileReader"
+                    :file_name.sync="displayName"
+                    @config-ready="sendConfig"
+                    @close="showModal = false"></adder-wizard>
+    </div>
+    <region-picker v-if="studyCount" class="float-right"></region-picker>
+    <bs-dropdown v-if="!studyCount" text="Plot options"  variant="info"
                    class="float-right">
         <div class="px-3">
           <div class="form-check form-check-inline">
@@ -23,7 +24,6 @@
           </div>
         </div>
       </bs-dropdown>
-    </div>
   </div>
 </template>
 
