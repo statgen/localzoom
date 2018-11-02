@@ -236,7 +236,14 @@ export default {
     },
     methods: {
         sendOptions() {
-            this.$emit('config-ready', Object.assign({}, this.parserOptions));
+            // The preview (first line of file) will set the default locus (view) for this data
+            const init_position = this.preview.position;
+            const init_state = {
+                chr: this.preview.chromosome,
+                start: Math.min(0, init_position - 250000),
+                end: init_position + 250000,
+            };
+            this.$emit('config-ready', Object.assign({}, this.parserOptions), init_state);
             this.$emit('close');
         },
     },

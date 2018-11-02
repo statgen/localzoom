@@ -48,30 +48,38 @@ export default {
 
             // Temporary state
             fileReader: null,
-            sourceName: null,
+            displayName: null,
 
-            hasCatalog: false,
-            hasCredibleSets: false,
+            hasCatalog: true,
+            hasCredibleSets: true,
         };
     },
     methods: {
         reset() {
             // Reset state in the component
             this.fileReader = null;
-            this.sourceName = null;
             this.displayName = null;
         },
         connectReader(reader, name) {
             this.fileReader = reader;
             this.displayName = name;
-            // LZ tooltip templates break if the data source name has special chars; strip
-            this.sourceName = name;
             this.showModal = true;
         },
-        sendConfig(options) {
+        sendConfig(parser_options, initial_state) {
             // This particular app captures reader options for display, then relays them to the plot
             this.studyCount += 1;
-            this.$root.$emit('config-ready', this.sourceName, this.fileReader, options);
+            const annotations = {
+                gwas_catalog: this.hasCatalog,
+                credible_sets: this.hasCredibleSets,
+            };
+            // Event signature:
+            //  source_options={label, reader, parser_config},
+            //  plot_options={annotations, state}
+            this.$root.$emit(
+                'config-ready',
+                { label: this.displayName, reader: this.fileReader, parser_config: parser_options },
+                { annotations, state: initial_state },
+            );
             this.reset();
         },
     },
