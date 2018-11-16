@@ -40,11 +40,13 @@ function sourceName(display_name) {
  * Create customized panel layout(s) that include functionality from all of the features selected.
  * @param {string} source_label
  * @param annotations
+ * @param build
  * @return {*[]}
  */
 function createAssocLayout(
     source_label,
     annotations = { credible_sets: false, gwas_catalog: true },
+    build,
 ) {
     const new_panels = [];
     const source_name = sourceName(source_label);
@@ -61,8 +63,12 @@ function createAssocLayout(
         title: { text: source_label },
         namespace,
     });
-    const assoc_layer = assoc_panel.data_layers[2];
+    const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     const assoc_tooltip = assoc_layer.tooltip;
+    // FIXME LZ.js cannot handle recomb rate for build 38; remove this layer if present
+    if (build === 38) {
+        assoc_panel.data_layers.splice(1, 1);
+    }
 
     const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
@@ -133,7 +139,7 @@ function preparePanels(
     data_sources.add(`credset_${sourceName(label)}`, ['CredibleSetLZ',
         { params: { fields: { log_pvalue: `${assoc_name}:log_pvalue` }, threshold: 0.95 } }]);
 
-    return createAssocLayout(label, plot_options.annotations);
+    return createAssocLayout(label, plot_options.annotations, plot_options.build);
 }
 
 function createPlot(
@@ -156,7 +162,7 @@ function createPlot(
 
     data_sources
         .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/`, params: { source: 2 } }])
-        .add('ld', ['LDLZ', { url: `${apiBase}pair/LD/` }])
+        .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', build: 37, population: 'ALL' } }])
         .add('gene', ['GeneLZ', {
             url: `${apiBase}annotation/genes/`,
             params: { source: 2 },
