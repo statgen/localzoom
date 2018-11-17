@@ -161,7 +161,8 @@ function createPlot(
     });
 
     data_sources
-        .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/`, params: { source: 2 } }])
+        // The catalog source will be auto-determined from genome build
+        .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/`, params: { source: null } }])
         .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', build: 37, population: 'ALL' } }])
         .add('gene', ['GeneLZ', {
             url: `${apiBase}annotation/genes/`,
