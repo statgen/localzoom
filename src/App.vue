@@ -26,12 +26,12 @@
           <strong>Genome Build</strong><br>
           <div class="form-check">
             <input class="form-check-input" type="radio" id="build-37"
-                   name="build" value="37" v-model="build">
+                   name="build" value="GRCh37" v-model="build">
             <label class="form-check-label" for="build-37">GRCh37</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" id="build-38"
-                   name="build" value="38" v-model="build">
+                   name="build" value="GRCh38" v-model="build">
             <label class="form-check-label" for="build-38">GRCh38</label>
           </div>
         </div>
@@ -67,7 +67,7 @@ export default {
             hasCatalog: false,
             hasCredibleSets: false,
             // Other plot options
-            build: 37,
+            build: 'GRCh37',
         };
     },
     methods: {
@@ -88,7 +88,7 @@ export default {
                 gwas_catalog: this.hasCatalog,
                 credible_sets: this.hasCredibleSets,
             };
-            const build = +this.build;
+            const { build } = this;
             // Event signature:
             //  source_options={label, reader, parser_config},
             //  plot_options={annotations, state}
@@ -98,7 +98,7 @@ export default {
                 {
                     annotations,
                     build,
-                    state: Object.assign({ genome_build: build }, state),
+                    state: Object.assign({ genome_build: this.build }, state),
                 },
             );
             this.reset();

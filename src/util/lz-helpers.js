@@ -65,10 +65,6 @@ function createAssocLayout(
     });
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     const assoc_tooltip = assoc_layer.tooltip;
-    // FIXME LZ.js cannot handle recomb rate for build 38; remove this layer if present
-    if (build === 38) {
-        assoc_panel.data_layers.splice(1, 1);
-    }
 
     const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
@@ -161,17 +157,11 @@ function createPlot(
     });
 
     data_sources
-        // The catalog source will be auto-determined from genome build
-        .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/`, params: { source: null } }])
-        .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', build: 37, population: 'ALL' } }])
-        .add('gene', ['GeneLZ', {
-            url: `${apiBase}annotation/genes/`,
-            params: { source: 2 },
-        }])
-        .add('recomb', ['RecombLZ', {
-            url: `${apiBase}annotation/recomb/results/`,
-            params: { source: 15 },
-        }])
+        // Gene/Recomb/Catalog sources will auto-select based on genome build
+        .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/` }])
+        .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', population: 'ALL' } }])
+        .add('gene', ['GeneLZ', { url: `${apiBase}annotation/genes/` }])
+        .add('recomb', ['RecombLZ', { url: `${apiBase}annotation/recomb/results/` }])
         .add('constraint', ['GeneConstraintLZ', { url: 'http://exac.broadinstitute.org/api/constraint' }]);
 
     // Last, draw the plot in the div for this page
