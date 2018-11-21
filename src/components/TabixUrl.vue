@@ -6,24 +6,18 @@
 */
 export default {
     data() {
-        return {
-            url: '',
-            validationMessage: '',
-        };
+        return { url: '' };
     },
     methods: {
         addSource() {
             const self = this;
-            self.validationMessage = '';
-
             const indexUrl = `${this.url}.tbi`;
-
             // Name is last part of url path, stripped of file extensions
             const name = indexUrl.split('/').pop().replace(/\.gz|\.tbi/gi, '');
             urlReader(this.url, indexUrl).then((reader) => {
                 self.$emit('connected', reader, name);
             }).catch((err) => {
-                self.validationMessage = err;
+                self.$emit('fail', err);
             });
         },
     },
@@ -37,7 +31,6 @@ export default {
 <div>
   <input type="url" v-model.trim="url" placeholder="Specify a URL">
   <button class="btn-primary" @click="addSource">Add</button>
-  <p id="validation-message">{{validationMessage}}</p>
 </div>
 </template>
 

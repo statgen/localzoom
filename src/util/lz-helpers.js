@@ -167,6 +167,8 @@ function createPlot(
 
     // Last, draw the plot in the div for this page
     const plot = LocusZoom.populate(selector, data_sources, layout);
+    // ...and add "loading" indicator to each panel
+    plot.layout.panels.forEach(panel => plot.panels[panel.id].addBasicLoader());
     return [plot, data_sources];
 }
 
@@ -175,6 +177,7 @@ function addPanels(plot, data_sources, source_options, plot_options) {
     layout.forEach((panel) => {
         panel.y_index = -1; // Make sure genes track is always the last one
         plot.addPanel(panel);
+        panel.addBasicLoader();
     });
 }
 

@@ -1,15 +1,17 @@
 <template>
   <div>
-    <div v-if="studyCount < maxStudies">
-      <tabix-file @connected="connectReader" class="float-left mr-3"></tabix-file>
-      <adder-wizard v-if="showModal"
-                    :file_reader="fileReader"
-                    :file_name.sync="displayName"
-                    @config-ready="sendConfig"
-                    @close="showModal = false"></adder-wizard>
-    </div>
-    <region-picker v-if="studyCount" class="float-right"></region-picker>
-    <bs-dropdown v-if="!studyCount" text="Plot options"  variant="info"
+    <div>
+      <div v-if="studyCount < maxStudies">
+        <tabix-file @connected="connectReader" @fail="showMessage"
+                    class="float-left mr-3"></tabix-file>
+        <adder-wizard v-if="showModal"
+                      :file_reader="fileReader"
+                      :file_name.sync="displayName"
+                      @config-ready="sendConfig"
+                      @close="showModal = false"></adder-wizard>
+      </div>
+      <region-picker v-if="studyCount" @fail="showMessage" class="float-right"></region-picker>
+      <bs-dropdown v-if="!studyCount" text="Plot options" variant="info"
                    class="float-right">
         <div class="px-3">
           <strong>Annotations</strong><br>
@@ -36,6 +38,10 @@
           </div>
         </div>
       </bs-dropdown>
+    </div>
+    <p v-if="message">
+      <span :class="[messageClass]">{{message}}</span>
+    </p>
   </div>
 </template>
 
@@ -59,6 +65,10 @@ export default {
             studyCount: 0,
             maxStudies: 3,
 
+            // Control display of success/failure messages from this or child components
+            message: '',
+            messageClass: '',
+
             // Temporary state
             fileReader: null,
             displayName: null,
@@ -75,6 +85,12 @@ export default {
             // Reset state in the component
             this.fileReader = null;
             this.displayName = null;
+            this.message = '';
+            this.messageClass = '';
+        },
+        showMessage(message, style = 'text-danger') {
+            this.message = message;
+            this.messageClass = style;
         },
         connectReader(reader, name) {
             this.fileReader = reader;

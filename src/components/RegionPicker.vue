@@ -2,7 +2,6 @@
   <div class="form-inline">
     <input type="text" v-model="region" placeholder="chr:start-end" class="form-control">
     <button @click="selectRegion" class="btn btn-primary">Go to region</button>
-    <span>{{validationMessage}}</span>
   </div>
 </template>
 
@@ -18,10 +17,7 @@ export default {
         },
     },
     data() {
-        return {
-            region: null,
-            validationMessage: '',
-        };
+        return { region: null };
     },
     methods: {
         positionToRange(pos) {
@@ -29,7 +25,6 @@ export default {
             return [pos - bounds, pos + bounds];
         },
         selectRegion() {
-            this.validationMessage = '';
             const range_match = this.region.match(REGEX_REGION);
             const single_match = this.region.match(REGEX_MARKER);
 
@@ -44,14 +39,15 @@ export default {
                 pos = +pos;
                 [start, end] = this.positionToRange(pos);
             } else {
-                this.validationMessage = 'Could not parse specified range';
+                this.$emit('fail', 'Could not parse specified range');
                 return;
             }
 
             // Ensure that returned values are numeric
             start = +start;
             end = +end;
-            this.$root.$emit('select-range', { chr, start, end });
+            this.$emit('fail', '', ''); // Notify parent that validation error resolved
+            this.$root.$emit('select-range', { chr, start, end }); // LZ plot lives outside of vue
         },
     },
 };
