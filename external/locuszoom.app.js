@@ -1626,7 +1626,7 @@
                     }]
             },
             tooltip: LocusZoom.Layouts.get('tooltip', 'catalog_variant', { unnamespaced: true }),
-            tooltip_positioning: 'vertical'
+            tooltip_positioning: 'top'
         });
         /**
  * Dashboard Layouts: toolbar buttons etc
@@ -8137,6 +8137,19 @@
         };
         /* global LocusZoom */
         'use strict';
+        function validateBuildSource(class_name, build, source) {
+            // Build OR Source, not both
+            if (build && source || !(build || source)) {
+                throw class_name + ' must specify either "build" or "source", but not both';
+            }
+            // If the build isn't recognized, our APIs can't transparently select a source to match
+            if (build && [
+                    'GRCh37',
+                    'GRCh38'
+                ].indexOf(build) === -1) {
+                throw class_name + ' must specify a valid genome build number';
+            }
+        }
         /**
  * LocusZoom functionality used for data parsing and retrieval
  * @namespace
@@ -8929,31 +8942,25 @@
         /**
  * Fetch LD directly from the standalone Portal LD server
  *
- * @type {LocusZoom.Data.Source}
  * @class
  * @public
  * @augments LocusZoom.Data.LDSource
  */
-        LocusZoom.LDSource2 = LocusZoom.KnownDataSources.extend('LDLZ', 'LDLZ2', {
+        LocusZoom.Data.LDSource2 = LocusZoom.KnownDataSources.extend('LDLZ', 'LDLZ2', {
             getURL: function (state, chain, fields) {
                 // Accept the following params in this.params:
                 // - method (r, rsquare, cov)
                 // - source (aka panel)
                 // - population (ALL, AFR, EUR, etc)
                 // - build
-                var build = state.genome_build || this.params.build || 37;
+                // The LD source/pop can be overridden from plot.state for dynamic layouts
+                var build = state.genome_build || this.params.build || 'GRCh37';
                 var source = state.ld_source || this.params.source || '1000G';
                 var population = state.ld_pop || this.params.population || 'ALL';
+                // LDServer panels will always have an ALL
                 var method = this.params.method || 'rsquare';
-                if ([
-                        37,
-                        38
-                    ].indexOf(build) === -1) {
-                    console.log(build, 'ld');
-                    throw 'Must specify a valid genome build number';
-                } else {
-                    build = 'GRCh' + build;
-                }
+                validateBuildSource(this.constructor.SOURCE_NAME, build, null);
+                // LD doesn't need to validate `source` option
                 var refVar = this.getRefvar(state, chain, fields);
                 chain.header.ldrefvar = refVar;
                 return [
@@ -9014,17 +9021,13 @@
             // This is intended to be aligned with another source- we will assume they are always ordered by position, asc
             //  (regardless of the actual match field)
             var build_option = state.genome_build || this.params.build;
-            var build = build_option || 37;
-            if (!build || [
-                    37,
-                    38
-                ].indexOf(build) === -1) {
-                throw 'Must specify a valid genome build number';
-            }
+            validateBuildSource(this.constructor.SOURCE_NAME, build_option, null);
+            // Source can override build- not mutually exclusive
             // Most of our annotations will respect genome build before any other option.
             //   But there can be more than one GWAS catalog for the same build, so an explicit config option will always take
             //   precedence.
-            var default_source = build === 38 ? 1 : 2;
+            var default_source = build_option === 'GRCh38' ? 1 : 2;
+            // EBI GWAS catalog
             var source = this.params.source || default_source;
             return this.url + '?format=objects&sort=pos&filter=id eq ' + source + ' and chrom eq \'' + state.chr + '\'' + ' and pos ge ' + state.start + ' and pos le ' + state.end;
         };
@@ -9099,21 +9102,12 @@
             this.parseInit(init);
         }, 'GeneLZ');
         LocusZoom.Data.GeneSource.prototype.getURL = function (state, chain, fields) {
-            var build_option = state.genome_build || this.params.build;
-            var build = build_option || 37;
-            if (!build || [
-                    37,
-                    38
-                ].indexOf(build) === -1) {
-                throw 'Must specify a valid genome build number';
-            }
-            var source;
-            if (build_option) {
-                source = build === 38 ? 1 : 3;    //  Portal API only has datasets for build 37 and 38
-            } else {
-                // Only respect the source ID if build is not directly specified.
-                //  This is because annotation tracks should make all possible efforts to match the build of the data.
-                source = this.params.source;
+            var build = state.genome_build || this.params.build;
+            var source = this.params.source;
+            validateBuildSource(this.constructor.SOURCE_NAME, build, source);
+            if (build) {
+                // If build specified, choose a known Portal API dataset IDs (build 37/38)
+                source = build === 'GRCh38' ? 1 : 3;
             }
             return this.url + '?filter=source in ' + source + ' and chrom eq \'' + state.chr + '\'' + ' and start le ' + state.end + ' and end ge ' + state.start;
         };
@@ -9212,12 +9206,13 @@
             this.parseInit(init);
         }, 'RecombLZ');
         LocusZoom.Data.RecombinationRateSource.prototype.getURL = function (state, chain, fields) {
-            // TODO: Add build 38 support once an appropriate data source becomes available
-            if (state.genome_build && state.genome_build !== 37) {
-                throw 'Recombination data source only supports build 37 datasets';
+            var build = state.genome_build || this.params.build;
+            var source = this.params.source;
+            validateBuildSource(this.constructor.SOURCE_NAME, build, source);
+            if (build) {
+                // If build specified, choose a known Portal API dataset IDs (build 37/38)
+                source = build === 'GRCh38' ? 16 : 15;
             }
-            var source = chain.header.recombsource || this.params.source || 15;
-            // In LZ API, source 15 = data for build 37 / HapMap Phase 2
             return this.url + '?filter=id in ' + source + ' and chromosome eq \'' + state.chr + '\'' + ' and position le ' + state.end + ' and position ge ' + state.start;
         };
         /**
@@ -9267,7 +9262,7 @@
             this.parseInit(init);
         }, 'PheWASLZ');
         LocusZoom.Data.PheWASSource.prototype.getURL = function (state, chain, fields) {
-            var build = (state.genome_build ? ['GRCh' + state.genome_build] : null) || this.params.build;
+            var build = (state.genome_build ? [state.genome_build] : null) || this.params.build;
             if (!build || !Array.isArray(build) || !build.length) {
                 throw [
                     'Data source',

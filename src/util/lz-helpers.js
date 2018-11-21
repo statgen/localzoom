@@ -146,6 +146,7 @@ function createPlot(
     source_options.parser_config.id_field = 'variant';
 
     const apiBase = 'https://portaldev.sph.umich.edu/api/v1/';
+    const devApiBase = 'https://portaldev.sph.umich.edu/api_internal_dev/v1/';
     const data_sources = new LocusZoom.DataSources();
 
     // Add data tracks, then make sure genes are shown on plot
@@ -161,7 +162,7 @@ function createPlot(
         .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/` }])
         .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', population: 'ALL' } }])
         .add('gene', ['GeneLZ', { url: `${apiBase}annotation/genes/` }])
-        .add('recomb', ['RecombLZ', { url: `${apiBase}annotation/recomb/results/` }])
+        .add('recomb', ['RecombLZ', { url: `${devApiBase}annotation/recomb/results/` }])
         .add('constraint', ['GeneConstraintLZ', { url: 'http://exac.broadinstitute.org/api/constraint' }]);
 
     // Last, draw the plot in the div for this page
