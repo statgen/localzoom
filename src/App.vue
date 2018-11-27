@@ -3,14 +3,24 @@
     <div>
       <div v-if="studyCount < maxStudies">
         <tabix-file @connected="connectReader" @fail="showMessage"
-                    class="float-left mr-3"></tabix-file>
+                    class="float-left"></tabix-file>
+        <bs-dropdown text="Add from URL" variant="success" class="float-left mr-3">
+          <div class="px-3">
+            <tabix-url @connected="connectReader" @fail="showMessage"></tabix-url>
+          </div>
+        </bs-dropdown>
         <adder-wizard v-if="showModal"
                       :file_reader="fileReader"
                       :file_name.sync="displayName"
                       @config-ready="sendConfig"
                       @close="showModal = false"></adder-wizard>
       </div>
-      <region-picker v-if="studyCount" @fail="showMessage" class="float-right"></region-picker>
+      <region-picker v-if="studyCount"
+                     @fail="showMessage" class="float-right"
+                     :build="build"
+                     max_range="500000"
+                     search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/"
+      ></region-picker>
       <bs-dropdown v-if="!studyCount" text="Plot options" variant="info"
                    class="float-right">
         <div class="px-3">
@@ -23,7 +33,7 @@
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="checkbox" id="show-credible-set"
                    v-model="hasCredibleSets">
-            <label class="form-check-label" for="show-credible-set">Credible sets</label>
+            <label class="form-check-label" for="show-credible-set">95% credible set</label>
           </div>
           <strong>Genome Build</strong><br>
           <div class="form-check">
@@ -51,9 +61,9 @@ import bsDropdown from 'bootstrap-vue/es/components/dropdown/dropdown';
 import bsDropdownItem from 'bootstrap-vue/es/components/dropdown/dropdown-item';
 
 import AdderWizard from './components/AdderWizard.vue';
-import TabixFile from './components/TabixFile.vue';
 import RegionPicker from './components/RegionPicker.vue';
-
+import TabixFile from './components/TabixFile.vue';
+import TabixUrl from './components/TabixUrl.vue';
 
 export default {
     name: 'gwas-chooser',
@@ -61,7 +71,7 @@ export default {
         return {
             // Whether to show the "add a gwas" UI
             showModal: false,
-            // Many GWAS selections can be added. Track a list of chosen GWASs (by filename)
+            // Limit how many studies can be added (due to browser performance)
             studyCount: 0,
             maxStudies: 3,
 
@@ -126,6 +136,7 @@ export default {
         AdderWizard,
         RegionPicker,
         TabixFile,
+        TabixUrl,
     },
 };
 </script>

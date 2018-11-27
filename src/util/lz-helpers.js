@@ -174,9 +174,9 @@ function createPlot(
 
 function addPanels(plot, data_sources, source_options, plot_options) {
     const layout = preparePanels(data_sources, source_options, plot_options);
-    layout.forEach((panel) => {
-        panel.y_index = -1; // Make sure genes track is always the last one
-        plot.addPanel(panel);
+    layout.forEach((panel_layout) => {
+        panel_layout.y_index = -1; // Make sure genes track is always the last one
+        const panel = plot.addPanel(panel_layout);
         panel.addBasicLoader();
     });
 }

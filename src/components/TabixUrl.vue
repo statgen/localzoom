@@ -29,8 +29,14 @@ export default {
     TODO: Not every server supports range requests. Validate request before connecting reader.
   -->
 <div>
-  <input type="url" v-model.trim="url" placeholder="Specify a URL">
-  <button class="btn-primary" @click="addSource">Add</button>
+  <div class="form-row">
+    <div class="col">
+      <input type="url" v-model.trim="url" placeholder="Specify a URL">
+    </div>
+    <div class="col">
+      <button class="btn-success" @click="addSource">Add</button>
+    </div>
+  </div>
 </div>
 </template>
 
