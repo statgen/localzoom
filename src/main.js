@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import App from './App.vue';
 
+import App from './App.vue';
 import { createPlot, addPanels } from './util/lz-helpers';
 
 Vue.config.productionTip = false;

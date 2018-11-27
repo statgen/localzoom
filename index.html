@@ -7,6 +7,7 @@
         integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 
   <link rel="stylesheet" href="dist/css/app.css">
+  <link rel="stylesheet" href="dist/css/chunk-vendors.css">
 
   <!-- Necessary includes for LocusZoom.js -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.css" type="text/css"/>
@@ -20,7 +21,7 @@
   <!-- FIXME: Vue build fails when `import`ing a UMD bundle; include file separately for now -->
   <script src="external/dalliance-tabix-reader.js" type="application/javascript"></script>
 
-  <title>LocusZoom.js ~ Plot your own Tabixed Data</title>
+  <title>LocalZoom ~ Plot your own Tabixed Data with LocusZoom.js</title>
 
   <style>
     body {
@@ -56,10 +57,7 @@
 <div class="container">
   <div class="row">
     <div class="col-md-12">
-      <h1 style="margin-top: 1em;"><strong>LocusZoom.js</strong></h1>
-
-      <h3 style="color: #777">Using LZ.js without an API</h3>
-
+      <h1 style="margin-top: 1em;"><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>
       <hr>
 
       <div class="card">
@@ -93,8 +91,11 @@
             interest. Therefore, it cannot generate summary views that would require processing the
             entire file (eg Manhattan plots).</p>
 
-          <p>LD and overlay information is based on <strong>build GRCh37</strong>. Exercise caution
-            when interpreting plots based on a GWAS with positions from a different build.</p>
+          <p>
+            LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
+            or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
+            plots based on a GWAS with positions from a different build.
+          </p>
         </div>
       </div>
     </div>
