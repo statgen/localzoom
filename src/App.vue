@@ -1,57 +1,58 @@
 <template>
   <div>
-    <div>
-      <div v-if="studyCount < maxStudies">
-        <tabix-file @connected="connectReader" @fail="showMessage"
-                    class="float-left"></tabix-file>
-        <bs-dropdown text="Add from URL" variant="success" class="float-left mr-3">
+    <div class="row">
+      <div class="col-sm-6" v-if="studyCount < maxStudies">
+        <tabix-file class="mr-1"
+                    @connected="connectReader" @fail="showMessage" />
+        <bs-dropdown text="Add from URL" variant="success">
           <div class="px-3">
-            <tabix-url @connected="connectReader" @fail="showMessage"></tabix-url>
+            <tabix-url @connected="connectReader" @fail="showMessage" />
           </div>
         </bs-dropdown>
         <adder-wizard v-if="showModal"
                       :file_reader="fileReader"
                       :file_name.sync="displayName"
                       @config-ready="sendConfig"
-                      @close="showModal = false"></adder-wizard>
+                      @close="showModal = false" />
       </div>
-      <region-picker v-if="studyCount"
-                     @fail="showMessage" class="float-right"
-                     :build="build"
-                     max_range="500000"
-                     search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/"
-      ></region-picker>
-      <bs-dropdown v-if="!studyCount" text="Plot options" variant="info"
-                   class="float-right">
-        <div class="px-3">
-          <strong>Annotations</strong><br>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="show-catalog"
-                   v-model="hasCatalog">
-            <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
+      <div class="col-sm-6">
+        <region-picker v-if="studyCount"
+                       @fail="showMessage" class="float-right"
+                       :build="build"
+                       max_range="500000"
+                       search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/" />
+        <bs-dropdown v-else text="Plot options" variant="info"
+                     class="float-right">
+          <div class="px-3">
+            <strong>Annotations</strong><br>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="show-catalog"
+                     v-model="hasCatalog">
+              <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="checkbox" id="show-credible-set"
+                     v-model="hasCredibleSets">
+              <label class="form-check-label" for="show-credible-set">95% credible set</label>
+            </div>
+            <strong>Genome Build</strong><br>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="build-37"
+                     name="build" value="GRCh37" v-model="build">
+              <label class="form-check-label" for="build-37">GRCh37</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="build-38"
+                     name="build" value="GRCh38" v-model="build">
+              <label class="form-check-label" for="build-38">GRCh38</label>
+            </div>
           </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" id="show-credible-set"
-                   v-model="hasCredibleSets">
-            <label class="form-check-label" for="show-credible-set">95% credible set</label>
-          </div>
-          <strong>Genome Build</strong><br>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" id="build-37"
-                   name="build" value="GRCh37" v-model="build">
-            <label class="form-check-label" for="build-37">GRCh37</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" id="build-38"
-                   name="build" value="GRCh38" v-model="build">
-            <label class="form-check-label" for="build-38">GRCh38</label>
-          </div>
-        </div>
-      </bs-dropdown>
+        </bs-dropdown>
+      </div>
     </div>
-    <p v-if="message">
-      <span :class="[messageClass]">{{message}}</span>
-    </p>
+    <div class="row" v-if="message">
+      <div class="col-sm-12"><span :class="[messageClass]">{{message}}</span></div>
+    </div>
   </div>
 </template>
 
