@@ -1,5 +1,5 @@
 /* global LocusZoom */
-import makeParser from './parsers';
+import { makeParser } from './parsers';
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
@@ -22,7 +22,10 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
         });
     },
     normalizeResponse(data) {
-        return data.map(this.parser);
+        // Some GWAS files will include variant rows, even if no pvalue can be calculated.
+        // Eg, EPACTS fills in "NA" for pvalue in this case. These rows are not useful for a
+        // scatter plot, and this data source should ignore them.
+        return data.map(this.parser).filter(item => !Number.isNaN(item.log_pvalue));
     },
 });
 

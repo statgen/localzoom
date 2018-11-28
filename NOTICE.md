@@ -1,5 +1,6 @@
 ## Third-party code
-LocusZoom gratefully acknowledges the use of some third-party code, with required license information provided below.
+LocalZoom gratefully acknowledges the use of some third-party code, with required license 
+information provided below.
 
 ### Biodalliance (client-side tabix file parsing)
 

@@ -1,5 +1,15 @@
 import { REGEX_MARKER } from '@/util/constants';
 
+const PARSER_PRESETS = {
+    // Counting starts at 0
+    epacts: { marker_col: 3, pvalue_col: 8, is_log_p: false }, // https://genome.sph.umich.edu/wiki/EPACTS#Output_Text_of_All_Test_Statistics
+    // FIXME: Canadian Sarah suggests that SAIGE columns depend on which options were chosen
+    saige: { marker_col: 2, pvalue_col: 11, is_log_p: false }, // https://github.com/weizhouUMICH/SAIGE/wiki/SAIGE-Hands-On-Practical
+    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false }, // https://www.cog-genomics.org/plink2/formats
+    // FIXME: What is correct pvalue col- 11 or 12?
+    'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false }, // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
+};
+
 /**
  * Specify how to parse a GWAS file, given certain column information.
  * Outputs an object with fields in portal API format.
@@ -14,7 +24,7 @@ import { REGEX_MARKER } from '@/util/constants';
  * @return {function(*): {chromosome: *, position: number, ref_allele: *,
  *          log_pvalue: number, variant: string}}
  */
-function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col, is_log_p = true, delimiter = '\t' } = {}) {
+function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col, is_log_p = false, delimiter = '\t' } = {}) {
     // Column IDs should be 0-indexed (computer friendly)
     if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
@@ -62,4 +72,4 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
     };
 }
 
-export default makeParser;
+export { makeParser, PARSER_PRESETS };

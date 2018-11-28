@@ -21,6 +21,24 @@
               </div>
 
               <bs-tabs v-model="variant_spec_tab">
+                <bs-tab title="Presets" class="pt-3">
+                  <div class="form-group row">
+                    <label for="vs-preset" class="col-sm-2">Program</label>
+                    <div class="col-sm-4">
+                      <select id="vs-preset" v-model="preset_type" class="form-control">
+                        <option v-for="program_name in preset_options"
+                                :value="program_name" :key="program_name">
+                          {{ program_name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <p>
+                    <em>If your program is not listed, choose another tab and specify how to read
+                      your file.</em>
+                  </p>
+                </bs-tab>
+
                 <bs-tab title="Variant from columns" class="pt-3">
                   <div class="form-group row">
                     <label for="vs-chr" class="col-sm-2">Chromosome</label>
@@ -73,7 +91,7 @@
                 </bs-tab>
               </bs-tabs>
 
-              <div class="form-group row">
+              <div class="form-group row" v-if="variant_spec_tab !== 0">
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
                   <select id="vs-pval" v-model="pvalue_col" class="form-control">
@@ -128,7 +146,7 @@
 import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 
-import makeParser from '../util/parsers';
+import { makeParser, PARSER_PRESETS } from '../util/parsers';
 
 export default {
     name: 'adder-wizard',
@@ -147,8 +165,10 @@ export default {
             sample_data: '',
 
             // Configuration options for variant data
-            variant_spec_tab: 0, // 0 = columns, 1 = marker
+            variant_spec_tab: 0, // 0 = presets, 1 = columns, 2 = marker
+            preset_options: Object.keys(PARSER_PRESETS),
             // Individual form field options
+            preset_type: null,
             marker_col: null,
             ref_col: null,
             alt_col: null,
@@ -201,9 +221,11 @@ export default {
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_tab === 1 && marker_col !== null) {
+            if (this.variant_spec_tab === 0 && this.preset_type) {
+                return PARSER_PRESETS[this.preset_type];
+            } else if (this.variant_spec_tab === 2 && marker_col !== null) {
                 return { marker_col };
-            } else if (pos_col !== null && chr_col !== null) {
+            } else if (this.variant_spec_tab === 1 && pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
                 return {
                     chr_col,
@@ -216,14 +238,14 @@ export default {
         },
         parserOptions() {
             const { pvalue_col, is_log_p } = this;
-            return Object.assign({}, this.variantSpec, {
+            return Object.assign({}, {
                 pvalue_col,
                 is_log_p,
-            });
+            }, this.variantSpec);
         },
         isValid() {
             const hasVariant = Object.keys(this.variantSpec).length !== 0;
-            const hasP = this.pvalue_col !== null;
+            const hasP = this.parserOptions.pvalue_col !== null;
             return hasVariant && hasP;
         },
         parser() {
