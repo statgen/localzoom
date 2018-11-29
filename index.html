@@ -114,6 +114,23 @@
     </div>
   </div>
 
+
+  <div id="credible-set-ui"  class="d-none row">
+    <div class="col-md-12">
+      <h3>Credible set members</h3>
+      <p>
+        <label>Select a dataset:
+          <select id="credible-set-datasets">
+            <option value=""></option>
+          </select>
+        </label>
+      </p>
+
+      <button id="credible-set-download" class="btn btn-primary d-none">Download as CSV</button><br>
+      <div id="credible-set-table"></div>
+    </div>
+  </div>
+
   <div class="row">
     <div class="col-md-12">
       <footer style="text-align: center;">
@@ -126,6 +143,13 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<!-- For "table of results" feature -->
+<script type="application/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha384-Dziy8F2VlJQLMShA6FHWNul/veM9bCkRUaLqr199K94ntO5QUrLJBEbYegdSkkqX" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.1/css/tabulator.min.css" integrity="sha384-uUckT6+9734bUz7HdTJ+c+PuMby2lpJoY32bbSz5AxNsX0HafyKd17e654uUdw1x" crossorigin="anonymous">
+<script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.1/js/tabulator.min.js" integrity="sha384-RpPuANG8/tgp6BYEwkavx0+frMPygzCmFcKd8bLQ4ReTROYaqH1h/mMgVLeA4cCX" crossorigin="anonymous"></script>
+
+<!-- For app -->
 <script src="dist/js/chunk-vendors.js"></script>
 <script src="dist/js/app.js"></script>
 

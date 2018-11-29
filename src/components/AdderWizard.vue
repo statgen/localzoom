@@ -203,6 +203,8 @@ export default {
                         this.column_titles = rows[this.file_reader.skip - 1].replace(/^#+/g, '')
                             .split('\t');
                     }
+                    //
+                    // FIXME: Sample data/ start region is actually not the first data line- improve
                     this.sample_data = rows[rows.length - 1]; // Give line parser a raw string
                 }, {
                     nLines: 25,
@@ -269,7 +271,7 @@ export default {
             const init_position = this.preview.position;
             const init_state = {
                 chr: this.preview.chromosome,
-                start: Math.min(0, init_position - 250000),
+                start: Math.max(0, init_position - 250000),
                 end: init_position + 250000,
             };
             this.$emit('config-ready', Object.assign({}, this.parserOptions), init_state);

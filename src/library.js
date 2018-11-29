@@ -7,5 +7,6 @@ import AdderWizard from './components/AdderWizard.vue';
 import RegionPicker from './components/RegionPicker.vue';
 import TabixFile from './components/TabixFile.vue';
 import TabixUrl from './components/TabixUrl.vue';
+import LzHelpers from './util/lz-helpers';
 
-export { AdderWizard, RegionPicker, TabixFile, TabixUrl };
+export { AdderWizard, RegionPicker, TabixFile, TabixUrl, LzHelpers };
