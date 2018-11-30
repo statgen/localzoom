@@ -3,7 +3,7 @@ import Vue from 'vue';
 
 import App from './App.vue';
 import { createPlot, addPanels, sourceName } from './util/lz-helpers';
-import { createTable } from './util/credible-set-ui';
+import { createTableConfig } from './util/credible-set-ui';
 
 Vue.config.productionTip = false;
 
@@ -37,15 +37,24 @@ app.$on('config-ready', (source_options, plot_options) => {
 app.$on('select-range', state => window.plot.applyState(state));
 
 // Control drawing of credible set results table (if this feature is selected)
+CREDSET_TABLE_SELECTOR.tabulator({
+    index: 'id',
+    height: 300,
+    layout: 'fitColumns',
+    layoutColumnsOnNewData: true,
+});
+// eslint-disable-next-line func-names
 CREDSET_OPTION_SELECTOR.change(function () {
     CREDSET_BUTTON_SELECTOR.removeClass('d-none');
+    CREDSET_TABLE_SELECTOR.removeClass('d-none');
 
     const source_label = $(this).val();
     const source_name = sourceName(source_label);
 
-    // Remove the previous table, and remake the layout so it is associated with the correct data
-    CREDSET_TABLE_SELECTOR.html('');
-    createTable(CREDSET_TABLE_SELECTOR, source_name);
+    // Redefine the table to associate with the correct data
+    const config = createTableConfig(source_name);
+    CREDSET_TABLE_SELECTOR.tabulator('setColumns', config);
+    CREDSET_TABLE_SELECTOR.tabulator('setSort', `credset_${source_name}:posterior_prob`, 'desc');
 
     window.plot.subscribeToData([
         `assoc_${source_name}:variant`, `assoc_${source_name}:chromosome`,
