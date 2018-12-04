@@ -3,6 +3,7 @@ import { makeParser, PARSER_PRESETS } from '../../src/util/parsers';
 
 
 const SAIGE_SAMPLE = 'chr1\t76792\tchr1:76792:A:C\tA\tC\t57\t0.00168639048933983\t16900\t0.573681678183941\t0.663806747906141\t1.30193005902619\t0.387461577915637\t0.387461577915637\t1\t2.2694293866027\t2.41152256615949';
+const RVTESTS_SAMPLE = '1\t761893\tG\tT\t19292\t2.59624e-05:0.000655308:0\t1:1:0\t0.998289:0.996068:0.998381\t1:1:1\t19258:759:18499\t1:1:0\t0:0:0\t1.33113\t0.268484\t18.4664\t7.12493e-07';
 
 describe('GWAS parsing', () => {
     describe('Mode selection', () => {
@@ -28,6 +29,18 @@ describe('GWAS parsing', () => {
                 position: 76792,
                 ref_allele: 'A',
                 variant: '1:76792_A/C',
+            });
+        });
+        it('parses RVTESTS data', () => {
+            const parser = makeParser(PARSER_PRESETS.rvtests);
+            const actual = parser(RVTESTS_SAMPLE);
+            assert.deepEqual(actual, {
+                alt_allele: 'T',
+                chromosome: '1',
+                log_pvalue: 6.147219398093217,
+                position: 761893,
+                ref_allele: 'G',
+                variant: '1:761893_G/T',
             });
         });
     });

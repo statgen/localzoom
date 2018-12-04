@@ -3,9 +3,11 @@ import { REGEX_MARKER } from '@/util/constants';
 const PARSER_PRESETS = {
     // Counting starts at 0
     epacts: { marker_col: 3, pvalue_col: 8, is_log_p: false }, // https://genome.sph.umich.edu/wiki/EPACTS#Output_Text_of_All_Test_Statistics
+    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false }, // https://www.cog-genomics.org/plink2/formats
+    // TODO: Documentation source for rvtests?
+    rvtests: { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 15, is_log_p: false },
     // FIXME: Canadian Sarah suggests that SAIGE columns depend on which options were chosen
     saige: { marker_col: 2, pvalue_col: 11, is_log_p: false }, // https://github.com/weizhouUMICH/SAIGE/wiki/SAIGE-Hands-On-Practical
-    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false }, // https://www.cog-genomics.org/plink2/formats
     // FIXME: What is correct pvalue col- 11 or 12?
     'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false }, // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
 };

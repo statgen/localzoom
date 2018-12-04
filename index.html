@@ -81,8 +81,10 @@
                 href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
               to check</a>)
             </li>
-            <li>Your file contains two key columns of information: a SNP marker in the format
-              <code>chr:pos_ref/alt</code>, and a p-value (or -log10 pvalue) for each row.
+            <li>Your file contains information requitred to draw a plot. Chromosome, position, ref,
+              and alt alleles can be specified as either individual columns, or a SNP marker (eg
+              <code>chr:pos_ref/alt</code>); there must also be a p-value (or -log10 pvalue) for
+              each SNP as a separate column.
               <em>Client-side plots cannot be generated from rsIDs.</em></li>
           </ol>
 
@@ -95,6 +97,12 @@
             LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
             or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
             plots based on a GWAS with positions from a different build.
+          </p>
+
+          <p>
+            Credible sets are <a href="https://github.com/statgen/gwas-credible-sets/">calculated</a>
+            based on the p-values for the displayed region. At the moment this tool does not support
+            uploading your own custom credible set annotations.
           </p>
         </div>
       </div>
