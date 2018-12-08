@@ -12,6 +12,106 @@ const PARSER_PRESETS = {
     'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false }, // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
 };
 
+
+/**
+ * Compute the levenshtein distance between two strings. Useful for finding the single best column
+ *  name that matches a given rule.
+ *  @private
+ */
+function levenshtein(a, b) { // https://github.com/trekhleb/javascript-algorithms
+    // Create empty edit distance matrix for all possible modifications of
+    // substrings of a to substrings of b.
+    const distanceMatrix = Array(b.length + 1)
+        .fill(null)
+        .map(() => Array(a.length + 1)
+            .fill(null));
+
+    // Fill the first row of the matrix.
+    // If this is first row then we're transforming empty string to a.
+    // In this case the number of transformations equals to size of a substring.
+    for (let i = 0; i <= a.length; i += 1) {
+        distanceMatrix[0][i] = i;
+    }
+
+    // Fill the first column of the matrix.
+    // If this is first column then we're transforming empty string to b.
+    // In this case the number of transformations equals to size of b substring.
+    for (let j = 0; j <= b.length; j += 1) {
+        distanceMatrix[j][0] = j;
+    }
+
+    for (let j = 1; j <= b.length; j += 1) {
+        for (let i = 1; i <= a.length; i += 1) {
+            const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+            distanceMatrix[j][i] = Math.min(
+                distanceMatrix[j][i - 1] + 1, // deletion
+                distanceMatrix[j - 1][i] + 1, // insertion
+                distanceMatrix[j - 1][i - 1] + indicator, // substitution
+            );
+        }
+    }
+    return distanceMatrix[b.length][a.length];
+}
+
+/**
+ * Return the index of the first column name that meets acceptance criteria
+ * @param {String[]} column_synonyms
+ * @param {String[]}header_names
+ * @param {Number} threshold Tolerance for fuzzy matching (# edits)
+ * @return {Number|null} Index of the best matching column, or null if no match possible
+ */
+function findColumn(column_synonyms, header_names, threshold = 2) {
+    // Find the column name that best matches
+    let best_score = threshold + 1;
+    let best_match = null;
+    for (let i = 0; i < header_names.length; i++) {
+        const header = header_names[i];
+        if (header === null) {
+            // If header is empty, don't consider it for a match
+            // Nulling a header provides a way to exclude something from future searching
+            continue; // eslint-disable-line no-continue
+        }
+        const score = Math.min(...column_synonyms.map(s => levenshtein(header, s)));
+        if (score < best_score) {
+            best_score = score;
+            best_match = i;
+        }
+    }
+    return best_match;
+}
+
+/**
+ *
+ * @param {String[]} header_row
+ * @param {String[][]} data_rows
+ */
+function guessGWAS(header_row, data_rows) {
+    // 1. Find a specific set of info: marker OR chr/pos/ref/alt ; pvalue OR log_pvalue
+    // 2. Validate that we will be able to parse the required info: fields present and make sense
+    // 3. Based on the field names selected, attempt to infer meaning: verify whether log is used,
+    //  and check ref/alt vs effect/noneffect
+    // 4. Return a parser config object if all tests pass, OR null.
+
+    // Normalize case and remove leading comment marks from line for easier comparison
+    let headers = header_row.map(item => item.toLowerCase());
+    headers[0].replace('/^#+/', '');
+    // Lists of fields are drawn from Encore (AssocResultReader) and Pheweb (conf_utils.py)
+    const MARKER_FIELDS = ['snpid', 'marker', 'markerid'];
+    const CHR_FIELDS = ['chrom', 'chr'];
+    const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end'];
+
+    // TODO: How to handle orienting ref vs effect?
+    // Order matters: consider ambiguous field names for ref before alt
+    const REF_FIELDS = ['A1'];
+    const ALT_FIELDS = ['A2'];
+
+    const LOGPVALUE_FIELDS = ['log_pvalue', 'log_pval'];
+    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score'];
+
+    // 1. Get marker
+
+}
+
 /**
  * Specify how to parse a GWAS file, given certain column information.
  * Outputs an object with fields in portal API format.
@@ -74,4 +174,10 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
     };
 }
 
-export { makeParser, PARSER_PRESETS };
+export {
+    // Public configuration options
+    makeParser, PARSER_PRESETS,
+    // Private members exposed for testing
+    levenshtein as _levenshtein,
+    findColumn as _findColumn,
+};
