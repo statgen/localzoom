@@ -20,25 +20,12 @@
                 </div>
               </div>
 
-              <bs-tabs v-model="variant_spec_tab">
-                <bs-tab title="Presets" class="pt-3">
-                  <div class="form-group row">
-                    <label for="vs-preset" class="col-sm-2">Program</label>
-                    <div class="col-sm-4">
-                      <select id="vs-preset" v-model="preset_type" class="form-control">
-                        <option v-for="program_name in preset_options"
-                                :value="program_name" :key="program_name">
-                          {{ program_name }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <p>
-                    <em>If your program is not listed, choose another tab and specify how to read
-                      your file.</em>
-                  </p>
-                </bs-tab>
-
+              <!-- First page of UI: try to guess appropriate parser settings -->
+              <div v-if="auto_detect_screen">
+                Automatic file format detection results:
+              </div>
+              <!-- Second page of UI is only used if fields could not be detected -->
+              <bs-tabs v-if="!auto_detect_screen"  v-model="variant_spec_tab">
                 <bs-tab title="Variant from columns" class="pt-3">
                   <div class="form-group row">
                     <label for="vs-chr" class="col-sm-2">Chromosome</label>
@@ -91,7 +78,7 @@
                 </bs-tab>
               </bs-tabs>
 
-              <div class="form-group row" v-if="variant_spec_tab !== 0">
+              <div v-if="!auto_detect_screen" class="form-group row">
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
                   <select id="vs-pval" v-model="pvalue_col" class="form-control">
@@ -122,6 +109,9 @@
                     Variant: {{ preview.variant }}<br>
                     -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
                   </div>
+                  <div v-else-if="auto_detect_screen">
+                    File format could not be automatically detected. Please select columns manually
+                  </div>
                   <div v-else>
                     Please select options to preview parsed data
                   </div>
@@ -129,7 +119,12 @@
               </div>
 
               <div class="row mt-3">
-                <button class="btn btn-primary ml-auto"
+                <button class="btn btn-secondary ml-auto mr-3" v-if="auto_detect_screen"
+                        @click="auto_detect_screen = false">
+                  Select columns manually
+                </button>
+                <button class="btn btn-success"
+                        :class="[auto_detect_screen ? '': 'ml-auto']"
                         :disabled="!isValid" @click="sendOptions">
                   Accept options
                 </button>
@@ -146,7 +141,7 @@
 import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 
-import { makeParser, PARSER_PRESETS } from '../util/parsers';
+import { makeParser, guessGWAS } from '../util/parsers';
 
 export default {
     name: 'adder-wizard',
@@ -160,13 +155,13 @@ export default {
     props: ['file_reader', 'file_name'],
     data() {
         return {
-            // Pages: select_source, select_options, accept_options
+            auto_detect_screen: true,
+
             column_titles: [],
-            sample_data: '',
+            sample_data: [],
 
             // Configuration options for variant data
-            variant_spec_tab: 0, // 0 = presets, 1 = columns, 2 = marker
-            preset_options: Object.keys(PARSER_PRESETS),
+            variant_spec_tab: 0, // 0 = columns, 1 = marker
             // Individual form field options
             preset_type: null,
             marker_col: null,
@@ -188,32 +183,35 @@ export default {
                 //  the last total line is assumed to be data.
                 // This wizard assumes all files are tabix (tab delimited)
 
-                if (!this.file_reader.skip) {
-                    // No lines skipped, grab last "true" header
-                    this.file_reader.fetchHeader((rows, err) => {
-                        // TODO: Incorporate proper meta char
-                        this.column_titles = rows[rows.length - 1].replace(/^#+/g, '')
-                            .split('\t');
-                    });
-                }
-                this.file_reader.fetchHeader((rows, err) => {
+                // Find headers by fetching a large block of lines, and picking the best ones
+                const callback = (rows, err) => {
                     // Read data (and last-ditch attempt to find headers, if necessary)
+                    let first_data_index = -1;
                     if (this.file_reader.skip) {
-                        // TODO: Incorporate proper meta char
-                        this.column_titles = rows[this.file_reader.skip - 1].replace(/^#+/g, '')
-                            .split('\t');
+                        first_data_index = this.file_reader.skip;
+                    } else {
+                        first_data_index = rows.findIndex(text => !text.startsWith('#'));
                     }
-                    //
-                    // FIXME: Sample data/ start region is actually not the first data line- improve
-                    this.sample_data = rows[rows.length - 1]; // Give line parser a raw string
-                }, {
-                    nLines: 25,
-                    metaOnly: false,
-                });
+                    this.column_titles = rows[first_data_index - 1]
+                        .replace(/^#+/g, '')
+                        .split('\t');
+                    this.sample_data = rows.slice(first_data_index);
+                };
+                this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
             },
         },
     },
     computed: {
+        auto_config() {
+            const { column_titles, sample_data } = this;
+
+            if (!column_titles.length) {
+                // This can manifest as a race condition: rendering UI before data is loaded.
+                return null;
+            }
+            const rows = sample_data.map(line => line.split('\t'));
+            return guessGWAS(column_titles, rows);
+        },
         chr_col() {
             return this.file_reader.colSeq - 1;
         },
@@ -222,12 +220,16 @@ export default {
         },
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
+            // Variant spec can come from one of three places: guess format, choose marker,
+            //  or choose indiv columns
+            if (this.auto_detect_screen && this.auto_config) {
+                return Object.assign(this.auto_config);
+            }
+
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_tab === 0 && this.preset_type) {
-                return PARSER_PRESETS[this.preset_type];
-            } else if (this.variant_spec_tab === 2 && marker_col !== null) {
+            if (this.variant_spec_tab === 1 && marker_col !== null) {
                 return { marker_col };
-            } else if (this.variant_spec_tab === 1 && pos_col !== null && chr_col !== null) {
+            } else if (this.variant_spec_tab === 0 && pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
                 return {
                     chr_col,
@@ -259,7 +261,7 @@ export default {
         },
         preview() {
             try {
-                return this.parser(this.sample_data);
+                return this.parser(this.sample_data[0]);
             } catch (e) {
                 return { error: 'Could not parse column contents' };
             }

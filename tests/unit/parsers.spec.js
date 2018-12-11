@@ -81,6 +81,12 @@ describe('_findColumn can fuzzy match column names', () => {
         assert.equal(match, 2);
     });
 
+    it('chooses the first exact match when more than one is present', () => {
+        const headers = ['chr', 'pvalue', 'p.value', 'marker'];
+        const match = _findColumn(pval_names, headers);
+        assert.equal(match, 1);
+    });
+
     it('prefers exact matches over fuzzy matches', () => {
         const headers = ['chr1', 'pos1', 'pvalues', 'p.value', '1marker'];
         const match = _findColumn(pval_names, headers);
@@ -227,6 +233,19 @@ describe('guessGWAS format detection', () => {
         assert.deepEqual(
             actual,
             { marker_col: 2, pvalue_col: 11, is_log_p: false },
+        );
+    });
+
+    it('handles some unlabeled file formats', () => {
+        // TODO: Identify the program used and make test more explicit
+        // FIXME: This test underscores difficulty of reliable ref/alt detection- a1 comes
+        //  before a0, but it might be more valid to switch the order of these columns
+        const headers = ['chr', 'rs', 'ps', 'n_mis', 'n_obs', 'allele1', 'allele0', 'af', 'beta', 'se', 'p_score'];
+        const data = [['1', 'rs75333668', '762320', '0', '3610', 'T', 'C', '0.013', '-5.667138e-02', '1.027936e-01', '5.814536e-01']];
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 2, ref_col: 5, alt_col: 6, pvalue_col: 10, is_log_p: false },
         );
     });
 });

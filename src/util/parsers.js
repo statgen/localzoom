@@ -134,7 +134,7 @@ function getChromPosRefAlt(header_row, data_rows) {
     // Get from either a marker, or 4 separate columns
     const MARKER_FIELDS = ['snpid', 'marker', 'markerid'];
     const CHR_FIELDS = ['chrom', 'chr'];
-    const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end'];
+    const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end', 'ps'];
 
     // TODO: How to handle orienting ref vs effect?
     // Order matters: consider ambiguous field names for ref before alt
@@ -147,7 +147,8 @@ function getChromPosRefAlt(header_row, data_rows) {
         return { marker_col };
     }
 
-    // If single columns were incomplete, attempt to auto detect 4 separate columns
+    // If single columns were incomplete, attempt to auto detect 4 separate columns. All 4 must
+    //  be found for this function to report a match.
     const headers_marked = header_row.slice();
     const find = [
         ['chr_col', CHR_FIELDS],
@@ -158,7 +159,7 @@ function getChromPosRefAlt(header_row, data_rows) {
     const config = [];
     for (let i = 0; i < find.length; i++) {
         const [col_name, choices] = find[i];
-        const col = findColumn(choices, header_row);
+        const col = findColumn(choices, headers_marked);
         if (col === null) {
             return null;
         }
@@ -186,7 +187,6 @@ function getPvalColumn(header_row, data_rows) {
         try {
             ps = cleaned_vals.map(p => parsePval(p, is_log));
         } catch (e) {
-            console.log('-----e??', e);
             return false;
         }
         return ps.every(val => !Number.isNaN(val));
@@ -305,6 +305,5 @@ export {
     levenshtein as _levenshtein,
     findColumn as _findColumn,
     getPvalColumn as _getPvalColumn,
-    getChromPosRefAlt as _getChromPosRefAlt,
     missingToNull as _missingToNull,
 };
