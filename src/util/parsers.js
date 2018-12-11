@@ -2,14 +2,14 @@ import { REGEX_MARKER } from '@/util/constants';
 
 const PARSER_PRESETS = {
     // Counting starts at 0
-    epacts: { marker_col: 3, pvalue_col: 8, is_log_p: false }, // https://genome.sph.umich.edu/wiki/EPACTS#Output_Text_of_All_Test_Statistics
-    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false }, // https://www.cog-genomics.org/plink2/formats
+    epacts: { marker_col: 3, pvalue_col: 8, is_log_p: false },
+    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false },
     // TODO: Documentation source for rvtests?
     rvtests: { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 15, is_log_p: false },
     // FIXME: Canadian Sarah suggests that SAIGE columns depend on which options were chosen
-    saige: { marker_col: 2, pvalue_col: 11, is_log_p: false }, // https://github.com/weizhouUMICH/SAIGE/wiki/SAIGE-Hands-On-Practical
+    saige: { marker_col: 2, pvalue_col: 11, is_log_p: false },
     // FIXME: What is correct pvalue col- 11 or 12?
-    'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false }, // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
+    'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false },
 };
 
 
@@ -81,6 +81,130 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
 }
 
 /**
+ * Convert all missing values to a standardized input form
+ * Useful for columns like pvalue, where a missing value explicitly allowed
+ */
+function missingToNull(values, nulls = ['', '.', 'NA', 'N/A', 'n/a', 'nan', '-nan', 'NaN', '-NaN', 'null', 'NULL'], placeholder = null) {
+    // TODO Make this operate on a single value; cache for efficiency?
+    const nullset = new Set(nulls);
+    return values.map(v => (nullset.has(v) ? placeholder : v));
+}
+
+/**
+ * Parse a single marker, cleaning up values as necessary
+ * @param {String} value
+ * @param {boolean} test If called in testing mode, do not throw an exception
+ * @returns {[string, number, string|null, string|null] | null} chr, pos, ref, alt (if match found)
+ */
+function parseMarker(value, test = false) {
+    const match = value.match(REGEX_MARKER);
+    if (match) {
+        return match.slice(1);
+    }
+    if (!test) {
+        throw new Error('Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt');
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Parse (and validate) a single pvalue according to preset rules
+ * @param value
+ * @param {boolean} is_log_p
+ * @returns {number||null} The -log10 pvalue
+ */
+function parsePval(value, is_log_p = false) {
+    if (value === null) {
+        return value;
+    }
+    const val = +value;
+    if (is_log_p) { // Take as is
+        return val;
+    }
+    // Regular pvalue: validate and convert
+    if (val < 0 || val > 1) {
+        throw new Error('p value is not in the allowed range');
+    }
+    // 0-values are explicitly allowed and will convert to infinity by design
+    return -Math.log10(val);
+}
+
+function getChromPosRefAlt(header_row, data_rows) {
+    // Get from either a marker, or 4 separate columns
+    const MARKER_FIELDS = ['snpid', 'marker', 'markerid'];
+    const CHR_FIELDS = ['chrom', 'chr'];
+    const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end'];
+
+    // TODO: How to handle orienting ref vs effect?
+    // Order matters: consider ambiguous field names for ref before alt
+    const REF_FIELDS = ['A1', 'ref', 'reference', 'allele0', 'allele1'];
+    const ALT_FIELDS = ['A2', 'alt', 'alternate', 'allele1', 'allele2'];
+
+    const first_row = data_rows[0];
+    const marker_col = findColumn(MARKER_FIELDS, header_row);
+    if (marker_col !== null && parseMarker(first_row[marker_col], true)) {
+        return { marker_col };
+    }
+
+    // If single columns were incomplete, attempt to auto detect 4 separate columns
+    const headers_marked = header_row.slice();
+    const find = [
+        ['chr_col', CHR_FIELDS],
+        ['pos_col', POS_FIELDS],
+        ['ref_col', REF_FIELDS],
+        ['alt_col', ALT_FIELDS],
+    ];
+    const config = [];
+    for (let i = 0; i < find.length; i++) {
+        const [col_name, choices] = find[i];
+        const col = findColumn(choices, header_row);
+        if (col === null) {
+            return null;
+        }
+        config[col_name] = col;
+        // Once a column has been assigned, remove it from consideration
+        headers_marked[col] = null;
+    }
+    return config;
+}
+
+/**
+ * Return parser configuration for pvalues
+ * @param header_row
+ * @param data_rows
+ * @returns {{}}
+ */
+function getPvalColumn(header_row, data_rows) {
+    // TODO: Allow overrides
+    const LOGPVALUE_FIELDS = ['log_pvalue', 'log_pval', 'logpvalue'];
+    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score'];
+
+    let ps;
+    const validateP = (col, data, is_log) => { // Validate pvalues
+        const cleaned_vals = missingToNull(data.map(row => row[col]));
+        try {
+            ps = cleaned_vals.map(p => parsePval(p, is_log));
+        } catch (e) {
+            console.log('-----e??', e);
+            return false;
+        }
+        return ps.every(val => !Number.isNaN(val));
+    };
+
+    const log_p_col = findColumn(LOGPVALUE_FIELDS, header_row);
+    const p_col = findColumn(PVALUE_FIELDS, header_row);
+
+    if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
+        return { pvalue_col: log_p_col, is_log_p: true };
+    } else if (p_col && validateP(p_col, data_rows, false)) {
+        return { pvalue_col: p_col, is_log_p: false };
+    }
+    // Could not auto-determine an appropriate pvalue column
+    return null;
+}
+
+/**
  *
  * @param {String[]} header_row
  * @param {String[][]} data_rows
@@ -93,23 +217,20 @@ function guessGWAS(header_row, data_rows) {
     // 4. Return a parser config object if all tests pass, OR null.
 
     // Normalize case and remove leading comment marks from line for easier comparison
-    let headers = header_row.map(item => item.toLowerCase());
+    const headers = header_row.map(item => (item ? item.toLowerCase() : item));
     headers[0].replace('/^#+/', '');
     // Lists of fields are drawn from Encore (AssocResultReader) and Pheweb (conf_utils.py)
-    const MARKER_FIELDS = ['snpid', 'marker', 'markerid'];
-    const CHR_FIELDS = ['chrom', 'chr'];
-    const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end'];
+    const pval_config = getPvalColumn(headers, data_rows);
+    if (!pval_config) {
+        return null;
+    }
+    headers[pval_config.pvalue_col] = null; // Remove this column from consideration
+    const position_config = getChromPosRefAlt(headers, data_rows);
 
-    // TODO: How to handle orienting ref vs effect?
-    // Order matters: consider ambiguous field names for ref before alt
-    const REF_FIELDS = ['A1'];
-    const ALT_FIELDS = ['A2'];
-
-    const LOGPVALUE_FIELDS = ['log_pvalue', 'log_pval'];
-    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score'];
-
-    // 1. Get marker
-
+    if (pval_config && position_config) {
+        return Object.assign({}, pval_config, position_config);
+    }
+    return null;
 }
 
 /**
@@ -176,8 +297,14 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
 
 export {
     // Public configuration options
-    makeParser, PARSER_PRESETS,
+    makeParser, guessGWAS,
+
+    // TODO: Deprecate this one
+    PARSER_PRESETS,
     // Private members exposed for testing
     levenshtein as _levenshtein,
     findColumn as _findColumn,
+    getPvalColumn as _getPvalColumn,
+    getChromPosRefAlt as _getChromPosRefAlt,
+    missingToNull as _missingToNull,
 };

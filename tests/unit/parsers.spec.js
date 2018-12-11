@@ -1,7 +1,14 @@
 import { assert } from 'chai';
-import { _findColumn, _levenshtein, makeParser, PARSER_PRESETS } from '../../src/util/parsers';
+import {
+    _findColumn, _getPvalColumn,
+    _levenshtein,
+    _missingToNull, guessGWAS,
+    makeParser,
+    PARSER_PRESETS,
+} from '../../src/util/parsers';
 
 
+// Line lines of text for data parsing
 const SAIGE_SAMPLE = 'chr1\t76792\tchr1:76792:A:C\tA\tC\t57\t0.00168639048933983\t16900\t0.573681678183941\t0.663806747906141\t1.30193005902619\t0.387461577915637\t0.387461577915637\t1\t2.2694293866027\t2.41152256615949';
 const RVTESTS_SAMPLE = '1\t761893\tG\tT\t19292\t2.59624e-05:0.000655308:0\t1:1:0\t0.998289:0.996068:0.998381\t1:1:1\t19258:759:18499\t1:1:0\t0:0:0\t1.33113\t0.268484\t18.4664\t7.12493e-07';
 
@@ -111,40 +118,115 @@ describe('_findColumn can fuzzy match column names', () => {
     });
 });
 
+describe('missingToNull', () => {
+    it('converts a range of missing values to null values', () => {
+        // Every other one should get converted
+        const values = [0, null, 5, 'n/a', 'bob', '-NaN'];
+        const result = _missingToNull(values);
+        assert.deepStrictEqual(result, [0, null, 5, null, 'bob', null]);
+    });
+});
 
-describe.skip('guessGWAS format detection', () => {
-    it('handles EPACTS', () => {
-        //
+describe('getPvalColumn', () => {
+    it('finds logp before p', () => {
+        const headers = ['logpvalue', 'pval'];
+        const data_rows = [[0.5, 0.5]];
+
+        const actual = _getPvalColumn(headers, data_rows);
+        assert.deepEqual(actual, { pvalue_col: 0, is_log_p: true });
     });
-    it('handles METAL', () => {
-        const headers = ['#CHROM', 'POS', 'REF', 'ALT', 'N', 'POOLED_ALT_AF', 'DIRECTION_BY_STUDY', 'EFFECT_SIZE', 'EFFECT_SIZE_SD', 'H2', 'PVALUE'];
-        const data = ['1', '10177', 'A', 'AC', '491984', '0.00511094', '?-????????????????-????+???????????????????????????????????????????????????????????????????-????????????????????????????????????????????????????????????????????????????????', '-0.0257947', '0.028959', '1.61266e-06', '0.373073'];
+
+    it('finds logp before p', () => {
+        const headers = ['logpvalue', 'pval'];
+        const data_rows = [[0.5, 0.5]];
+
+        const actual = _getPvalColumn(headers, data_rows);
+        assert.deepEqual(actual, { pvalue_col: 0, is_log_p: true });
     });
-    it.skip('handles PLINK', () => {
+
+    it('checks that pvalues are in a realistic range 0..1', () => {
+        const headers = ['pval'];
+        const data_rows = [[100]];
+
+        const actual = _getPvalColumn(headers, data_rows);
+        assert.deepEqual(actual, null);
+    });
+});
+
+describe('guessGWAS format detection', () => {
+    it.skip('handles BOLT-LMM', () => {
+        // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
         // TODO: Get real sample of data
     });
+
+    it('handles EPACTS', () => {
+        // https://genome.sph.umich.edu/wiki/EPACTS#Output_Text_of_All_Test_Statistics
+        const headers = ['#CHROM', 'BEGIN', 'END', 'MARKER_ID', 'NS', 'AC', 'CALLRATE', 'MAF', 'PVALUE', 'SCORE', 'N.CASE', 'N.CTRL', 'AF.CASE', 'AF.CTRL'];
+        const data = [['20', '1610894', '1610894', '20:1610894_G/A_Synonymous:SIRPG', '266', '138.64', '1', '0.26061', '6.9939e-05', '3.9765', '145', '121', '0.65177', '0.36476']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(actual, { marker_col: 3, pvalue_col: 8, is_log_p: false });
+    });
+
+    it('handles METAL', () => {
+        const headers = ['#CHROM', 'POS', 'REF', 'ALT', 'N', 'POOLED_ALT_AF', 'DIRECTION_BY_STUDY', 'EFFECT_SIZE', 'EFFECT_SIZE_SD', 'H2', 'PVALUE'];
+        const data = [['1', '10177', 'A', 'AC', '491984', '0.00511094', '?-????????????????-????+???????????????????????????????????????????????????????????????????-????????????????????????????????????????????????????????????????????????????????', '-0.0257947', '0.028959', '1.61266e-06', '0.373073']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 10, is_log_p: false },
+        );
+    });
+
+    it.skip('handles PLINK', () => {
+        // https://www.cog-genomics.org/plink2/formats
+        // TODO: Get sample of data
+    });
+
     it('handles RAREMETAL', () => {
-        //
+        const headers = ['#CHROM', 'POS', 'REF', 'ALT', 'N', 'POOLED_ALT_AF', 'DIRECTION_BY_STUDY', 'EFFECT_SIZE', 'EFFECT_SIZE_SD', 'H2', 'PVALUE'];
+        const data = [['1', '10177', 'A', 'AC', '491984', '0.00511094', '?-????????????????-????+???????????????????????????????????????????????????????????????????-????????????????????????????????????????????????????????????????????????????????', '-0.0257947', '0.028959', '1.61266e-06', '0.373073']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 10, is_log_p: false },
+        );
     });
+
     it('handles RAREMETALWORKER', () => {
-        //
+        const headers = ['#CHROM', 'POS', 'REF', 'ALT', 'N_INFORMATIVE', 'FOUNDER_AF', 'ALL_AF', 'INFORMATIVE_ALT_AC', 'CALL_RATE', 'HWE_PVALUE', 'N_REF', 'N_HET', 'N_ALT', 'U_STAT', 'SQRT_V_STAT', 'ALT_EFFSIZE', 'PVALUE'];
+        const data = [['9', '400066155', 'T', 'C', '432', '0', '0', '0', '1', '1', '432', '0', '0', 'NA', 'NA', 'NA', 'NA']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 16, is_log_p: false },
+        );
     });
+
     it('handles RVTESTS', () => {
         // Courtesy of xyyin and gzajac
-        const headers = [
-            'CHROM', 'POS', 'REF', 'ALT', 'N_INFORMATIVE', 'AF', 'INFORMATIVE_ALT_AC',
-            'CALL_RATE', 'HWE_PVALUE', 'N_REF', 'N_HET', 'N_ALT', 'U_STAT', 'SQRT_V_STAT',
-            'ALT_EFFSIZE', 'PVALUE',
-        ];
+        const headers = ['CHROM', 'POS', 'REF', 'ALT', 'N_INFORMATIVE', 'AF', 'INFORMATIVE_ALT_AC', 'CALL_RATE', 'HWE_PVALUE', 'N_REF', 'N_HET', 'N_ALT', 'U_STAT', 'SQRT_V_STAT', 'ALT_EFFSIZE', 'PVALUE'];
+        const data = [['1', '761893', 'G', 'T', '19292', '2.59624e-05:0.000655308:0', '1:1:0', '0.998289:0.996068:0.998381', '1:1:1', '19258:759:18499', '1:1:0', '0:0:0', '1.33113', '0.268484', '18.4664', '7.12493e-07']];
 
-        const data = [
-            '1', '761893', 'G', 'T', '19292', '2.59624e-05:0.000655308:0', '1:1:0',
-            '0.998289:0.996068:0.998381', '1:1:1', '19258:759:18499', '1:1:0', '0:0:0', '1.33113',
-            '0.268484', '18.4664', '7.12493e-07',
-        ];
-        // TODO: Implement
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 15, is_log_p: false },
+        );
     });
+
     it('handles SAIGE', () => {
-        //
+        // https://github.com/weizhouUMICH/SAIGE/wiki/SAIGE-Hands-On-Practical
+        const headers = ['CHR', 'POS', 'SNPID', 'Allele1', 'Allele2', 'AC_Allele2', 'AF_Allele2', 'N', 'BETA', 'SE', 'Tstat', 'p.value', 'p.value.NA', 'Is.SPA.converge', 'varT', 'varTstar'];
+        const data = [['chr1', '76792', 'chr1:76792:A:C', 'A', 'C', '57', '0.00168639048933983', '16900', '0.573681678183941', '0.663806747906141', '1.30193005902619', '0.387461577915637', '0.387461577915637', '1', '2.2694293866027', '2.41152256615949']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { marker_col: 2, pvalue_col: 11, is_log_p: false },
+        );
     });
 });
