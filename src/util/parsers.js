@@ -1,17 +1,5 @@
 import { REGEX_MARKER } from '@/util/constants';
 
-const PARSER_PRESETS = {
-    // Counting starts at 0
-    epacts: { marker_col: 3, pvalue_col: 8, is_log_p: false },
-    plink: { marker_col: 1, pvalue_col: 8, is_log_p: false },
-    // TODO: Documentation source for rvtests?
-    rvtests: { chr_col: 0, pos_col: 1, ref_col: 2, alt_col: 3, pvalue_col: 15, is_log_p: false },
-    // FIXME: Canadian Sarah suggests that SAIGE columns depend on which options were chosen
-    saige: { marker_col: 2, pvalue_col: 11, is_log_p: false },
-    // FIXME: What is correct pvalue col- 11 or 12?
-    'bolt-lmm': { chr_col: 1, pos_col: 2, ref_col: 5, alt_col: 4, pvalue_col: 10, is_log_p: false },
-};
-
 
 /**
  * Compute the levenshtein distance between two strings. Useful for finding the single best column
@@ -298,9 +286,6 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
 export {
     // Public configuration options
     makeParser, guessGWAS,
-
-    // TODO: Deprecate this one
-    PARSER_PRESETS,
     // Private members exposed for testing
     levenshtein as _levenshtein,
     findColumn as _findColumn,

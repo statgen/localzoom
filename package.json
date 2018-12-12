@@ -2,11 +2,11 @@
   "name": "locuszoom-tabix",
   "version": "0.1.0",
   "private": true,
-  "main": "lib/LzWidgets.umd.min.js",
+  "main": "lib/LzTabix.umd.min.js",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build:library": "vue-cli-service build --target lib src/library.js --name LzWidgets --dest lib",
+    "build:library": "vue-cli-service build --target lib src/library.js --name LzTabix --dest lib",
     "watch": "vue-cli-service build --watch --mode production",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
