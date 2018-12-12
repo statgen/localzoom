@@ -120,7 +120,7 @@ function parsePval(value, is_log_p = false) {
 
 function getChromPosRefAlt(header_row, data_rows) {
     // Get from either a marker, or 4 separate columns
-    const MARKER_FIELDS = ['snpid', 'marker', 'markerid'];
+    const MARKER_FIELDS = ['snpid', 'marker', 'markerid', 'snpmarker'];
     const CHR_FIELDS = ['chrom', 'chr'];
     const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end', 'ps'];
 

@@ -252,4 +252,15 @@ describe('guessGWAS format detection', () => {
             { chr_col: 0, pos_col: 2, ref_col: 5, alt_col: 6, pvalue_col: 10, is_log_p: false },
         );
     });
+
+    it('handles output of AlisaM pipeline', () => {
+        const headers = ['MarkerName', 'chr', 'pos', 'ref', 'alt', 'minor.allele', 'maf', 'mac', 'n', 'pvalue', 'SNPID', 'BETA', 'SE', 'ALTFreq', 'SNPMarker'];
+        const data = [['chr1-281876-AC-A', 'chr1', '281876', 'AC', 'A', 'alt', '0.231428578495979', '1053', '2275', '0.447865946615285', 'rs72502741', '-0.0872936159370696', '0.115014743551501', '0.231428578495979', 'chr1:281876_AC/A']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 1, pos_col: 2, ref_col: 3, alt_col: 4, pvalue_col: 9, is_log_p: false },
+        );
+    });
 });
