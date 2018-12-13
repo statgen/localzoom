@@ -4,21 +4,22 @@
       <div class="col-sm-6">
         <div v-if="studyCount < maxStudies">
           <tabix-file class="mr-1"
-                      @connected="connectReader" @fail="showMessage" />
+                      @ready="connectReader" @fail="showMessage" />
           <bs-dropdown text="Add from URL" variant="success">
             <div class="px-3">
-              <tabix-url @connected="connectReader" @fail="showMessage" />
+              <tabix-url @ready="connectReader" @fail="showMessage" />
             </div>
           </bs-dropdown>
           <adder-wizard v-if="showModal"
                         :file_reader="fileReader"
                         :file_name.sync="displayName"
-                        @config-ready="sendConfig"
+                        @ready="sendConfig"
                         @close="showModal = false" />
         </div>
       </div>
       <div class="col-sm-6">
         <region-picker v-if="studyCount"
+                       @ready="selectRange"
                        @fail="showMessage" class="float-right"
                        :build="build"
                        max_range="500000"
@@ -98,12 +99,15 @@ export default {
             // Reset state in the component
             this.fileReader = null;
             this.displayName = null;
-            this.message = '';
-            this.messageClass = '';
+            this.showMessage('', '');
         },
         showMessage(message, style = 'text-danger') {
             this.message = message;
             this.messageClass = style;
+        },
+        selectRange(config) {
+            this.showMessage('', '');
+            this.$root.$emit('select-range', config);
         },
         connectReader(reader, name) {
             this.fileReader = reader;

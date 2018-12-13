@@ -18,7 +18,7 @@ export default {
             // Suggested dataset label is last part of url path, stripped of file extensions
             const name = indexUrl.split('/').pop().replace(/\.gz|\.tbi/gi, '');
             urlReader(this.url, indexUrl).then((reader) => {
-                self.$emit('connected', reader, name);
+                self.$emit('ready', reader, name);
             }).catch((err) => {
                 self.$emit('fail', err);
             });

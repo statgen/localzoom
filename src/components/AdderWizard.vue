@@ -257,7 +257,7 @@ export default {
                 start: Math.max(0, init_position - 250000),
                 end: init_position + 250000,
             };
-            this.$emit('config-ready', Object.assign({}, this.parserOptions), init_state);
+            this.$emit('ready', Object.assign({}, this.parserOptions), init_state);
             this.$emit('close');
         },
     },

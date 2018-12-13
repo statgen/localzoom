@@ -26,7 +26,7 @@ export default {
             }
             const name = tabix_file.name.replace(/\.gz|\.tbi/gi, '');
             blobReader(gwas_file, tabix_file).then((reader) => {
-                self.$emit('connected', reader, name);
+                self.$emit('ready', reader, name);
             }).catch((err) => {
                 self.$emit('fail', err);
             }).finally(() => {

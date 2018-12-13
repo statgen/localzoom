@@ -79,10 +79,7 @@ export default {
                 this.$emit('fail', 'Could not parse specified range');
                 return;
             }
-            this.$root.$emit('select-range', { chr, start, end }); // LZ plot lives outside of vue
-            // Tell the parent to clear any previous validation error (necessary because range
-            //   event goes to the root instance, bypassing the parent)
-            this.$emit('fail', '', '');
+            this.$emit('ready', { chr, start, end });
         },
         doSearch() {
             // TODO: Generalize URL + parse for other apis in future
