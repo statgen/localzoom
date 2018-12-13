@@ -164,6 +164,14 @@ describe('getPvalColumn', () => {
 });
 
 describe('guessGWAS format detection', () => {
+    it('Returns null if columns could not be identified', () => {
+        const headers = ['rsid, pval'];
+        const data = [['rs1234', 0.5]];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(actual, null);
+    });
+
     it.skip('handles BOLT-LMM', () => {
         // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
         // TODO: Get real sample of data

@@ -118,7 +118,7 @@ function parsePval(value, is_log_p = false) {
     return -Math.log10(val);
 }
 
-function getChromPosRefAlt(header_row, data_rows) {
+function getChromPosRefAltColumns(header_row, data_rows) {
     // Get from either a marker, or 4 separate columns
     const MARKER_FIELDS = ['snpid', 'marker', 'markerid', 'snpmarker'];
     const CHR_FIELDS = ['chrom', 'chr'];
@@ -213,7 +213,7 @@ function guessGWAS(header_row, data_rows) {
         return null;
     }
     headers[pval_config.pvalue_col] = null; // Remove this column from consideration
-    const position_config = getChromPosRefAlt(headers, data_rows);
+    const position_config = getChromPosRefAltColumns(headers, data_rows);
 
     if (pval_config && position_config) {
         return Object.assign({}, pval_config, position_config);
