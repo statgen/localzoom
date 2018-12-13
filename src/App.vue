@@ -1,19 +1,21 @@
 <template>
   <div>
     <div class="row">
-      <div class="col-sm-6" v-if="studyCount < maxStudies">
-        <tabix-file class="mr-1"
-                    @connected="connectReader" @fail="showMessage" />
-        <bs-dropdown text="Add from URL" variant="success">
-          <div class="px-3">
-            <tabix-url @connected="connectReader" @fail="showMessage" />
-          </div>
-        </bs-dropdown>
-        <adder-wizard v-if="showModal"
-                      :file_reader="fileReader"
-                      :file_name.sync="displayName"
-                      @config-ready="sendConfig"
-                      @close="showModal = false" />
+      <div class="col-sm-6">
+        <div v-if="studyCount < maxStudies">
+          <tabix-file class="mr-1"
+                      @connected="connectReader" @fail="showMessage" />
+          <bs-dropdown text="Add from URL" variant="success">
+            <div class="px-3">
+              <tabix-url @connected="connectReader" @fail="showMessage" />
+            </div>
+          </bs-dropdown>
+          <adder-wizard v-if="showModal"
+                        :file_reader="fileReader"
+                        :file_name.sync="displayName"
+                        @config-ready="sendConfig"
+                        @close="showModal = false" />
+        </div>
       </div>
       <div class="col-sm-6">
         <region-picker v-if="studyCount"

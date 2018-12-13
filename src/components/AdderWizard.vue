@@ -21,16 +21,13 @@
               </div>
 
               <!-- First page of UI: try to guess appropriate parser settings -->
-              <div v-if="auto_detect_screen">
-                Automatic file format detection results:
-              </div>
               <!-- Second page of UI is only used if fields could not be detected -->
-              <bs-tabs v-if="!auto_detect_screen"  v-model="variant_spec_tab">
+              <bs-tabs v-model="variant_spec_tab">
                 <bs-tab title="Variant from columns" class="pt-3">
                   <div class="form-group row">
                     <label for="vs-chr" class="col-sm-2">Chromosome</label>
                     <div class="col-sm-4">
-                      <select id="vs-chr" v-model="chr_col" disabled class="form-control">
+                      <select id="vs-chr" v-model="chr_col" class="form-control">
                         <option v-for="(item, index) in column_titles" :value="index" :key="index">
                           {{ item }}
                         </option>
@@ -38,7 +35,7 @@
                     </div>
                     <label for="vs-pos" class="col-sm-2">Position</label>
                     <div class="col-sm-4">
-                      <select id="vs-pos" v-model="pos_col" disabled class="form-control">
+                      <select id="vs-pos" v-model="pos_col" class="form-control">
                         <option v-for="(item, index) in column_titles" :value="index" :key="index">
                           {{ item }}
                         </option>
@@ -78,7 +75,7 @@
                 </bs-tab>
               </bs-tabs>
 
-              <div v-if="!auto_detect_screen" class="form-group row">
+              <div class="form-group row">
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
                   <select id="vs-pval" v-model="pvalue_col" class="form-control">
@@ -109,9 +106,6 @@
                     Variant: {{ preview.variant }}<br>
                     -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
                   </div>
-                  <div v-else-if="auto_detect_screen">
-                    File format could not be automatically detected. Please select columns manually
-                  </div>
                   <div v-else>
                     Please select options to preview parsed data
                   </div>
@@ -119,12 +113,7 @@
               </div>
 
               <div class="row mt-3">
-                <button class="btn btn-secondary ml-auto mr-3" v-if="auto_detect_screen"
-                        @click="auto_detect_screen = false">
-                  Select columns manually
-                </button>
-                <button class="btn btn-success"
-                        :class="[auto_detect_screen ? '': 'ml-auto']"
+                <button class="btn btn-success ml-auto"
                         :disabled="!isValid" @click="sendOptions">
                   Accept options
                 </button>
@@ -143,6 +132,9 @@ import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 
 import { makeParser, guessGWAS } from '../util/parsers';
 
+const TAB_FROM_SEPARATE_COLUMNS = 0;
+const TAB_FROM_MARKER = 1;
+
 export default {
     name: 'adder-wizard',
     mounted() {
@@ -155,13 +147,13 @@ export default {
     props: ['file_reader', 'file_name'],
     data() {
         return {
-            auto_detect_screen: true,
+            auto_config: null,
 
             column_titles: [],
             sample_data: [],
 
             // Configuration options for variant data
-            variant_spec_tab: 0, // 0 = columns, 1 = marker
+            variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
             // Individual form field options
             preset_type: null,
             marker_col: null,
@@ -196,22 +188,22 @@ export default {
                         .replace(/^#+/g, '')
                         .split('\t');
                     this.sample_data = rows.slice(first_data_index);
+
+                    // When data is first loaded, generate a suggested auto-config
+                    const data_rows = this.sample_data.map(line => line.split('\t'));
+                    const guess = guessGWAS(this.column_titles, data_rows);
+                    if (guess) {
+                        Object.assign(this, guess);
+                        // If config is detected, set the UI to tab that best shows selected option
+                        this.variant_spec_tab = guess.marker_col ? TAB_FROM_MARKER :
+                            TAB_FROM_SEPARATE_COLUMNS;
+                    }
                 };
                 this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
             },
         },
     },
     computed: {
-        auto_config() {
-            const { column_titles, sample_data } = this;
-
-            if (!column_titles.length) {
-                // This can manifest as a race condition: rendering UI before data is loaded.
-                return null;
-            }
-            const rows = sample_data.map(line => line.split('\t'));
-            return guessGWAS(column_titles, rows);
-        },
         chr_col() {
             return this.file_reader.colSeq - 1;
         },
@@ -220,23 +212,13 @@ export default {
         },
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
-            // Variant spec can come from one of three places: guess format, choose marker,
-            //  or choose indiv columns
-            if (this.auto_detect_screen && this.auto_config) {
-                return Object.assign(this.auto_config);
-            }
-
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_tab === 1 && marker_col !== null) {
+            if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
                 return { marker_col };
-            } else if (this.variant_spec_tab === 0 && pos_col !== null && chr_col !== null) {
+            } else if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS &&
+                pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
-                return {
-                    chr_col,
-                    pos_col,
-                    ref_col,
-                    alt_col,
-                };
+                return { chr_col, pos_col, ref_col, alt_col };
             }
             return {};
         },
@@ -256,8 +238,7 @@ export default {
             if (this.isValid) {
                 return makeParser(this.parserOptions);
             }
-            return () => {
-            };
+            return () => {};
         },
         preview() {
             try {
