@@ -7,16 +7,21 @@
         integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 
   <link rel="stylesheet" href="dist/css/app.css">
+  <link rel="stylesheet" href="dist/css/chunk-vendors.css">
 
   <!-- Necessary includes for LocusZoom.js -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.css" type="text/css"/>
-  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.vendor.min.js" type="application/javascript"></script>
-  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.8.0/dist/locuszoom.app.min.js" type="application/javascript"></script>
+  <script src="external/locuszoom.vendor.min.js" type="application/javascript"></script>
+  <script src="external/locuszoom.app.min.js" type="application/javascript"></script>
+
+  <!-- Extensions for credible sets -->
+  <script type="application/javascript" src="https://unpkg.com/gwas-credible-sets@0.1.0/dist/gwas-credible-sets.min.js" integrity="sha384-lJL/xQT18Xu6GVovitlKgX4kL8hw6YfgLGVM5PWcFUMe+tfvznEwsJlauLzB1AnQ" crossorigin="anonymous"></script>
+  <script src="external/ext/lz-credible-sets.min.js" type="application/javascript"></script>
 
   <!-- FIXME: Vue build fails when `import`ing a UMD bundle; include file separately for now -->
   <script src="external/dalliance-tabix-reader.js" type="application/javascript"></script>
 
-  <title>LocusZoom.js ~ Plot your own Tabixed Data</title>
+  <title>LocalZoom ~ Plot your own Tabixed Data with LocusZoom.js</title>
 
   <style>
     body {
@@ -52,10 +57,7 @@
 <div class="container">
   <div class="row">
     <div class="col-md-12">
-      <h1 style="margin-top: 1em;"><strong>LocusZoom.js</strong></h1>
-
-      <h3 style="color: #777">Using LZ.js without an API</h3>
-
+      <h1 style="margin-top: 1em;"><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>
       <hr>
 
       <div class="card">
@@ -79,8 +81,10 @@
                 href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
               to check</a>)
             </li>
-            <li>Your file contains two key columns of information: a SNP marker in the format
-              <code>chr:pos_ref/alt</code>, and a p-value (or -log10 pvalue) for each row.
+            <li>Your file contains information requitred to draw a plot. Chromosome, position, ref,
+              and alt alleles can be specified as either individual columns, or a SNP marker (eg
+              <code>chr:pos_ref/alt</code>); there must also be a p-value (or -log10 pvalue) for
+              each SNP as a separate column.
               <em>Client-side plots cannot be generated from rsIDs.</em></li>
           </ol>
 
@@ -89,8 +93,17 @@
             interest. Therefore, it cannot generate summary views that would require processing the
             entire file (eg Manhattan plots).</p>
 
-          <p>LD and overlay information is based on <strong>build GRCh37</strong>. Exercise caution
-            when interpreting plots based on a GWAS with positions from a different build.</p>
+          <p>
+            LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
+            or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
+            plots based on a GWAS with positions from a different build.
+          </p>
+
+          <p>
+            Credible sets are <a href="https://github.com/statgen/gwas-credible-sets/">calculated</a>
+            based on the p-values for the displayed region. At the moment this tool does not support
+            uploading your own custom credible set annotations.
+          </p>
         </div>
       </div>
     </div>
@@ -99,15 +112,30 @@
   <hr>
 
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
+      <div id="choose-gwas"></div>
       <div id="lz-plot" class="lz-container-responsive">
         <div class="placeholder-plot" style="display:table;">
           <span class="text-center" style="display: table-cell; vertical-align:middle">Please add a GWAS track to continue</span>
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div id="choose-gwas"></div>
+  </div>
+
+
+  <div id="credible-set-ui"  class="d-none row">
+    <div class="col-md-12">
+      <h3>Credible set members</h3>
+      <p>
+        <label>Select a dataset:
+          <select id="credible-set-datasets">
+            <option value=""></option>
+          </select>
+        </label>
+      </p>
+
+      <button id="credible-set-download" class="btn btn-primary d-none">Download as CSV</button><br>
+      <div id="credible-set-table" class="d-none"></div>
     </div>
   </div>
 
@@ -123,6 +151,13 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<!-- For "table of results" feature -->
+<script type="application/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha384-Dziy8F2VlJQLMShA6FHWNul/veM9bCkRUaLqr199K94ntO5QUrLJBEbYegdSkkqX" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.1/css/tabulator.min.css" integrity="sha384-uUckT6+9734bUz7HdTJ+c+PuMby2lpJoY32bbSz5AxNsX0HafyKd17e654uUdw1x" crossorigin="anonymous">
+<script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.1/js/tabulator.min.js" integrity="sha384-RpPuANG8/tgp6BYEwkavx0+frMPygzCmFcKd8bLQ4ReTROYaqH1h/mMgVLeA4cCX" crossorigin="anonymous"></script>
+
+<!-- For app -->
 <script src="dist/js/chunk-vendors.js"></script>
 <script src="dist/js/app.js"></script>
 

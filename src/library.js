@@ -4,10 +4,15 @@
  * Note: These widgets use bootstrap for styling.
  */
 import AdderWizard from './components/AdderWizard.vue';
-import ParserOptions from './components/ParserOptions.vue';
 import RegionPicker from './components/RegionPicker.vue';
-import StudiesVlist from './components/StudiesVlist.vue';
 import TabixFile from './components/TabixFile.vue';
 import TabixUrl from './components/TabixUrl.vue';
+import lzhelpers from './util/lz-helpers';
+import gwas_parsers from './util/parsers';
 
-export { AdderWizard, ParserOptions, RegionPicker, StudiesVlist, TabixFile, TabixUrl };
+export {
+    // Components
+    AdderWizard, RegionPicker, TabixFile, TabixUrl,
+    // Utility modules with parsing options
+    lzhelpers, gwas_parsers,
+};

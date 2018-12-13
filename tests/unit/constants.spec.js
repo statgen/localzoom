@@ -5,7 +5,7 @@ import { REGEX_MARKER, REGEX_REGION } from '../../src/util/constants';
 describe('REGEX_MARKER', () => {
     it('handles various marker formats', () => {
         const has_chr_pos = ['chr1:23', 'chrX:23', '1:23', 'X:23'];
-        const has_chr_pos_refalt = ['chr1:23_A/C', '1:23_A/C', 'chr:1:23:AAAA:G', '1:23_A|C'];
+        const has_chr_pos_refalt = ['chr1:23_A/C', '1:23_A/C', 'chr:1:23:AAAA:G', '1:23_A|C', 'chr1:281876_AC/A'];
         const has_chr_pos_refalt_extra = [
             'chr1:23_A/C_gibberish', '1:23_A/C_gibberish', '1:23_A|C_gibberish',
         ];
