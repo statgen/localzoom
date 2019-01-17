@@ -1,5 +1,7 @@
-/* global LocusZoom */
-import { makeParser } from './parsers';
+/* global LocusZoom */ // FIXME: do as modules
+import { makeParser } from '@/util/parsers';
+
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from '@/util/constants';
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
@@ -40,13 +42,14 @@ function sourceName(display_name) {
 }
 
 /**
- * Create customized panel layout(s) that include functionality from all of the features selected.
+ * Create customized panel layout(s) for a single association study, with functionality from all
+ *   of the features selected.
  * @param {string} source_label
  * @param annotations
  * @param build
  * @return {*[]}
  */
-function createAssocLayout(
+function createStudyLayout(
     source_label,
     annotations = { credible_sets: false, gwas_catalog: true },
     build,
@@ -112,76 +115,90 @@ function createAssocLayout(
     return new_panels;
 }
 
-
 /**
- * Add data sources and generate layouts, but don't add them to the plot
- * @private
- * @param data_sources
- * @param source_options
- * @param plot_options
+ * Create all the datasources needed to plot a specific study, from Tabixed data
+ * @return Array Return an array of [name, source_config] entries
  */
-function preparePanels(
-    data_sources,
-    source_options,
-    plot_options,
-) {
-    const { label, reader, parser_config } = source_options;
-
-    parser_config.id_field = 'variant';
-    // Add a GWAS to the plot
+function createStudyTabixSources(label, tabix_reader, parser_options) {
     const assoc_name = `assoc_${sourceName(label)}`;
-    data_sources.add(assoc_name, ['TabixAssociationLZ', {
-        tabix_reader: reader,
-        params: parser_config,
-    }]);
-    // Always add a credible set source; it won't be called unless used in a layout
-    data_sources.add(`credset_${sourceName(label)}`, ['CredibleSetLZ',
-        { params: { fields: { log_pvalue: `${assoc_name}:log_pvalue` }, threshold: 0.95 } }]);
-
-    return createAssocLayout(label, plot_options.annotations, plot_options.build);
+    const source_params = { ...parser_options, id_field: 'variant' };
+    return [
+        [assoc_name, ['TabixAssociationLZ', { tabix_reader, params: source_params }]],
+        [ // Always add a credible set source; it won't be called unless used in a layout
+            `credset_${sourceName(label)}`, [
+                'CredibleSetLZ',
+                { params: { fields: { log_pvalue: `${assoc_name}:log_pvalue` }, threshold: 0.95 } },
+            ],
+        ],
+    ];
 }
 
-function createPlot(
-    selector,
-    source_options = { label: null, reader: null, parser_config: null },
-    plot_options = { annotations: {}, state: {} },
-) {
-    source_options.parser_config.id_field = 'variant';
-
-    const apiBase = 'https://portaldev.sph.umich.edu/api/v1/';
-    const devApiBase = 'https://portaldev.sph.umich.edu/api_internal_dev/v1/';
-    const data_sources = new LocusZoom.DataSources();
-
-    // Add data tracks, then make sure genes are shown on plot
-    const panel_layouts = preparePanels(data_sources, source_options, plot_options);
-    panel_layouts.push(LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }));
-    const layout = LocusZoom.Layouts.get('plot', 'standard_association', {
-        state: plot_options.state,
-        panels: panel_layouts,
-    });
-
-    data_sources
-        // Gene/Recomb/Catalog sources will auto-select based on genome build
-        .add('catalog', ['GwasCatalogLZ', { url: `${apiBase}annotation/gwascatalog/results/` }])
-        .add('ld', ['LDLZ2', { url: 'https://portaldev.sph.umich.edu/ld/', params: { source: '1000G', population: 'ALL' } }])
-        .add('gene', ['GeneLZ', { url: `${apiBase}annotation/genes/` }])
-        .add('recomb', ['RecombLZ', { url: `${devApiBase}annotation/recomb/results/` }])
-        .add('constraint', ['GeneConstraintLZ', { url: 'http://exac.broadinstitute.org/api/constraint' }]);
-
-    // Last, draw the plot in the div for this page
-    const plot = LocusZoom.populate(selector, data_sources, layout);
-    // ...and add "loading" indicator to each panel
-    plot.layout.panels.forEach(panel => plot.panels[panel.id].addBasicLoader());
-    return [plot, data_sources];
-}
-
-function addPanels(plot, data_sources, source_options, plot_options) {
-    const layout = preparePanels(data_sources, source_options, plot_options);
-    layout.forEach((panel_layout) => {
+function addPanels(plot, data_sources, panel_options, source_options) {
+    source_options.forEach(source => data_sources.add(...source));
+    panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
         const panel = plot.addPanel(panel_layout);
         panel.addBasicLoader();
     });
 }
 
-export { createPlot, sourceName, addPanels };
+/**
+ * Get configuration for the set of common, non-study-specific datasources used by the plot.
+ * Can optionally prepend study-specific sources for convenience when first creating the plot
+ */
+function getBasicSources(study_sources = []) {
+    return [
+        ...study_sources,
+        ['catalog', ['GwasCatalogLZ', { url: `${PORTAL_API_BASE_URL}annotation/gwascatalog/results/` }]],
+        ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, params: { source: '1000G', population: 'ALL' } }]],
+        ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
+        ['recomb', ['RecombLZ', { url: `${PORTAL_DEV_API_BASE_URL}annotation/recomb/results/` }]],
+        // TODO: This source is broken on https; I wish we had an alternative
+        ['constraint', ['GeneConstraintLZ', { url: 'http://exac.broadinstitute.org/api/constraint' }]],
+    ];
+}
+
+function getBasicLayout(initial_state = {}, study_panels = []) {
+    const panels = [
+        ...study_panels,
+        LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
+    ];
+
+    return LocusZoom.Layouts.get('plot', 'standard_association', {
+        state: initial_state,
+        panels,
+    });
+}
+
+/**
+ * Remove the `sourcename:` prefix from field names in the data returned by an LZ datasource
+ *
+ * This is a convenience method for writing external widgets (like tables) that subscribe to the
+ *   plot; typically we don't want to have to redefine the table layout every time someone selects
+ *   a different association study.
+ * As with all convenience methods, it has limits: don't use it if the same field name is requested
+ *   from two different sources!
+ * @param {Object} data An object representing the fields for one row of data
+ * @param {String} [prefer] Sometimes, two sources provide a field with same name. Specify which
+ *  source will take precedence in the event of a conflict.
+ */
+function deNamespace(data, prefer) {
+    return Object.keys(data).reduce((acc, key) => {
+        const new_key = key.replace(/.*?:/, '');
+        if (!Object.prototype.hasOwnProperty.call(acc, new_key) ||
+            (!prefer || key.startsWith(prefer))) {
+            acc[new_key] = data[key];
+        }
+        return acc;
+    }, {});
+}
+
+export {
+    // Basic definitions
+    getBasicSources, getBasicLayout,
+    createStudyTabixSources, createStudyLayout,
+    // Plot manipulation
+    sourceName, addPanels,
+    // General helpers
+    deNamespace,
+};

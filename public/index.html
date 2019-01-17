@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Necessary includes for LocusZoom.js -->
+  <!-- FIXME: These assets are being loaded statically for now, due to problems with the various module styles. Improve support for use of non-global-variable-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locuszoom@0.9.0/dist/locuszoom.css" type="text/css"/>
+  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.9.0/dist/locuszoom.vendor.min.js" type="application/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.9.0/dist/locuszoom.app.min.js" type="application/javascript"></script>
+
+  <!-- Extensions for credible sets -->
+  <script type="application/javascript" src="https://unpkg.com/gwas-credible-sets@0.1.0/dist/gwas-credible-sets.min.js" integrity="sha384-lJL/xQT18Xu6GVovitlKgX4kL8hw6YfgLGVM5PWcFUMe+tfvznEwsJlauLzB1AnQ" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/locuszoom@0.9.0/dist/ext/lz-credible-sets.min.js" type="application/javascript"></script>
+
+  <!-- FIXME: Vue build fails when `import`ing a UMD bundle; include file separately for now -->
+  <script src="external/dalliance-tabix-reader.js" type="application/javascript"></script>
+
+  <title>LocalZoom ~ Plot your own Tabixed Data with LocusZoom.js</title>
+
+  <style>
+    body {
+      background-color: #FAFAFA;
+      margin: 0px 20px;
+    }
+
+    img {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
+
+</head>
+
+<body>
+<div class="container">
+  <div id="app"></div>
+</div>
+
+<!-- built files will be auto injected -->
+
+</body>
+</html>

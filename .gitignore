@@ -2,7 +2,7 @@
 node_modules
 #/dist
 
-# local env files
+# Vue configuration files
 .env.local
 .env.*.local
 

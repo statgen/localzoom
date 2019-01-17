@@ -20,8 +20,6 @@
                 </div>
               </div>
 
-              <!-- First page of UI: try to guess appropriate parser settings -->
-              <!-- Second page of UI is only used if fields could not be detected -->
               <bs-tabs v-model="variant_spec_tab">
                 <bs-tab title="Variant from columns" class="pt-3">
                   <div class="form-group row">
@@ -157,6 +155,12 @@ export default {
             // Individual form field options
             preset_type: null,
             marker_col: null,
+
+            // These are set by tabix but can be overridden
+            chr_col: this.file_reader.colSeq - 1,
+            pos_col: this.file_reader.colStart - 1,
+
+            // User must define these
             ref_col: null,
             alt_col: null,
             pvalue_col: null,
@@ -204,12 +208,6 @@ export default {
         },
     },
     computed: {
-        chr_col() {
-            return this.file_reader.colSeq - 1;
-        },
-        pos_col() {
-            return this.file_reader.colStart - 1;
-        },
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
