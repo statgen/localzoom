@@ -4,14 +4,14 @@
         :data="search_results"
         v-model="region"
         :serializer="s => s.term"
-        min-matching-chars="3"
+        :min-matching-chars="3"
         placeholder="chr:start-end"/>
     <button @click="selectRegion" class="btn btn-primary">Go to region</button>
   </div>
 </template>
 
 <script>
-import { debounce } from 'underscore'; // slightly smaller build size than lodash
+import { debounce } from 'lodash';
 import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBootstrapTypeahead.vue';
 
 import { REGEX_MARKER, REGEX_REGION } from '../util/constants';
@@ -87,7 +87,9 @@ export default {
             fetch(url)
                 .then(resp => resp.json())
                 .then((data) => {
-                    this.search_results = data.data.filter(item => !item.error);
+                    // Limit the API response to a set of valid, and useful, search results
+                    //   (omnisearch does some things we don't need)
+                    this.search_results = data.data.filter(item => !item.error && (item.type !== 'region'));
                 });
         },
     },
