@@ -3,36 +3,19 @@ import bsCard from 'bootstrap-vue/es/components/card/card';
 import bsCollapse from 'bootstrap-vue/es/components/collapse/collapse';
 import bsNav from 'bootstrap-vue/es/components/nav/nav';
 import bsNavItem from 'bootstrap-vue/es/components/nav/nav-item';
-import bsTab from 'bootstrap-vue/es/components/tabs/tab';
-import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 import bsToggle from 'bootstrap-vue/es/directives/toggle/toggle';
 
 import {
-    getBasicSources, getBasicLayout, createStudyTabixSources, createStudyLayout,
-    addPanels, deNamespace,
+    getBasicSources, getBasicLayout,
+    createStudyTabixSources, createStudyLayout,
 } from '@/util/lz-helpers';
 
-import ExportData from '@/components/ExportData.vue';
+import PlotPanes from '@/components/PlotPanes.vue';
 import GwasToolbar from '@/components/GwasToolbar.vue';
-import LzPlot from '@/components/LzPlot.vue';
-import PhewasMaker from '@/components/PhewasMaker.vue';
+
 
 export default {
     name: 'LocalZoom',
-    beforeCreate() {
-        // Preserve a reference to component widgets so that their methods can be accessed directly
-        //  Some- esp LZ plots- behave very oddly when wrapped as a nested observable; we can
-        //  bypass these problems by assigning them as static properties instead of nested
-        //  observables.
-
-        this.PHEWAS_TAB = 1;
-
-        this.assoc_plot = null;
-        this.assoc_sources = null;
-
-        this.phewas_plot = null;
-        this.export_table = null;
-    },
     data() {
         return {
             // Used to trigger the initial drawing of the plot
@@ -40,35 +23,16 @@ export default {
             base_assoc_sources: null,
 
             // Current position/ shared state
-            pos_chr: null,
-            pos_start: null,
-            pos_end: null,
-
+            chr: null,
+            start: null,
+            end: null,
 
             // State to be tracked across all components
             build: null,
             study_names: [],
-            selected_tab: 0,
-
-            // For the "phewas plot" label:
-            tmp_phewas_study: null,
-            tmp_phewas_variant: null,
-            tmp_phewas_logpvalue: null,
-
-            // Required for export widget
-            tmp_export_callback: null,
+            // Control specific display options TODO improve
             has_credible_sets: false,
-            table_data: [],
         };
-    },
-    computed: {
-        has_studies() {
-            return !!this.study_names.length;
-        },
-        allow_phewas() {
-            // Our current phewas api only has build 37 datasets; disable option for build 38
-            return this.build === 'GRCh37';
-        },
     },
     methods: {
         receiveAssocOptions(source_options, plot_options) {
@@ -84,70 +48,35 @@ export default {
 
             this.updateRegion(state);
 
-            if (!this.assoc_plot) {
+            if (!this.study_names.length) {
+                // Creating the initial plot can be done by simply passing props directly
                 this.base_assoc_sources = getBasicSources(sources);
-
                 // Prevent weird resize behavior when switching tabs
                 const base_assoc_layout = getBasicLayout(state, panels);
                 base_assoc_layout.responsive_resize = false;
                 this.base_assoc_layout = base_assoc_layout;
             } else {
-                addPanels(this.assoc_plot, this.assoc_sources, panels, sources);
+                // Adding subsequent panels is a more advanced usage; manipulate the child widget
+                this.$refs.plotWidget.addStudy(panels, sources);
             }
             this.study_names.push(label);
             this.build = build;
         },
-        receivePlot(plot, data_sources) {
-            this.assoc_plot = plot;
-            this.assoc_sources = data_sources;
-        },
-        updateRegion(region) {
-            this.pos_chr = region.chr;
-            this.pos_start = region.start;
-            this.pos_end = region.end;
-        },
-        subscribeFields(fields) {
-            // This method controls one table widget that draws from plot data, and that widget
-            //  listens to only one set of fields at a time.
-            if (this.tmp_export_callback) {
-                this.assoc_plot.off('data_rendered', this.tmp_export_callback);
-                this.tmp_export_callback = null;
-            }
-            if (!fields.length || !this.assoc_plot) {
-                return;
-            }
-            this.tmp_export_callback = this.assoc_plot.subscribeToData(fields, (data) => {
-                this.table_data = data.map(item => deNamespace(item, 'assoc'));
-            });
-            // In this use case, the plot already has data; make sure it feeds data to the table
-            // immediately
-            this.assoc_plot.emit('data_rendered');
-        },
-        onVariantClick(lzEvent) {
-            // Respond to clicking on an association plot datapoint
-            const panel_name = lzEvent.sourceID;
-            if (panel_name.indexOf('association_') === -1) {
-                return;
-            }
 
-            // TODO: Clean this up a bit to better match original display name
-            const variant_data = deNamespace(lzEvent.data, 'assoc');
-            this.tmp_phewas_study = panel_name.replace(/^assoc_/, '');// FIXME: remove leading lzplot prefix
-            this.tmp_phewas_variant = variant_data.variant;
-            this.tmp_phewas_logpvalue = variant_data.log_pvalue;
+        updateRegion(region) {
+            // Receive new region config from toolbar
+            this.chr = region.chr;
+            this.start = region.start;
+            this.end = region.end;
         },
     },
     components: {
-        PhewasMaker,
-        ExportData,
         GwasToolbar,
-        LzPlot,
         bsCollapse,
         bsCard,
         bsNav,
         bsNavItem,
-        bsTab,
-        bsTabs,
+        PlotPanes,
     },
     directives: { 'b-toggle': bsToggle },
 };
@@ -215,51 +144,20 @@ export default {
       </div>
     </div>
 
-    <bs-card no-body>
-      <bs-tabs pills card vertical v-model="selected_tab"
-               style="min-height:750px;">
-        <bs-tab title="GWAS">
-          <lz-plot v-if="has_studies"
-                   :show_loading="true"
-                   :base_layout="base_assoc_layout"
-                   :base_sources="base_assoc_sources"
-                   :pos_chr="pos_chr"
-                   :pos_start="pos_start"
-                   :pos_end="pos_end"
-                   @region_changed="updateRegion"
-                   @element_clicked="onVariantClick"
-                   @connected="receivePlot" />
-            <div v-else class="placeholder-plot" style="display:table;">
-              <span class="text-center" style="display: table-cell; vertical-align:middle">
-                Please add a GWAS track to continue
-              </span>
-            </div>
-        </bs-tab>
-        <bs-tab :disabled="!has_studies || !allow_phewas">
-          <template slot="title">
-            <span title="Only available for build GRCh37 datasets">PheWAS</span>
-          </template>
-          <phewas-maker :variant_name="tmp_phewas_variant" :build="build"
-                        :your_study="tmp_phewas_study"
-                        :your_logpvalue="tmp_phewas_logpvalue"
-                        :allow_render="selected_tab === PHEWAS_TAB"/>
-        </bs-tab>
-        <bs-tab title="Export" :disabled="!has_studies">
-          <export-data :has_credible_sets="has_credible_sets"
-                       :study_names="study_names"
-                       :table_data="table_data"
-                       @requested-data="subscribeFields"/>
-        </bs-tab>
-
-      </bs-tabs>
-    </bs-card>
+    <div class="row">
+      <div class="col-md-12">
+        <plot-panes ref="plotWidget"
+                    :assoc_layout="base_assoc_layout" :assoc_sources="base_assoc_sources"
+                    :study_names="study_names" :has_credible_sets="has_credible_sets"
+                    :chr="chr" :start="start" :end="end" />
+      </div>
+    </div>
 
     <div class="row">
       <div class="col-md-12">
         <footer style="text-align: center;">
-          &copy; Copyright 2019 <a href="https://github.com/statgen">The University of Michigan Center
-          for Statistical
-          Genetics</a><br>
+          &copy; Copyright 2019 <a href="https://github.com/statgen">The University of Michigan
+          Center for Statistical Genetics</a><br>
         </footer>
       </div>
     </div>
@@ -267,9 +165,4 @@ export default {
 </template>
 
 <style scoped>
-    .placeholder-plot {
-      width: 100%;
-      height: 500px;
-      border-style: dashed;
-    }
 </style>

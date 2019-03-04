@@ -10,9 +10,9 @@ export default {
     props: {
         base_layout: { type: Object },
         base_sources: { type: Array },
-        pos_chr: { type: String },
-        pos_start: { type: Number },
-        pos_end: { type: Number },
+        chr: { type: String },
+        start: { type: Number },
+        end: { type: Number },
         show_loading: { type: Boolean, default: false },
     },
     beforeCreate() {
@@ -33,7 +33,7 @@ export default {
     },
     computed: {
         region() { // Hack: make sure that all 3 region properties get updated atomically
-            const { pos_chr: chr, pos_start: start, pos_end: end } = this;
+            const { chr, start, end } = this;
             return { chr, start, end };
         },
     },
