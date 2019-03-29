@@ -122,6 +122,7 @@ export default {
                        @ready="selectRange"
                        @fail="showMessage" class="float-right"
                        :build="build"
+                       :max_range="1000000"
                        search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/" />
         <bs-dropdown v-else text="Plot options" variant="info"
                      class="float-right">

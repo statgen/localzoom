@@ -140,6 +140,7 @@ export default {
         <gwas-toolbar
             @config-ready="receiveAssocOptions"
             @select-range="updateRegion"
+            :max_studies="4"
         />
       </div>
     </div>

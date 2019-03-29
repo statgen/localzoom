@@ -22,7 +22,7 @@ export default {
     props: {
         max_range: {
             type: Number,
-            default: 1000000,
+            default: 500000,
         },
         search_url: {
             type: String,
