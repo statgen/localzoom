@@ -22,7 +22,7 @@ export default {
     props: {
         max_range: {
             type: Number,
-            default: 500000,
+            default: 1000000,
         },
         search_url: {
             type: String,
@@ -67,7 +67,7 @@ export default {
                 start = +start;
                 end = +end;
                 if ((end - start) > this.max_range) {
-                    this.$emit('fail', `Maximum allowable range is ${this.max_range}`);
+                    this.$emit('fail', `Maximum allowable range is ${this.max_range.toLocaleString()}`);
                     return;
                 }
             } else if (single_match) {
