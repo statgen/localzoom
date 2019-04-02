@@ -148,6 +148,7 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <plot-panes ref="plotWidget"
+                    :dynamic_urls="true"
                     :assoc_layout="base_assoc_layout" :assoc_sources="base_assoc_sources"
                     :study_names="study_names" :has_credible_sets="has_credible_sets"
                     :build="build"

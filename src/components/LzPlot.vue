@@ -1,18 +1,29 @@
 <script>
-/** A generic Vue component to wrap basic LZ components */
+/**
+ * A generic Vue component to wrap a LocusZoom instance
+ *
+ * This can handle any type of plot that LocusZoom supports, including multiple panels and
+ *  custom datasources
+ */
 
 import LocusZoom from 'locuszoom';
+import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/dist/ext/lz-dynamic-urls.min';
 
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {
     name: 'LzPlot',
     props: {
+        // The initial layout and datasources used to create this LZ instance.
         base_layout: { type: Object },
         base_sources: { type: Array },
+        // Plot region
         chr: { type: String },
         start: { type: Number },
         end: { type: Number },
-        show_loading: { type: Boolean, default: false },
+
+        show_loading: { type: Boolean, default: false }, // Show loading indicators
+        // Change URL when plot updates. Only one plot on the page should use this.
+        dynamic_urls: { default: false },
     },
     beforeCreate() {
         uid += 1;
@@ -87,6 +98,14 @@ export default {
                     this.$emit('region_changed', { chr, start, end });
                 }
             });
+
+            // Changes in the plot can be reflected in the URL, and vice versa (eg browser back
+            //  button can go back to a previously viewed region).
+            if (this.dynamic_urls) {
+                const stateUrlMapping = { chr: 'chrom', start: 'start', end: 'end' };
+                plotUpdatesUrl(plot, stateUrlMapping);
+                plotWatchesUrl(plot, stateUrlMapping);
+            }
         },
     },
     watch: {

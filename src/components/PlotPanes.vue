@@ -26,6 +26,7 @@ export default {
         build: { type: String, default: 'GRCh37' },
 
         // Control optional features (this could be done more nicely)
+        dynamic_urls: { default: false }, // Change URL when plot updates
         has_credible_sets: { type: Boolean, default: true }, // export tool
     },
     data() {
@@ -126,6 +127,7 @@ export default {
                    :chr="chr"
                    :start="start"
                    :end="end"
+                   :dynamic_urls="dynamic_urls"
                    @element_clicked="onVariantClick"
                    @connected="receivePlot" />
             <div v-else class="placeholder-plot" style="display:table;">
