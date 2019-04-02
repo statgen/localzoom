@@ -1,5 +1,5 @@
 <script>
-/* global LocusZoom */
+import LocusZoom from 'locuszoom';
 import LzPlot from '@/components/LzPlot.vue';
 
 export default {

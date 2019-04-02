@@ -150,6 +150,7 @@ export default {
         <plot-panes ref="plotWidget"
                     :assoc_layout="base_assoc_layout" :assoc_sources="base_assoc_sources"
                     :study_names="study_names" :has_credible_sets="has_credible_sets"
+                    :build="build"
                     :chr="chr" :start="start" :end="end" />
       </div>
     </div>

@@ -26,7 +26,7 @@ export default {
         build: { type: String, default: 'GRCh37' },
 
         // Control optional features (this could be done more nicely)
-        has_credible_sets: { type: Boolean }, // export tool
+        has_credible_sets: { type: Boolean, default: true }, // export tool
     },
     data() {
         return {

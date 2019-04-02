@@ -1,4 +1,6 @@
-/* global LocusZoom */ // FIXME: do as modules
+import LocusZoom from 'locuszoom';
+import 'locuszoom/dist/ext/lz-credible-sets.min'; // Import for side effects (globally register helpers)
+
 import { makeParser } from '@/util/parsers';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from '@/util/constants';

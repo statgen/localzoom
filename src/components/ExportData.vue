@@ -1,10 +1,10 @@
 <script>
-/* global LocusZoom */
-
 /**
  * A LocalZoom-specific export widget. This wraps creation of a fields array + table config based
  * on the currently selected dataset. It emits a fields list event
  */
+
+import LocusZoom from 'locuszoom';
 
 import { sourceName } from '@/util/lz-helpers';
 import TabulatorTable from './TabulatorTable.vue';

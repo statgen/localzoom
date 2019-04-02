@@ -1,8 +1,7 @@
 <script>
 /** A generic Vue component to wrap basic LZ components */
 
-// FIXME: Long term dependencies should all move to modules
-/* global LocusZoom */
+import LocusZoom from 'locuszoom';
 
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {
