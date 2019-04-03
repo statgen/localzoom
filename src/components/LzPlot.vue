@@ -9,6 +9,8 @@
 import LocusZoom from 'locuszoom';
 import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/dist/ext/lz-dynamic-urls.min';
 
+import { stateUrlMapping } from '@/util/lz-helpers';
+
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {
     name: 'LzPlot',
@@ -102,7 +104,6 @@ export default {
             // Changes in the plot can be reflected in the URL, and vice versa (eg browser back
             //  button can go back to a previously viewed region).
             if (this.dynamic_urls) {
-                const stateUrlMapping = { chr: 'chrom', start: 'start', end: 'end' };
                 plotUpdatesUrl(plot, stateUrlMapping);
                 plotWatchesUrl(plot, stateUrlMapping);
             }

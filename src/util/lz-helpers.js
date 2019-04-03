@@ -5,6 +5,8 @@ import { makeParser } from '@/util/parsers';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from '@/util/constants';
 
+const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
+
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
         this.params = init.params; // delimiter, marker_col, pval_col, is_log_p
@@ -203,4 +205,6 @@ export {
     sourceName, addPanels,
     // General helpers
     deNamespace,
+    // Constants
+    stateUrlMapping,
 };
