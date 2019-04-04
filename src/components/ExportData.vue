@@ -6,7 +6,7 @@
 
 import LocusZoom from 'locuszoom';
 
-import { sourceName } from '@/util/lz-helpers';
+import { sourceName } from '../util/lz-helpers';
 import TabulatorTable from './TabulatorTable.vue';
 
 function formatSciNotation(cell, params) {

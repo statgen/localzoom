@@ -1,4 +1,4 @@
-import { REGEX_MARKER } from '@/util/constants';
+import { REGEX_MARKER } from './constants';
 
 
 /**

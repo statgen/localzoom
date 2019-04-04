@@ -8,10 +8,10 @@ import bsToggle from 'bootstrap-vue/es/directives/toggle/toggle';
 import {
     getBasicSources, getBasicLayout,
     createStudyTabixSources, createStudyLayout,
-} from '@/util/lz-helpers';
+} from './util/lz-helpers';
 
-import PlotPanes from '@/components/PlotPanes.vue';
-import GwasToolbar from '@/components/GwasToolbar.vue';
+import PlotPanes from './components/PlotPanes.vue';
+import GwasToolbar from './components/GwasToolbar.vue';
 
 
 export default {

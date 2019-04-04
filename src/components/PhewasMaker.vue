@@ -1,6 +1,6 @@
 <script>
 import LocusZoom from 'locuszoom';
-import LzPlot from '@/components/LzPlot.vue';
+import LzPlot from './LzPlot.vue';
 
 export default {
     name: 'PhewasMaker',

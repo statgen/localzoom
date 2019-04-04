@@ -9,7 +9,7 @@
 import LocusZoom from 'locuszoom';
 import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/dist/ext/lz-dynamic-urls.min';
 
-import { stateUrlMapping } from '@/util/lz-helpers';
+import { stateUrlMapping } from '../util/lz-helpers';
 
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {

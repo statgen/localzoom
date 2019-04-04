@@ -6,11 +6,11 @@ import bsCard from 'bootstrap-vue/es/components/card/card';
 import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 
-import ExportData from '@/components/ExportData.vue';
-import LzPlot from '@/components/LzPlot.vue';
-import PhewasMaker from '@/components/PhewasMaker.vue';
+import ExportData from './ExportData.vue';
+import LzPlot from './LzPlot.vue';
+import PhewasMaker from './PhewasMaker.vue';
 
-import { addPanels, deNamespace } from '@/util/lz-helpers';
+import { addPanels, deNamespace } from '../util/lz-helpers';
 
 export default {
     name: 'PlotPanes',
