@@ -144,7 +144,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
         ['ref_col', REF_FIELDS],
         ['alt_col', ALT_FIELDS],
     ];
-    const config = [];
+    const config = {};
     for (let i = 0; i < find.length; i++) {
         const [col_name, choices] = find[i];
         const col = findColumn(choices, headers_marked);

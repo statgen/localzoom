@@ -115,12 +115,6 @@ describe('_findColumn can fuzzy match column names', () => {
         assert.equal(match, 2);
     });
 
-    it('returns null if no match', () => {
-        const headers = ['chr', 'marker', 'position'];
-        const match = _findColumn(pval_names, headers);
-        assert.equal(match, null);
-    });
-
     it('skips headers with a null value', () => {
         const headers = ['chr', null, 'marker', 'pval'];
         const match = _findColumn(pval_names, headers);
@@ -146,14 +140,6 @@ describe('getPvalColumn', () => {
         assert.deepEqual(actual, { pvalue_col: 0, is_log_p: true });
     });
 
-    it('finds logp before p', () => {
-        const headers = ['logpvalue', 'pval'];
-        const data_rows = [[0.5, 0.5]];
-
-        const actual = _getPvalColumn(headers, data_rows);
-        assert.deepEqual(actual, { pvalue_col: 0, is_log_p: true });
-    });
-
     it('checks that pvalues are in a realistic range 0..1', () => {
         const headers = ['pval'];
         const data_rows = [[100]];
@@ -165,7 +151,7 @@ describe('getPvalColumn', () => {
 
 describe('guessGWAS format detection', () => {
     it('Returns null if columns could not be identified', () => {
-        const headers = ['rsid, pval'];
+        const headers = ['rsid', 'pval'];
         const data = [['rs1234', 0.5]];
 
         const actual = guessGWAS(headers, data);
