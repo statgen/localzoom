@@ -213,8 +213,9 @@ export default {
             const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
             if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
                 return { marker_col };
-            } else if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS &&
-                pos_col !== null && chr_col !== null) {
+            }
+            if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
+                && pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
                 return { chr_col, pos_col, ref_col, alt_col };
             }

@@ -8,23 +8,35 @@ describe('REGEX_MARKER', () => {
         const has_chr_pos_refalt = ['chr1:23_A/C', '1:23_A/C', 'chr:1:23:AAAA:G', '1:23_A|C', 'chr1:281876_AC/A'];
         const has_chr_pos_refalt_extra = [
             'chr1:23_A/C_gibberish', '1:23_A/C_gibberish', '1:23_A|C_gibberish',
+            '1:51873951_G/GT_1:51873951_G/GT',
         ];
 
         has_chr_pos.forEach((item) => {
             const match = item.match(REGEX_MARKER);
-            assert.ok(match, REGEX_MARKER, `Match found for ${item}`);
+            assert.ok(match, `Match found for ${item}`);
             assert.lengthOf(match.filter(e => !!e), 3, `Found chr:pos for ${item}`);
         });
         has_chr_pos_refalt.forEach((item) => {
             const match = item.match(REGEX_MARKER);
-            assert.ok(match, REGEX_MARKER, `Match found for ${item}`);
+            assert.ok(match, `Match found for ${item}`);
             assert.lengthOf(match.filter(e => !!e), 5, `Found chr:pos_ref/alt for ${item}`);
         });
         has_chr_pos_refalt_extra.forEach((item) => {
             const match = item.match(REGEX_MARKER);
-            assert.ok(match, REGEX_MARKER, `Match found for ${item}`);
+            assert.ok(match, `Match found for ${item}`);
             assert.lengthOf(match.filter(e => !!e), 6, `Found chr:pos_ref/alt_extra for ${item}`);
         });
+
+        // Pathological edge cases
+        let match = '1:51873951_G/GT_1:51873951_G/GT'.match(REGEX_MARKER);
+        assert.equal(match[1], '1', 'Found correct chrom');
+        assert.equal(match[2], '51873951', 'Found correct pos');
+        assert.equal(match[3], 'G', 'Found correct ref');
+        assert.equal(match[4], 'GT', 'Found correct alt');
+
+        match = 'sentence_goes_here_1:51873951_G/GT'.match(REGEX_MARKER);
+        assert.isNotOk(match, 'Marker must be at start of string');
+
     });
 });
 
