@@ -9,7 +9,7 @@ const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end'
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
-        this.params = init.params; // delimiter, marker_col, pval_col, is_log_p
+        this.params = init.params; // delimiter, marker_col, pval_col, is_log_pval
         this.parser = makeParser(this.params);
         this.reader = init.tabix_reader;
     },
@@ -189,8 +189,8 @@ function getBasicLayout(initial_state = {}, study_panels = []) {
 function deNamespace(data, prefer) {
     return Object.keys(data).reduce((acc, key) => {
         const new_key = key.replace(/.*?:/, '');
-        if (!Object.prototype.hasOwnProperty.call(acc, new_key) ||
-            (!prefer || key.startsWith(prefer))) {
+        if (!Object.prototype.hasOwnProperty.call(acc, new_key)
+            || (!prefer || key.startsWith(prefer))) {
             acc[new_key] = data[key];
         }
         return acc;

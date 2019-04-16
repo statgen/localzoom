@@ -99,15 +99,15 @@ function parseMarker(value, test = false) {
 /**
  * Parse (and validate) a single pvalue according to preset rules
  * @param value
- * @param {boolean} is_log_p
+ * @param {boolean} is_log_pval
  * @returns {number||null} The -log10 pvalue
  */
-function parsePval(value, is_log_p = false) {
+function parsePval(value, is_log_pval = false) {
     if (value === null) {
         return value;
     }
     const val = +value;
-    if (is_log_p) { // Take as is
+    if (is_log_pval) { // Take as is
         return val;
     }
     // Regular pvalue: validate and convert
@@ -184,9 +184,9 @@ function getPvalColumn(header_row, data_rows) {
     const p_col = findColumn(PVALUE_FIELDS, header_row);
 
     if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
-        return { pvalue_col: log_p_col, is_log_p: true };
+        return { pval_col: log_p_col, is_log_pval: true };
     } else if (p_col && validateP(p_col, data_rows, false)) {
-        return { pvalue_col: p_col, is_log_p: false };
+        return { pval_col: p_col, is_log_pval: false };
     }
     // Could not auto-determine an appropriate pvalue column
     return null;
@@ -212,7 +212,7 @@ function guessGWAS(header_row, data_rows) {
     if (!pval_config) {
         return null;
     }
-    headers[pval_config.pvalue_col] = null; // Remove this column from consideration
+    headers[pval_config.pval_col] = null; // Remove this column from consideration
     const position_config = getChromPosRefAltColumns(headers, data_rows);
 
     if (pval_config && position_config) {
@@ -229,13 +229,13 @@ function guessGWAS(header_row, data_rows) {
  * @param [pos_col]
  * @param [ref_col]
  * @param [alt_col]
- * @param pvalue_col
- * @param [is_log_p=false]
+ * @param pval_col
+ * @param [is_log_pval=false]
  * @param [delimiter='\t']
  * @return {function(*): {chromosome: *, position: number, ref_allele: *,
  *          log_pvalue: number, variant: string}}
  */
-function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col, is_log_p = false, delimiter = '\t' } = {}) {
+function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, is_log_pval = false, delimiter = '\t' } = {}) {
     // Column IDs should be 0-indexed (computer friendly)
     if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
@@ -267,8 +267,8 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pvalue_col
             throw new Error('Must specify how to parse file');
         }
 
-        const pvalue_raw = +fields[pvalue_col];
-        const log_pval = is_log_p ? pvalue_raw : -Math.log10(pvalue_raw);
+        const pvalue_raw = +fields[pval_col];
+        const log_pval = is_log_pval ? pvalue_raw : -Math.log10(pvalue_raw);
         ref = ref || null;
         alt = alt || null;
         const ref_alt = (ref && alt) ? `_${ref}/${alt}` : '';

@@ -13,7 +13,7 @@
           </div>
           <div class="modal-body">
             <div>
-              <div class="form-group row">
+              <div class="form-group row" v-if="file_name">
                 <label for="display_name" class="col-sm-3">Dataset Label</label>
                 <div class="col-sm-9">
                   <input id="display_name" class="form-control" type="text" v-model="file_name">
@@ -76,20 +76,20 @@
               <div class="form-group row">
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
-                  <select id="vs-pval" v-model="pvalue_col" class="form-control">
+                  <select id="vs-pval" v-model="pval_col" class="form-control">
                     <option v-for="(item, index) in column_titles" :value="index" :key="index">
                       {{ item }}
                     </option>
                   </select>
                 </div>
                 <div class="col-sm-2">
-                  <label for="is_log_p" class="form-check-label" style="white-space: nowrap">
+                  <label for="is_log_pval" class="form-check-label" style="white-space: nowrap">
                     Uses <em>-log<sub>10</sub>(p)</em>
                   </label>
                 </div>
                 <div class="col-sm-4">
                   <div class="form-check float-left">
-                    <input id="is_log_p" v-model="is_log_p"
+                    <input id="is_log_pval" v-model="is_log_pval"
                            type="checkbox" class="form-check-input">
                   </div>
                 </div>
@@ -163,8 +163,8 @@ export default {
             // User must define these
             ref_col: null,
             alt_col: null,
-            pvalue_col: null,
-            is_log_p: false,
+            pval_col: null,
+            is_log_pval: false,
         };
     },
     watch: {
@@ -199,8 +199,8 @@ export default {
                     if (guess) {
                         Object.assign(this, guess);
                         // If config is detected, set the UI to tab that best shows selected option
-                        this.variant_spec_tab = guess.marker_col ? TAB_FROM_MARKER :
-                            TAB_FROM_SEPARATE_COLUMNS;
+                        this.variant_spec_tab = guess.marker_col ? TAB_FROM_MARKER
+                            : TAB_FROM_SEPARATE_COLUMNS;
                     }
                 };
                 this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
@@ -221,15 +221,15 @@ export default {
             return {};
         },
         parserOptions() {
-            const { pvalue_col, is_log_p } = this;
+            const { pval_col, is_log_pval } = this;
             return Object.assign({}, {
-                pvalue_col,
-                is_log_p,
+                pval_col,
+                is_log_pval,
             }, this.variantSpec);
         },
         isValid() {
             const hasVariant = Object.keys(this.variantSpec).length !== 0;
-            const hasP = this.parserOptions.pvalue_col !== null;
+            const hasP = this.parserOptions.pval_col !== null;
             return hasVariant && hasP;
         },
         parser() {
