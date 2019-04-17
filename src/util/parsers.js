@@ -1,4 +1,4 @@
-import { REGEX_MARKER } from './constants';
+import { MISSING_VALUES, REGEX_MARKER } from './constants';
 
 
 /**
@@ -72,10 +72,9 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
  * Convert all missing values to a standardized input form
  * Useful for columns like pvalue, where a missing value explicitly allowed
  */
-function missingToNull(values, nulls = ['', '.', 'NA', 'N/A', 'n/a', 'nan', '-nan', 'NaN', '-NaN', 'null', 'NULL'], placeholder = null) {
+function missingToNull(values, nulls = MISSING_VALUES, placeholder = null) {
     // TODO Make this operate on a single value; cache for efficiency?
-    const nullset = new Set(nulls);
-    return values.map(v => (nullset.has(v) ? placeholder : v));
+    return values.map(v => (nulls.has(v) ? placeholder : v));
 }
 
 /**
@@ -185,7 +184,8 @@ function getPvalColumn(header_row, data_rows) {
 
     if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
         return { pval_col: log_p_col, is_log_pval: true };
-    } else if (p_col && validateP(p_col, data_rows, false)) {
+    }
+    if (p_col && validateP(p_col, data_rows, false)) {
         return { pval_col: p_col, is_log_pval: false };
     }
     // Could not auto-determine an appropriate pvalue column

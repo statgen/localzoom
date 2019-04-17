@@ -129,6 +129,7 @@ import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 
 import { makeParser, guessGWAS } from '../util/parsers';
+import { isHeader } from '../util/sniffers';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
@@ -184,9 +185,11 @@ export default {
                     // Read data (and last-ditch attempt to find headers, if necessary)
                     let first_data_index = -1;
                     if (this.file_reader.skip) {
+                        // A tabix reader defines headers as "comment lines and/or lines you skip"
                         first_data_index = this.file_reader.skip;
                     } else {
-                        first_data_index = rows.findIndex(text => !text.startsWith('#'));
+                        // Some files use headers that are not comment lines.
+                        first_data_index = rows.findIndex(text => !isHeader(text));
                     }
                     this.column_titles = rows[first_data_index - 1]
                         .replace(/^#+/g, '')
