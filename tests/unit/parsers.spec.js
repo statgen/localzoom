@@ -183,9 +183,17 @@ describe('guessGWAS format detection', () => {
         );
     });
 
-    it.skip('handles PLINK', () => {
-        // https://www.cog-genomics.org/plink2/formats
-        // TODO: Get sample of data
+    it('handles PLINK', () => {
+        // Format: https://www.cog-genomics.org/plink2/formats
+        // Sample: https://github.com/babelomics/babelomics/wiki/plink.assoc
+        // h/t Josh Weinstock
+        const headers = ['CHR', 'SNP', 'BP', 'A1', 'F_A', 'F_U', 'A2', 'CHISQ', 'P'];
+        const data = [['1', 'rs3094315', '742429', 'C', '0.1509', '0.1394', 'T', '0.0759', '0.782', '1.097']];
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { chr_col: 0, pos_col: 2, ref_col: 3, alt_col: 6, pval_col: 8, is_log_pval: false },
+        );
     });
 
     it('handles RAREMETAL', () => {
