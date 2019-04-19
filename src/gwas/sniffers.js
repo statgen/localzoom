@@ -1,5 +1,23 @@
-import { MISSING_VALUES, REGEX_MARKER } from './constants';
+/**
+ * Sniffers: auto detect file format and parsing options for GWAS files.
+ *  TODO: Reorganize code base and move more logic here
+ */
 
+import { MISSING_VALUES, _parsePvalToLog, _parseMarker, _missingToNull } from './parser_utils';
+
+function isNumeric(val) {
+    // Check whether an unparsed string is a numeric value"
+    if (MISSING_VALUES.has(val)) {
+        return true;
+    }
+    return !Number.isNaN(+val);
+}
+
+function isHeader(row, { comment_char = '#', delimiter = '\t' } = {}) {
+    // This assumes two basic rules: the line is not a comment, and gwas data is more likely
+    // to be numeric than headers
+    return row.startsWith(comment_char) || row.split(delimiter).every(item => !isNumeric(item));
+}
 
 /**
  * Compute the levenshtein distance between two strings. Useful for finding the single best column
@@ -68,54 +86,48 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
     return best_match;
 }
 
-/**
- * Convert all missing values to a standardized input form
- * Useful for columns like pvalue, where a missing value explicitly allowed
- */
-function missingToNull(values, nulls = MISSING_VALUES, placeholder = null) {
-    // TODO Make this operate on a single value; cache for efficiency?
-    return values.map(v => (nulls.has(v) ? placeholder : v));
-}
 
 /**
- * Parse a single marker, cleaning up values as necessary
- * @param {String} value
- * @param {boolean} test If called in testing mode, do not throw an exception
- * @returns {[string, number, string|null, string|null] | null} chr, pos, ref, alt (if match found)
+ * Return parser configuration for pvalues
+ * @param header_row
+ * @param data_rows
+ * @returns {{}}
  */
-function parseMarker(value, test = false) {
-    const match = value.match(REGEX_MARKER);
-    if (match) {
-        return match.slice(1);
+function getPvalColumn(header_row, data_rows) {
+    // TODO: Allow overrides
+    const LOGPVALUE_FIELDS = ['neg_log_pvalue', 'log_pvalue', 'log_pval', 'logpvalue'];
+    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score', 'p'];
+
+    let ps;
+    const validateP = (col, data, is_log) => { // Validate pvalues
+        const cleaned_vals = _missingToNull(data.map(row => row[col]));
+        try {
+            ps = cleaned_vals.map(p => _parsePvalToLog(p, is_log));
+        } catch (e) {
+            return false;
+        }
+        return ps.every(val => !Number.isNaN(val));
+    };
+
+    const log_p_col = findColumn(LOGPVALUE_FIELDS, header_row);
+    const p_col = findColumn(PVALUE_FIELDS, header_row);
+
+    if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
+        return {
+            pval_col: log_p_col,
+            is_log_pval: true,
+        };
     }
-    if (!test) {
-        throw new Error('Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt');
-    } else {
-        return null;
+    if (p_col && validateP(p_col, data_rows, false)) {
+        return {
+            pval_col: p_col,
+            is_log_pval: false,
+        };
     }
+    // Could not auto-determine an appropriate pvalue column
+    return null;
 }
 
-/**
- * Parse (and validate) a single pvalue according to preset rules
- * @param value
- * @param {boolean} is_log_pval
- * @returns {number||null} The -log10 pvalue
- */
-function parsePval(value, is_log_pval = false) {
-    if (value === null) {
-        return value;
-    }
-    const val = +value;
-    if (is_log_pval) { // Take as is
-        return val;
-    }
-    // Regular pvalue: validate and convert
-    if (val < 0 || val > 1) {
-        throw new Error('p value is not in the allowed range');
-    }
-    // 0-values are explicitly allowed and will convert to infinity by design
-    return -Math.log10(val);
-}
 
 function getChromPosRefAltColumns(header_row, data_rows) {
     // Get from either a marker, or 4 separate columns
@@ -130,7 +142,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
 
     const first_row = data_rows[0];
     const marker_col = findColumn(MARKER_FIELDS, header_row);
-    if (marker_col !== null && parseMarker(first_row[marker_col], true)) {
+    if (marker_col !== null && _parseMarker(first_row[marker_col], true)) {
         return { marker_col };
     }
 
@@ -155,41 +167,6 @@ function getChromPosRefAltColumns(header_row, data_rows) {
         headers_marked[col] = null;
     }
     return config;
-}
-
-/**
- * Return parser configuration for pvalues
- * @param header_row
- * @param data_rows
- * @returns {{}}
- */
-function getPvalColumn(header_row, data_rows) {
-    // TODO: Allow overrides
-    const LOGPVALUE_FIELDS = ['neg_log_pvalue', 'log_pvalue', 'log_pval', 'logpvalue'];
-    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score', 'p'];
-
-    let ps;
-    const validateP = (col, data, is_log) => { // Validate pvalues
-        const cleaned_vals = missingToNull(data.map(row => row[col]));
-        try {
-            ps = cleaned_vals.map(p => parsePval(p, is_log));
-        } catch (e) {
-            return false;
-        }
-        return ps.every(val => !Number.isNaN(val));
-    };
-
-    const log_p_col = findColumn(LOGPVALUE_FIELDS, header_row);
-    const p_col = findColumn(PVALUE_FIELDS, header_row);
-
-    if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
-        return { pval_col: log_p_col, is_log_pval: true };
-    }
-    if (p_col && validateP(p_col, data_rows, false)) {
-        return { pval_col: p_col, is_log_pval: false };
-    }
-    // Could not auto-determine an appropriate pvalue column
-    return null;
 }
 
 /**
@@ -221,74 +198,13 @@ function guessGWAS(header_row, data_rows) {
     return null;
 }
 
-/**
- * Specify how to parse a GWAS file, given certain column information.
- * Outputs an object with fields in portal API format.
- * @param [marker_col]
- * @param [chr_col]
- * @param [pos_col]
- * @param [ref_col]
- * @param [alt_col]
- * @param pval_col
- * @param [is_log_pval=false]
- * @param [delimiter='\t']
- * @return {function(*): {chromosome: *, position: number, ref_allele: *,
- *          log_pvalue: number, variant: string}}
- */
-function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, is_log_pval = false, delimiter = '\t' } = {}) {
-    // Column IDs should be 0-indexed (computer friendly)
-    if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
-        throw new Error('Must specify either marker OR chr + pos');
-    }
-    if (!(marker_col !== undefined || (chr_col !== undefined && pos_col !== undefined))) {
-        throw new Error('Must specify how to locate marker');
-    }
-
-    return (line) => {
-        const fields = line.split(delimiter);
-        let chr;
-        let pos;
-        let ref;
-        let alt;
-        if (marker_col !== undefined) {
-            const marker = fields[marker_col];
-            const match = marker.match(REGEX_MARKER);
-            if (!match) {
-                // eslint-disable-next-line no-throw-literal
-                throw new Error('Could not understand marker format. Must be of format chr:pos or chr:pos_ref/alt');
-            }
-            [chr, pos, ref, alt] = match.slice(1);
-        } else if (chr_col !== undefined && pos_col !== undefined) {
-            chr = fields[chr_col].replace(/^chr/g, '');
-            pos = fields[pos_col];
-            ref = fields[ref_col];
-            alt = fields[alt_col];
-        } else {
-            throw new Error('Must specify how to parse file');
-        }
-
-        const pvalue_raw = +fields[pval_col];
-        const log_pval = is_log_pval ? pvalue_raw : -Math.log10(pvalue_raw);
-        ref = ref || null;
-        alt = alt || null;
-        const ref_alt = (ref && alt) ? `_${ref}/${alt}` : '';
-        return {
-            chromosome: chr,
-            position: +pos,
-            ref_allele: ref,
-            alt_allele: alt,
-            log_pvalue: log_pval,
-            variant: `${chr}:${pos}${ref_alt}`,
-        };
-    };
-}
-
 export {
-    // Public configuration options
-    makeParser, guessGWAS,
-    // Private members exposed for testing
-    levenshtein as _levenshtein,
-    findColumn as _findColumn,
+    // Public members
+    guessGWAS,
+    isNumeric,
+    isHeader,
+    // Symbols exported for testing
     getPvalColumn as _getPvalColumn,
-    missingToNull as _missingToNull,
+    findColumn as _findColumn,
+    levenshtein as _levenshtein,
 };

@@ -128,8 +128,8 @@
 import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
 import bsTab from 'bootstrap-vue/es/components/tabs/tab';
 
-import { makeParser, guessGWAS } from '../util/parsers';
-import { isHeader } from '../util/sniffers';
+import { isHeader, guessGWAS } from '../gwas/sniffers';
+import { makeParser } from '../gwas/parsers';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;

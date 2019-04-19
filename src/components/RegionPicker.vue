@@ -14,7 +14,8 @@
 import { debounce } from 'lodash';
 import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBootstrapTypeahead.vue';
 
-import { REGEX_MARKER, REGEX_REGION } from '../util/constants';
+import { REGEX_REGION } from '../util/constants';
+import { REGEX_MARKER } from '../gwas/parser_utils';
 
 export default {
     name: 'region-picker',

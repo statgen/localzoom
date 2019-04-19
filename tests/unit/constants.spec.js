@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { REGEX_MARKER, REGEX_REGION } from '../../src/util/constants';
+import { REGEX_REGION } from '../../src/util/constants';
+import { REGEX_MARKER } from '@/gwas/parser_utils';
 
 
 describe('REGEX_MARKER', () => {
@@ -36,7 +37,6 @@ describe('REGEX_MARKER', () => {
 
         match = 'sentence_goes_here_1:51873951_G/GT'.match(REGEX_MARKER);
         assert.isNotOk(match, 'Marker must be at start of string');
-
     });
 });
 
