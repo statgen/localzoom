@@ -26,7 +26,8 @@
                     <label for="vs-chr" class="col-sm-2">Chromosome</label>
                     <div class="col-sm-4">
                       <select id="vs-chr" v-model="chr_col" class="form-control">
-                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        <option v-for="(item, index) in column_titles"
+                                :value="index + 1" :key="index">
                           {{ item }}
                         </option>
                       </select>
@@ -34,7 +35,8 @@
                     <label for="vs-pos" class="col-sm-2">Position</label>
                     <div class="col-sm-4">
                       <select id="vs-pos" v-model="pos_col" class="form-control">
-                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        <option v-for="(item, index) in column_titles"
+                                :value="index + 1" :key="index">
                           {{ item }}
                         </option>
                       </select>
@@ -44,7 +46,8 @@
                     <label for="vs-ref" class="col-sm-2">Ref allele</label>
                     <div class="col-sm-4">
                       <select id="vs-ref" v-model="ref_col" class="form-control">
-                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        <option v-for="(item, index) in column_titles"
+                                :value="index + 1" :key="index">
                           {{ item }}
                         </option>
                       </select>
@@ -52,7 +55,8 @@
                     <label for="vs-alt" class="col-sm-2">Alt allele</label>
                     <div class="col-sm-4">
                       <select id="vs-alt" v-model="alt_col" class="form-control">
-                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        <option v-for="(item, index) in column_titles"
+                                :value="index + 1" :key="index">
                           {{ item }}
                         </option>
                       </select>
@@ -64,7 +68,8 @@
                     <label for="vs-marker" class="col-sm-2">Marker</label>
                     <div class="col-sm-4">
                       <select id="vs-marker" v-model="marker_col" class="form-control">
-                        <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                        <option v-for="(item, index) in column_titles"
+                                :value="index + 1" :key="index">
                           {{ item }}
                         </option>
                       </select>
@@ -77,7 +82,7 @@
                 <label for="vs-pval" class="col-sm-2">P-value column</label>
                 <div class="col-sm-4">
                   <select id="vs-pval" v-model="pval_col" class="form-control">
-                    <option v-for="(item, index) in column_titles" :value="index" :key="index">
+                    <option v-for="(item, index) in column_titles" :value="index + 1" :key="index">
                       {{ item }}
                     </option>
                   </select>
@@ -158,8 +163,8 @@ export default {
             marker_col: null,
 
             // These are set by tabix but can be overridden
-            chr_col: this.file_reader.colSeq - 1,
-            pos_col: this.file_reader.colStart - 1,
+            chr_col: this.file_reader.colSeq,
+            pos_col: this.file_reader.colStart,
 
             // User must define these
             ref_col: null,
@@ -202,7 +207,7 @@ export default {
                     if (guess) {
                         Object.assign(this, guess);
                         // If config is detected, set the UI to tab that best shows selected option
-                        this.variant_spec_tab = guess.marker_col ? TAB_FROM_MARKER
+                        this.variant_spec_tab = (guess.marker_col !== null) ? TAB_FROM_MARKER
                             : TAB_FROM_SEPARATE_COLUMNS;
                     }
                 };

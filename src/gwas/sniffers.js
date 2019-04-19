@@ -89,6 +89,8 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
 
 /**
  * Return parser configuration for pvalues
+ *
+ * Returns 1-based column indices, for compatibility with parsers
  * @param header_row
  * @param data_rows
  * @returns {{}}
@@ -114,13 +116,13 @@ function getPvalColumn(header_row, data_rows) {
 
     if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
         return {
-            pval_col: log_p_col,
+            pval_col: log_p_col + 1,
             is_log_pval: true,
         };
     }
     if (p_col && validateP(p_col, data_rows, false)) {
         return {
-            pval_col: p_col,
+            pval_col: p_col + 1,
             is_log_pval: false,
         };
     }
@@ -130,6 +132,7 @@ function getPvalColumn(header_row, data_rows) {
 
 
 function getChromPosRefAltColumns(header_row, data_rows) {
+    // Returns 1-based column indices, for compatibility with parsers
     // Get from either a marker, or 4 separate columns
     const MARKER_FIELDS = ['snpid', 'marker', 'markerid', 'snpmarker'];
     const CHR_FIELDS = ['chrom', 'chr'];
@@ -141,8 +144,9 @@ function getChromPosRefAltColumns(header_row, data_rows) {
     const ALT_FIELDS = ['A2', 'alt', 'alternate', 'allele1', 'allele2'];
 
     const first_row = data_rows[0];
-    const marker_col = findColumn(MARKER_FIELDS, header_row);
+    let marker_col = findColumn(MARKER_FIELDS, header_row);
     if (marker_col !== null && _parseMarker(first_row[marker_col], true)) {
+        marker_col += 1;
         return { marker_col };
     }
 
@@ -162,7 +166,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
         if (col === null) {
             return null;
         }
-        config[col_name] = col;
+        config[col_name] = col + 1;
         // Once a column has been assigned, remove it from consideration
         headers_marked[col] = null;
     }
@@ -173,8 +177,9 @@ function getChromPosRefAltColumns(header_row, data_rows) {
  *
  * @param {String[]} header_row
  * @param {String[][]} data_rows
+ * @param {int} offset Used to convert between 0 and 1-based indexing.
  */
-function guessGWAS(header_row, data_rows) {
+function guessGWAS(header_row, data_rows, offset = 1) {
     // 1. Find a specific set of info: marker OR chr/pos/ref/alt ; pvalue OR log_pvalue
     // 2. Validate that we will be able to parse the required info: fields present and make sense
     // 3. Based on the field names selected, attempt to infer meaning: verify whether log is used,
@@ -185,11 +190,11 @@ function guessGWAS(header_row, data_rows) {
     const headers = header_row.map(item => (item ? item.toLowerCase() : item));
     headers[0].replace('/^#+/', '');
     // Lists of fields are drawn from Encore (AssocResultReader) and Pheweb (conf_utils.py)
-    const pval_config = getPvalColumn(headers, data_rows);
+    const pval_config = getPvalColumn(headers, data_rows, offset);
     if (!pval_config) {
         return null;
     }
-    headers[pval_config.pval_col] = null; // Remove this column from consideration
+    headers[pval_config.pval_col - 1] = null; // Remove this column from consideration
     const position_config = getChromPosRefAltColumns(headers, data_rows);
 
     if (pval_config && position_config) {

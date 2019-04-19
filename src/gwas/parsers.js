@@ -15,7 +15,7 @@ import { REGEX_MARKER } from './parser_utils';
  *          log_pvalue: number, variant: string}}
  */
 function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, is_log_pval = false, delimiter = '\t' } = {}) {
-    // Column IDs should be 0-indexed (computer friendly)
+    // Column IDs should be 1-indexed (human friendly)
     if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
     }
@@ -30,7 +30,7 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, 
         let ref;
         let alt;
         if (marker_col !== undefined) {
-            const marker = fields[marker_col];
+            const marker = fields[marker_col - 1];
             const match = marker.match(REGEX_MARKER);
             if (!match) {
                 // eslint-disable-next-line no-throw-literal
@@ -38,15 +38,15 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, 
             }
             [chr, pos, ref, alt] = match.slice(1);
         } else if (chr_col !== undefined && pos_col !== undefined) {
-            chr = fields[chr_col].replace(/^chr/g, '');
-            pos = fields[pos_col];
-            ref = fields[ref_col];
-            alt = fields[alt_col];
+            chr = fields[chr_col - 1].replace(/^chr/g, '');
+            pos = fields[pos_col - 1];
+            ref = fields[ref_col - 1];
+            alt = fields[alt_col - 1];
         } else {
             throw new Error('Must specify how to parse file');
         }
 
-        const pvalue_raw = +fields[pval_col];
+        const pvalue_raw = +fields[pval_col - 1];
         const log_pval = is_log_pval ? pvalue_raw : -Math.log10(pvalue_raw);
         ref = ref || null;
         alt = alt || null;
@@ -62,8 +62,7 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, 
     };
 }
 
-// Preconfigured parser with defaults for common options
-//  (TODO: These are zorp 1-based, not internal 0-based)
+// Preconfigured parser with defaults for a standard file format
 const standard_gwas_parser = makeParser({
     chr_col: 1,
     pos_col: 2,
