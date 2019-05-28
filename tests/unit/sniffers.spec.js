@@ -104,9 +104,16 @@ describe('guessGWAS format detection', () => {
         assert.deepEqual(actual, null);
     });
 
-    it.skip('handles BOLT-LMM', () => {
+    it('handles BOLT-LMM', () => {
         // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
-        // TODO: Get real sample of data
+        // This sample drawn from:
+        //  ftp://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/ZhuZ_30940143_GCST007609
+        // TODO: The official format spec may use other pvalue col names; add tests for that
+        const headers = ['SNP', 'CHR', 'BP', 'A1', 'A0', 'MAF', 'HWEP', 'INFO', 'BETA', 'SE', 'P'];
+        const data = [['10:48698435_A_G', '10', '48698435', 'A', 'G', '0.01353', '0.02719', '0.960443', '0.0959329', '0.0941266', '3.3E-01']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(actual, { marker_col: 1, pval_col: 11, is_log_pval: false });
     });
 
     it('handles EPACTS', () => {
