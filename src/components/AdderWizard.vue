@@ -1,5 +1,151 @@
-<!-- A modal dialog window -->
-<!-- See: https://vuejs.org/v2/examples/modal.html -->
+<script>
+/**
+ * A modal dialog window used to specify file parsing configuration options
+ * See: https://vuejs.org/v2/examples/modal.html -->
+ */
+import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
+import bsTab from 'bootstrap-vue/es/components/tabs/tab';
+
+import { isHeader, guessGWAS } from '../gwas/sniffers';
+import { makeParser } from '../gwas/parsers';
+
+const TAB_FROM_SEPARATE_COLUMNS = 0;
+const TAB_FROM_MARKER = 1;
+
+export default {
+    name: 'adder-wizard',
+    mounted() {
+        document.body.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                this.$emit('close');
+            }
+        });
+    },
+    props: ['file_reader', 'file_name'],
+    data() {
+        return {
+            column_titles: [],
+            sample_data: [],
+
+            // Configuration options for variant data
+            variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
+            // Individual form field options
+            preset_type: null,
+            marker_col: null,
+
+            // These are set by tabix but can be overridden
+            chr_col: this.file_reader.colSeq,
+            pos_col: this.file_reader.colStart,
+
+            // User must define these
+            ref_col: null,
+            alt_col: null,
+            pval_col: null,
+            is_log_pval: false,
+        };
+    },
+    watch: {
+        file_reader: {
+            immediate: true,
+            handler() {
+                // Uses a watcher to resolve async value fetch.
+                // Not every tabix file represents column header data in the same way: in some, it's
+                //  the last line with a comment (meta) character. In others, there is no meta
+                //   char, so we use the last line that was skipped
+                // Fetch 25 rows of data. The last skipped line is assumed to be column headers;
+                //  the last total line is assumed to be data.
+                // This wizard assumes all files are tabix (tab delimited)
+
+                // Find headers by fetching a large block of lines, and picking the best ones
+                const callback = (rows, err) => {
+                    // Read data (and last-ditch attempt to find headers, if necessary)
+                    let first_data_index = -1;
+                    if (this.file_reader.skip) {
+                        // A tabix reader defines headers as "comment lines and/or lines you skip"
+                        first_data_index = this.file_reader.skip;
+                    } else {
+                        // Some files use headers that are not comment lines.
+                        first_data_index = rows.findIndex(text => !isHeader(text));
+                    }
+                    this.column_titles = rows[first_data_index - 1]
+                        .replace(/^#+/g, '')
+                        .split('\t');
+                    this.sample_data = rows.slice(first_data_index);
+
+                    // When data is first loaded, generate a suggested auto-config
+                    const data_rows = this.sample_data.map(line => line.split('\t'));
+                    const guess = guessGWAS(this.column_titles, data_rows);
+                    if (guess) {
+                        Object.assign(this, guess);
+                        // If config is detected, set the UI to tab that best shows selected option
+                        this.variant_spec_tab = (guess.marker_col !== undefined) ? TAB_FROM_MARKER
+                            : TAB_FROM_SEPARATE_COLUMNS;
+                    }
+                };
+                this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
+            },
+        },
+    },
+    computed: {
+        variantSpec() {
+            // Only provide a value if the variant description is minimally complete
+            const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
+            if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
+                return { marker_col };
+            }
+            if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
+                && pos_col !== null && chr_col !== null) {
+                // Ref and alt are optional
+                return { chr_col, pos_col, ref_col, alt_col };
+            }
+            return {};
+        },
+        parserOptions() {
+            const { pval_col, is_log_pval } = this;
+            return Object.assign({}, {
+                pval_col,
+                is_log_pval,
+            }, this.variantSpec);
+        },
+        isValid() {
+            const hasVariant = Object.keys(this.variantSpec).length !== 0;
+            const hasP = this.parserOptions.pval_col !== null;
+            return hasVariant && hasP;
+        },
+        parser() {
+            if (this.isValid) {
+                return makeParser(this.parserOptions);
+            }
+            return () => {};
+        },
+        preview() {
+            try {
+                return this.parser(this.sample_data[0]);
+            } catch (e) {
+                return { error: 'Could not parse column contents' };
+            }
+        },
+    },
+    methods: {
+        sendOptions() {
+            // The preview (first line of file) will set the default locus (view) for this data
+            const init_position = this.preview.position;
+            const init_state = {
+                chr: this.preview.chromosome,
+                start: Math.max(0, init_position - 250000),
+                end: init_position + 250000,
+            };
+            this.$emit('ready', Object.assign({}, this.parserOptions), init_state);
+            this.$emit('close');
+        },
+    },
+    components: {
+        bsTab,
+        bsTabs,
+    },
+};
+</script>
+
 <template>
   <transition name="modal">
     <div class="modal-mask">
@@ -128,152 +274,6 @@
     </div>
   </transition>
 </template>
-
-<script>
-import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
-import bsTab from 'bootstrap-vue/es/components/tabs/tab';
-
-import { isHeader, guessGWAS } from '../gwas/sniffers';
-import { makeParser } from '../gwas/parsers';
-
-const TAB_FROM_SEPARATE_COLUMNS = 0;
-const TAB_FROM_MARKER = 1;
-
-export default {
-    name: 'adder-wizard',
-    mounted() {
-        document.body.addEventListener('keyup', (e) => {
-            if (e.key === 'Escape') {
-                this.$emit('close');
-            }
-        });
-    },
-    props: ['file_reader', 'file_name'],
-    data() {
-        return {
-            auto_config: null,
-
-            column_titles: [],
-            sample_data: [],
-
-            // Configuration options for variant data
-            variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
-            // Individual form field options
-            preset_type: null,
-            marker_col: null,
-
-            // These are set by tabix but can be overridden
-            chr_col: this.file_reader.colSeq,
-            pos_col: this.file_reader.colStart,
-
-            // User must define these
-            ref_col: null,
-            alt_col: null,
-            pval_col: null,
-            is_log_pval: false,
-        };
-    },
-    watch: {
-        file_reader: {
-            immediate: true,
-            handler() {
-                // Uses a watcher to resolve async value fetch.
-                // Not every tabix file represents column header data in the same way: in some, it's
-                //  the last line with a comment (meta) character. In others, there is no meta
-                //   char, so we use the last line that was skipped
-                // Fetch 25 rows of data. The last skipped line is assumed to be column headers;
-                //  the last total line is assumed to be data.
-                // This wizard assumes all files are tabix (tab delimited)
-
-                // Find headers by fetching a large block of lines, and picking the best ones
-                const callback = (rows, err) => {
-                    // Read data (and last-ditch attempt to find headers, if necessary)
-                    let first_data_index = -1;
-                    if (this.file_reader.skip) {
-                        // A tabix reader defines headers as "comment lines and/or lines you skip"
-                        first_data_index = this.file_reader.skip;
-                    } else {
-                        // Some files use headers that are not comment lines.
-                        first_data_index = rows.findIndex(text => !isHeader(text));
-                    }
-                    this.column_titles = rows[first_data_index - 1]
-                        .replace(/^#+/g, '')
-                        .split('\t');
-                    this.sample_data = rows.slice(first_data_index);
-
-                    // When data is first loaded, generate a suggested auto-config
-                    const data_rows = this.sample_data.map(line => line.split('\t'));
-                    const guess = guessGWAS(this.column_titles, data_rows);
-                    if (guess) {
-                        Object.assign(this, guess);
-                        // If config is detected, set the UI to tab that best shows selected option
-                        this.variant_spec_tab = (guess.marker_col !== null) ? TAB_FROM_MARKER
-                            : TAB_FROM_SEPARATE_COLUMNS;
-                    }
-                };
-                this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
-            },
-        },
-    },
-    computed: {
-        variantSpec() {
-            // Only provide a value if the variant description is minimally complete
-            const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
-                return { marker_col };
-            }
-            if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
-                && pos_col !== null && chr_col !== null) {
-                // Ref and alt are optional
-                return { chr_col, pos_col, ref_col, alt_col };
-            }
-            return {};
-        },
-        parserOptions() {
-            const { pval_col, is_log_pval } = this;
-            return Object.assign({}, {
-                pval_col,
-                is_log_pval,
-            }, this.variantSpec);
-        },
-        isValid() {
-            const hasVariant = Object.keys(this.variantSpec).length !== 0;
-            const hasP = this.parserOptions.pval_col !== null;
-            return hasVariant && hasP;
-        },
-        parser() {
-            if (this.isValid) {
-                return makeParser(this.parserOptions);
-            }
-            return () => {};
-        },
-        preview() {
-            try {
-                return this.parser(this.sample_data[0]);
-            } catch (e) {
-                return { error: 'Could not parse column contents' };
-            }
-        },
-    },
-    methods: {
-        sendOptions() {
-            // The preview (first line of file) will set the default locus (view) for this data
-            const init_position = this.preview.position;
-            const init_state = {
-                chr: this.preview.chromosome,
-                start: Math.max(0, init_position - 250000),
-                end: init_position + 250000,
-            };
-            this.$emit('ready', Object.assign({}, this.parserOptions), init_state);
-            this.$emit('close');
-        },
-    },
-    components: {
-        bsTab,
-        bsTabs,
-    },
-};
-</script>
 
 <style scoped>
   .modal-mask {
