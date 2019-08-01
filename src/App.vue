@@ -52,9 +52,11 @@ export default {
                 // Creating the initial plot can be done by simply passing props directly
                 this.base_assoc_sources = getBasicSources(sources);
                 // Prevent weird resize behavior when switching tabs
-                const base_assoc_layout = getBasicLayout(state, panels);
-                base_assoc_layout.responsive_resize = false;
-                this.base_assoc_layout = base_assoc_layout;
+                this.base_assoc_layout = getBasicLayout(
+                    state,
+                    panels,
+                    { responsive_resize: false },
+                );
             } else {
                 // Adding subsequent panels is a more advanced usage; manipulate the child widget
                 this.$refs.plotWidget.addStudy(panels, sources);

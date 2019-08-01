@@ -161,16 +161,17 @@ function getBasicSources(study_sources = []) {
     ];
 }
 
-function getBasicLayout(initial_state = {}, study_panels = []) {
+function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     const panels = [
         ...study_panels,
         LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
     ];
 
-    return LocusZoom.Layouts.get('plot', 'standard_association', {
+    const extra = Object.assign({
         state: initial_state,
         panels,
-    });
+    }, mods);
+    return LocusZoom.Layouts.get('plot', 'standard_association', extra);
 }
 
 /**
