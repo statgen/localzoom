@@ -134,7 +134,7 @@ function getPvalColumn(header_row, data_rows) {
 function getChromPosRefAltColumns(header_row, data_rows) {
     // Returns 1-based column indices, for compatibility with parsers
     // Get from either a marker, or 4 separate columns
-    const MARKER_FIELDS = ['snpid', 'marker', 'markerid', 'snpmarker'];
+    const MARKER_FIELDS = ['snpid', 'marker', 'markerid', 'snpmarker', 'chr:position'];
     const CHR_FIELDS = ['chrom', 'chr'];
     const POS_FIELDS = ['position', 'pos', 'begin', 'beg', 'bp', 'end', 'ps'];
 

@@ -218,4 +218,15 @@ describe('guessGWAS format detection', () => {
             { chr_col: 2, pos_col: 3, ref_col: 4, alt_col: 5, pval_col: 10, is_log_pval: false },
         );
     });
+
+    it('handles whatever diagram was using', () => {
+        const headers = ['Chr:Position', 'Allele1', 'Allele2', 'Effect', 'StdErr', 'P-value', 'TotalSampleSize'];
+        const data = [['5:29439275', 'T', 'C', '-0.0003', '0.015', '0.99', '111309']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(
+            actual,
+            { marker_col: 1, pval_col: 6, is_log_pval: false },
+        );
+    });
 });
