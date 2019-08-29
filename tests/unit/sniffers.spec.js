@@ -113,7 +113,13 @@ describe('guessGWAS format detection', () => {
         const data = [['10:48698435_A_G', '10', '48698435', 'A', 'G', '0.01353', '0.02719', '0.960443', '0.0959329', '0.0941266', '3.3E-01']];
 
         const actual = guessGWAS(headers, data);
-        assert.deepEqual(actual, { marker_col: 1, pval_col: 11, is_log_pval: false });
+        assert.deepEqual(actual, {
+            marker_col: 1,
+            pval_col: 11,
+            is_log_pval: false,
+            beta_col: 9,
+            stderr_col: 10,
+        });
     });
 
     it('handles EPACTS', () => {
@@ -132,7 +138,16 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 1, pos_col: 2, ref_col: 3, alt_col: 4, pval_col: 11, is_log_pval: false },
+            {
+                chr_col: 1,
+                pos_col: 2,
+                ref_col: 3,
+                alt_col: 4,
+                pval_col: 11,
+                is_log_pval: false,
+                beta_col: 8,
+                stderr_col: 9,
+            },
         );
     });
 
@@ -156,7 +171,16 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 1, pos_col: 2, ref_col: 3, alt_col: 4, pval_col: 11, is_log_pval: false },
+            {
+                chr_col: 1,
+                pos_col: 2,
+                ref_col: 3,
+                alt_col: 4,
+                pval_col: 11,
+                is_log_pval: false,
+                beta_col: 8,
+                stderr_col: 9,
+            },
         );
     });
 
@@ -167,7 +191,15 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 1, pos_col: 2, ref_col: 3, alt_col: 4, pval_col: 17, is_log_pval: false },
+            {
+                chr_col: 1,
+                pos_col: 2,
+                ref_col: 3,
+                alt_col: 4,
+                pval_col: 17,
+                is_log_pval: false,
+                beta_col: 16,
+            },
         );
     });
 
@@ -179,7 +211,15 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 1, pos_col: 2, ref_col: 3, alt_col: 4, pval_col: 16, is_log_pval: false },
+            {
+                chr_col: 1,
+                pos_col: 2,
+                ref_col: 3,
+                alt_col: 4,
+                pval_col: 16,
+                is_log_pval: false,
+                beta_col: 15,
+            },
         );
     });
 
@@ -191,11 +231,11 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { marker_col: 3, pval_col: 12, is_log_pval: false },
+            { marker_col: 3, pval_col: 12, is_log_pval: false, beta_col: 9, stderr_col: 10 },
         );
     });
 
-    it('handles some unlabeled file formats', () => {
+    it('parses a mystery format', () => {
         // TODO: Identify the program used and make test more explicit
         // FIXME: This test underscores difficulty of reliable ref/alt detection- a1 comes
         //  before a0, but it might be more valid to switch the order of these columns
@@ -204,7 +244,16 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 1, pos_col: 3, ref_col: 6, alt_col: 7, pval_col: 11, is_log_pval: false },
+            {
+                chr_col: 1,
+                pos_col: 3,
+                ref_col: 6,
+                alt_col: 7,
+                pval_col: 11,
+                is_log_pval: false,
+                beta_col: 9,
+                stderr_col: 10,
+            },
         );
     });
 
@@ -215,7 +264,16 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chr_col: 2, pos_col: 3, ref_col: 4, alt_col: 5, pval_col: 10, is_log_pval: false },
+            {
+                chr_col: 2,
+                pos_col: 3,
+                ref_col: 4,
+                alt_col: 5,
+                pval_col: 10,
+                is_log_pval: false,
+                beta_col: 12,
+                stderr_col: 13,
+            },
         );
     });
 
@@ -226,7 +284,7 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { marker_col: 1, pval_col: 6, is_log_pval: false },
+            { marker_col: 1, pval_col: 6, is_log_pval: false, beta_col: 4, stderr_col: 5 },
         );
     });
 });

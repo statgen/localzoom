@@ -16,6 +16,7 @@ describe('GWAS parsing', () => {
             // were too few copies of the alt allele in the sample, and running the test is a waste
             // of time since it will never be significant. *These can be safely skipped.*"
         });
+
         it('parses SAIGE data', () => {
             const saige_sample = 'chr1\t76792\tchr1:76792:A:C\tA\tC\t57\t0.00168639048933983\t16900\t0.573681678183941\t0.663806747906141\t1.30193005902619\t0.387461577915637\t0.387461577915637\t1\t2.2694293866027\t2.41152256615949';
             const parser = makeParser({ marker_col: 3, pval_col: 12, is_log_pval: false });
@@ -27,8 +28,11 @@ describe('GWAS parsing', () => {
                 position: 76792,
                 ref_allele: 'A',
                 variant: '1:76792_A/C',
+                beta: null,
+                stderr_beta: null,
             });
         });
+
         it('parses RVTESTS data', () => {
             const rvtests_sample = '1\t761893\tG\tT\t19292\t2.59624e-05:0.000655308:0\t1:1:0\t0.998289:0.996068:0.998381\t1:1:1\t19258:759:18499\t1:1:0\t0:0:0\t1.33113\t0.268484\t18.4664\t7.12493e-07';
             const parser = makeParser({
@@ -47,6 +51,24 @@ describe('GWAS parsing', () => {
                 position: 761893,
                 ref_allele: 'G',
                 variant: '1:761893_G/T',
+                beta: null,
+                stderr_beta: null,
+            });
+        });
+        it('parses beta and stderr where appropriate', () => {
+            const line = 'X:12_A/T\t0.1\t0.5\t0.6';
+            const parser = makeParser({ marker_col: 1, pval_col: 2, beta_col: 3, stderr_col: 4 });
+            const actual = parser(line);
+
+            assert.deepEqual(actual, {
+                chromosome: 'X',
+                position: 12,
+                ref_allele: 'A',
+                alt_allele: 'T',
+                variant: 'X:12_A/T',
+                log_pvalue: 1,
+                beta: 0.5,
+                stderr_beta: 0.6,
             });
         });
     });

@@ -235,7 +235,7 @@ export default {
                 </div>
                 <div class="col-sm-2">
                   <label for="is_log_pval" class="form-check-label" style="white-space: nowrap">
-                    Uses <em>-log<sub>10</sub>(p)</em>
+                    Values are <em>-log<sub>10</sub>(p)</em>
                   </label>
                 </div>
                 <div class="col-sm-4">

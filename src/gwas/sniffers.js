@@ -174,7 +174,41 @@ function getChromPosRefAltColumns(header_row, data_rows) {
 }
 
 /**
- *
+ * Identify which columns contain effect size (beta) and stderr of the effect size
+ * @param {String[]} header_names
+ * @param {Array[]} data_rows
+ * @returns {{}}
+ */
+function getEffectSizeColumns(header_names, data_rows) {
+    const BETA_FIELDS = ['beta', 'effect_size', 'alt_effsize', 'effect'];
+    const STDERR_BETA_FIELDS = ['stderr', 'effect_size_sd', 'se'];
+
+
+    function validate_numeric(col, data) {
+        const cleaned_vals = _missingToNull(data.map(row => row[col]));
+        let nums;
+        try {
+            nums = cleaned_vals.filter(val => val !== null).map(val => +val);
+        } catch (e) {
+            return false;
+        }
+        return nums.every(val => !Number.isNaN(val));
+    }
+
+    const beta_col = findColumn(BETA_FIELDS, header_names, 0);
+    const stderr_col = findColumn(STDERR_BETA_FIELDS, header_names, 0);
+
+    const ret = {};
+    if (beta_col !== null && validate_numeric(beta_col, data_rows)) {
+        ret.beta_col = beta_col + 1;
+    }
+    if (stderr_col !== null && validate_numeric(stderr_col, data_rows)) {
+        ret.stderr_col = stderr_col + 1;
+    }
+    return ret;
+}
+/**
+ * Attempt to guess the correct parser settings given a set of header rows and a set of data rows
  * @param {String[]} header_row
  * @param {String[][]} data_rows
  * @param {int} offset Used to convert between 0 and 1-based indexing.
@@ -196,9 +230,18 @@ function guessGWAS(header_row, data_rows, offset = 1) {
     }
     headers[pval_config.pval_col - 1] = null; // Remove this column from consideration
     const position_config = getChromPosRefAltColumns(headers, data_rows);
+    if (!position_config) {
+        return null;
+    }
+    // Remove the position config from consideration for future matches
+    Object.keys(position_config).forEach((key) => {
+        headers[position_config[key]] = null;
+    });
+
+    const beta_config = getEffectSizeColumns(headers, data_rows);
 
     if (pval_config && position_config) {
-        return Object.assign({}, pval_config, position_config);
+        return Object.assign({}, pval_config, position_config, beta_config || {});
     }
     return null;
 }

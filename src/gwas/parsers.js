@@ -9,12 +9,14 @@ import { REGEX_MARKER } from './parser_utils';
  * @param [ref_col]
  * @param [alt_col]
  * @param pval_col
+ * @param [beta_col]
+ * @param [stderr_col]
  * @param [is_log_pval=false]
  * @param [delimiter='\t']
  * @return {function(*): {chromosome: *, position: number, ref_allele: *,
  *          log_pvalue: number, variant: string}}
  */
-function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, is_log_pval = false, delimiter = '\t' } = {}) {
+function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, beta_col, stderr_col, is_log_pval = false, delimiter = '\t' } = {}) {
     // Column IDs should be 1-indexed (human friendly)
     if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
@@ -50,6 +52,9 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, 
         const log_pval = is_log_pval ? pvalue_raw : -Math.log10(pvalue_raw);
         ref = ref || null;
         alt = alt || null;
+
+        const beta = beta_col !== undefined ? +fields[beta_col - 1] : null;
+        const stderr_beta = stderr_col !== undefined ? +fields[stderr_col - 1] : null;
         const ref_alt = (ref && alt) ? `_${ref}/${alt}` : '';
         return {
             chromosome: chr,
@@ -58,6 +63,8 @@ function makeParser({ marker_col, chr_col, pos_col, ref_col, alt_col, pval_col, 
             alt_allele: alt,
             log_pvalue: log_pval,
             variant: `${chr}:${pos}${ref_alt}`,
+            beta,
+            stderr_beta,
         };
     };
 }
@@ -69,6 +76,8 @@ const standard_gwas_parser = makeParser({
     ref_col: 3,
     alt_col: 4,
     pval_col: 5,
+    beta_col: 6,
+    stderr_col: 7,
     is_log_pval: true,
     delimiter: '\t',
 });
