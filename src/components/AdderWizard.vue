@@ -12,8 +12,17 @@ import { makeParser } from '../gwas/parsers';
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
 
+const PAGES = {
+    filename: 0,
+    variant: 1,
+    optional: 2,
+};
+
 export default {
     name: 'adder-wizard',
+    beforeCreate() {
+        this.PAGES = PAGES;
+    },
     mounted() {
         document.body.addEventListener('keyup', (e) => {
             if (e.key === 'Escape') {
@@ -27,10 +36,10 @@ export default {
             column_titles: [],
             sample_data: [],
 
-            // Configuration options for variant data
+            // Which part of the UI should we show?
+            current_page: this.filename ? PAGES.filename : PAGES.variant,
             variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
-            // Individual form field options
-            preset_type: null,
+            // Configuration options for variant data
             marker_col: null,
 
             // These are set by tabix but can be overridden
@@ -42,6 +51,11 @@ export default {
             alt_col: null,
             pval_col: null,
             is_log_pval: false,
+
+            // These fields are optional. They're more useful for a standalone upload service
+            //  but we can add tooltip fields in the future for UI.
+            beta_col: null,
+            stderr_col: null,
         };
     },
     watch: {
@@ -92,7 +106,10 @@ export default {
                             .map((item, index) => `Column ${index + 1}`);
                     }
                 };
-                this.file_reader.fetchHeader(callback, { nLines: 30, metaOnly: false });
+                this.file_reader.fetchHeader(callback, {
+                    nLines: 30,
+                    metaOnly: false,
+                });
             },
         },
     },
@@ -106,15 +123,22 @@ export default {
             if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
                 && pos_col !== null && chr_col !== null) {
                 // Ref and alt are optional
-                return { chr_col, pos_col, ref_col, alt_col };
+                return {
+                    chr_col,
+                    pos_col,
+                    ref_col,
+                    alt_col,
+                };
             }
             return {};
         },
         parserOptions() {
-            const { pval_col, is_log_pval } = this;
+            const { pval_col, is_log_pval, beta_col, stderr_col } = this;
             return Object.assign({}, {
                 pval_col,
                 is_log_pval,
+                beta_col,
+                stderr_col,
             }, this.variantSpec);
         },
         isValid() {
@@ -126,7 +150,8 @@ export default {
             if (this.isValid) {
                 return makeParser(this.parserOptions);
             }
-            return () => {};
+            return () => {
+            };
         },
         preview() {
             try {
@@ -169,112 +194,144 @@ export default {
           </div>
           <div class="modal-body">
             <div>
-              <div class="form-group row" v-if="file_name">
+              <div class="form-group row" v-if="current_page === PAGES.filename">
                 <label for="display_name" class="col-sm-3">Dataset Label</label>
                 <div class="col-sm-9">
                   <input id="display_name" class="form-control" type="text" v-model="file_name">
                 </div>
               </div>
 
-              <bs-tabs v-model="variant_spec_tab">
-                <bs-tab title="Variant from columns" class="pt-3">
-                  <div class="form-group row">
-                    <label for="vs-chr" class="col-sm-2">Chromosome</label>
-                    <div class="col-sm-4">
-                      <select id="vs-chr" v-model="chr_col" class="form-control">
-                        <option v-for="(item, index) in column_titles"
-                                :value="index + 1" :key="index">
-                          {{ item }}
-                        </option>
-                      </select>
+              <div v-else-if="current_page === PAGES.variant">
+                <bs-tabs v-model="variant_spec_tab">
+                  <bs-tab title="Variant from columns" class="pt-3">
+                    <div class="form-group row">
+                      <label for="vs-chr" class="col-sm-2">Chromosome</label>
+                      <div class="col-sm-4">
+                        <select id="vs-chr" v-model="chr_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                      <label for="vs-pos" class="col-sm-2">Position</label>
+                      <div class="col-sm-4">
+                        <select id="vs-pos" v-model="pos_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
                     </div>
-                    <label for="vs-pos" class="col-sm-2">Position</label>
-                    <div class="col-sm-4">
-                      <select id="vs-pos" v-model="pos_col" class="form-control">
-                        <option v-for="(item, index) in column_titles"
-                                :value="index + 1" :key="index">
-                          {{ item }}
-                        </option>
-                      </select>
+                    <div class="form-group row">
+                      <label for="vs-ref" class="col-sm-2">Ref allele</label>
+                      <div class="col-sm-4">
+                        <select id="vs-ref" v-model="ref_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                      <label for="vs-alt" class="col-sm-2">Alt allele</label>
+                      <div class="col-sm-4">
+                        <select id="vs-alt" v-model="alt_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </bs-tab>
+                  <bs-tab title="Variant from marker" class="pt-3">
+                    <div class="form-group row">
+                      <label for="vs-marker" class="col-sm-2">Marker</label>
+                      <div class="col-sm-4">
+                        <select id="vs-marker" v-model="marker_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </bs-tab>
+                </bs-tabs>
+                <div class="form-group row">
+                  <label for="vs-pval" class="col-sm-2">P-value column</label>
+                  <div class="col-sm-4">
+                    <select id="vs-pval" v-model="pval_col" class="form-control">
+                      <option v-for="(item, index) in column_titles" :value="index + 1"
+                              :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-sm-2">
+                    <label for="is_log_pval" class="form-check-label" style="white-space: nowrap">
+                      is <em>-log<sub>10</sub>(p)</em>
+                    </label>
+                  </div>
+                  <div class="col-sm-4">
+                    <div class="form-check float-left">
+                      <input id="is_log_pval" v-model="is_log_pval"
+                             type="checkbox" class="form-check-input">
                     </div>
                   </div>
-                  <div class="form-group row">
-                    <label for="vs-ref" class="col-sm-2">Ref allele</label>
-                    <div class="col-sm-4">
-                      <select id="vs-ref" v-model="ref_col" class="form-control">
-                        <option v-for="(item, index) in column_titles"
-                                :value="index + 1" :key="index">
-                          {{ item }}
-                        </option>
-                      </select>
-                    </div>
-                    <label for="vs-alt" class="col-sm-2">Alt allele</label>
-                    <div class="col-sm-4">
-                      <select id="vs-alt" v-model="alt_col" class="form-control">
-                        <option v-for="(item, index) in column_titles"
-                                :value="index + 1" :key="index">
-                          {{ item }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </bs-tab>
-                <bs-tab title="Variant from marker" class="pt-3">
-                  <div class="form-group row">
-                    <label for="vs-marker" class="col-sm-2">Marker</label>
-                    <div class="col-sm-4">
-                      <select id="vs-marker" v-model="marker_col" class="form-control">
-                        <option v-for="(item, index) in column_titles"
-                                :value="index + 1" :key="index">
-                          {{ item }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </bs-tab>
-              </bs-tabs>
+                </div>
 
-              <div class="form-group row">
-                <label for="vs-pval" class="col-sm-2">P-value column</label>
-                <div class="col-sm-4">
-                  <select id="vs-pval" v-model="pval_col" class="form-control">
-                    <option v-for="(item, index) in column_titles" :value="index + 1" :key="index">
-                      {{ item }}
-                    </option>
-                  </select>
+                <div class="row">
+                  <div class="card card-body bg-light">
+                    <div v-if="isValid && preview.error">
+                      <span class="text-danger">{{ preview.error }}</span>
+                    </div>
+                    <div v-else-if="isValid">
+                      Variant: {{ preview.variant }}<br>
+                      -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
+                    </div>
+                    <div v-else>
+                      Please select options to preview parsed data
+                    </div>
+                  </div>
                 </div>
-                <div class="col-sm-2">
-                  <label for="is_log_pval" class="form-check-label" style="white-space: nowrap">
-                    is <em>-log<sub>10</sub>(p)</em>
-                  </label>
+
+              </div>
+
+              <div v-else-if="current_page === PAGES.optional">
+                <h3>Optional fields</h3>
+                <div class="form-group row">
+                  <label for="vs-beta" class="col-sm-2">Effect size</label>
+                  <div class="col-sm-4">
+                    <select id="vs-beta" v-model="beta_col" class="form-control">
+                      <option v-for="(item, index) in column_titles"
+                              :value="index + 1" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="col-sm-6"></div>
                 </div>
-                <div class="col-sm-4">
-                  <div class="form-check float-left">
-                    <input id="is_log_pval" v-model="is_log_pval"
-                           type="checkbox" class="form-check-input">
+                <div class="form-group row">
+                  <label for="vs-stderr" class="col-sm-2">Std. Err.</label>
+                  <div class="col-sm-4">
+                    <select id="vs-stderr" v-model="stderr_col" class="form-control">
+                      <option v-for="(item, index) in column_titles"
+                              :value="index + 1" :key="index">
+                        {{ item }}
+                      </option>
+                    </select>
                   </div>
                 </div>
               </div>
-
-              <div class="row">
-                <div class="card card-body bg-light">
-                  <div v-if="isValid && preview.error">
-                    <span class="text-danger">{{ preview.error }}</span>
-                  </div>
-                  <div v-else-if="isValid">
-                    Variant: {{ preview.variant }}<br>
-                    -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
-                  </div>
-                  <div v-else>
-                    Please select options to preview parsed data
-                  </div>
-                </div>
-              </div>
-
               <div class="row mt-3">
-                <button class="btn btn-success ml-auto"
+                <button v-if="current_page === PAGES.optional" class="btn btn-success ml-auto"
                         :disabled="!isValid" @click="sendOptions">
                   Accept options
+                </button>
+                <button v-else class="btn btn-success ml-auto"
+                        :disabled="!isValid" @click="current_page += 1">Next
                 </button>
               </div>
             </div>
