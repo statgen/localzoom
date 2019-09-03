@@ -104,6 +104,23 @@ describe('guessGWAS format detection', () => {
         assert.deepEqual(actual, null);
     });
 
+    it('handles zorp standard format', () => {
+        const headers = ['#chrom', 'pos', 'ref', 'alt', 'neg_log_pvalue', 'beta', 'stderr_beta'];
+        const data = [['1', '762320', 'C', 'T', '0.36947042857317597', '0.5', '0.1']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(actual, {
+            chr_col: 1,
+            pos_col: 2,
+            ref_col: 3,
+            alt_col: 4,
+            pval_col: 5,
+            is_log_pval: true,
+            beta_col: 6,
+            stderr_col: 7,
+        });
+    });
+
     it('handles BOLT-LMM', () => {
         // https://data.broadinstitute.org/alkesgroup/BOLT-LMM/#x1-450008.1
         // This sample drawn from:
