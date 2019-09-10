@@ -43,19 +43,19 @@ export default {
             marker_col: null,
 
             // These are set by tabix but can be overridden
-            chr_col: this.file_reader.colSeq,
+            chrom_col: this.file_reader.colSeq,
             pos_col: this.file_reader.colStart,
 
             // User must define these
             ref_col: null,
             alt_col: null,
-            pval_col: null,
-            is_log_pval: false,
+            pvalue_col: null,
+            is_neg_log_pvalue: false,
 
             // These fields are optional. They're more useful for a standalone upload service
             //  but we can add tooltip fields in the future for UI.
             beta_col: null,
-            stderr_col: null,
+            stderr_beta_col: null,
         };
     },
     watch: {
@@ -116,15 +116,15 @@ export default {
     computed: {
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
-            const { marker_col, chr_col, pos_col, ref_col, alt_col } = this;
+            const { marker_col, chrom_col, pos_col, ref_col, alt_col } = this;
             if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
                 return { marker_col };
             }
             if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
-                && pos_col !== null && chr_col !== null) {
+                && pos_col !== null && chrom_col !== null) {
                 // Ref and alt are optional
                 return {
-                    chr_col,
+                    chrom_col,
                     pos_col,
                     ref_col,
                     alt_col,
@@ -133,17 +133,17 @@ export default {
             return {};
         },
         parserOptions() {
-            const { pval_col, is_log_pval, beta_col, stderr_col } = this;
+            const { pvalue_col, is_neg_log_pvalue, beta_col, stderr_beta_col } = this;
             return Object.assign({}, {
-                pval_col,
-                is_log_pval,
+                pvalue_col,
+                is_neg_log_pvalue,
                 beta_col,
-                stderr_col,
+                stderr_beta_col,
             }, this.variantSpec);
         },
         isValid() {
             const hasVariant = Object.keys(this.variantSpec).length !== 0;
-            const hasP = this.parserOptions.pval_col !== null;
+            const hasP = this.parserOptions.pvalue_col !== null;
             return hasVariant && hasP;
         },
         parser() {
@@ -207,7 +207,7 @@ export default {
                     <div class="form-group row">
                       <label for="vs-chr" class="col-sm-2">Chromosome</label>
                       <div class="col-sm-4">
-                        <select id="vs-chr" v-model="chr_col" class="form-control">
+                        <select id="vs-chr" v-model="chrom_col" class="form-control">
                           <option v-for="(item, index) in column_titles"
                                   :value="index + 1" :key="index">
                             {{ item }}
@@ -262,7 +262,7 @@ export default {
                 <div class="form-group row">
                   <label for="vs-pval" class="col-sm-2">P-value column</label>
                   <div class="col-sm-4">
-                    <select id="vs-pval" v-model="pval_col" class="form-control">
+                    <select id="vs-pval" v-model="pvalue_col" class="form-control">
                       <option v-for="(item, index) in column_titles" :value="index + 1"
                               :key="index">
                         {{ item }}
@@ -270,13 +270,14 @@ export default {
                     </select>
                   </div>
                   <div class="col-sm-2">
-                    <label for="is_log_pval" class="form-check-label" style="white-space: nowrap">
+                    <label for="is_neg_log_pvalue"
+                           class="form-check-label" style="white-space: nowrap">
                       is <em>-log<sub>10</sub>(p)</em>
                     </label>
                   </div>
                   <div class="col-sm-4">
                     <div class="form-check float-left">
-                      <input id="is_log_pval" v-model="is_log_pval"
+                      <input id="is_neg_log_pvalue" v-model="is_neg_log_pvalue"
                              type="checkbox" class="form-check-input">
                     </div>
                   </div>
@@ -316,7 +317,7 @@ export default {
                 <div class="form-group row">
                   <label for="vs-stderr" class="col-sm-2">Std. Err.</label>
                   <div class="col-sm-4">
-                    <select id="vs-stderr" v-model="stderr_col" class="form-control">
+                    <select id="vs-stderr" v-model="stderr_beta_col" class="form-control">
                       <option v-for="(item, index) in column_titles"
                               :value="index + 1" :key="index">
                         {{ item }}

@@ -116,14 +116,14 @@ function getPvalColumn(header_row, data_rows) {
 
     if (log_p_col !== null && validateP(log_p_col, data_rows, true)) {
         return {
-            pval_col: log_p_col + 1,
-            is_log_pval: true,
+            pvalue_col: log_p_col + 1,
+            is_neg_log_pvalue: true,
         };
     }
     if (p_col && validateP(p_col, data_rows, false)) {
         return {
-            pval_col: p_col + 1,
-            is_log_pval: false,
+            pvalue_col: p_col + 1,
+            is_neg_log_pvalue: false,
         };
     }
     // Could not auto-determine an appropriate pvalue column
@@ -154,7 +154,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
     //  be found for this function to report a match.
     const headers_marked = header_row.slice();
     const find = [
-        ['chr_col', CHR_FIELDS],
+        ['chrom_col', CHR_FIELDS],
         ['pos_col', POS_FIELDS],
         ['ref_col', REF_FIELDS],
         ['alt_col', ALT_FIELDS],
@@ -196,14 +196,14 @@ function getEffectSizeColumns(header_names, data_rows) {
     }
 
     const beta_col = findColumn(BETA_FIELDS, header_names, 0);
-    const stderr_col = findColumn(STDERR_BETA_FIELDS, header_names, 0);
+    const stderr_beta_col = findColumn(STDERR_BETA_FIELDS, header_names, 0);
 
     const ret = {};
     if (beta_col !== null && validate_numeric(beta_col, data_rows)) {
         ret.beta_col = beta_col + 1;
     }
-    if (stderr_col !== null && validate_numeric(stderr_col, data_rows)) {
-        ret.stderr_col = stderr_col + 1;
+    if (stderr_beta_col !== null && validate_numeric(stderr_beta_col, data_rows)) {
+        ret.stderr_beta_col = stderr_beta_col + 1;
     }
     return ret;
 }
@@ -228,7 +228,7 @@ function guessGWAS(header_row, data_rows, offset = 1) {
     if (!pval_config) {
         return null;
     }
-    headers[pval_config.pval_col - 1] = null; // Remove this column from consideration
+    headers[pval_config.pvalue_col - 1] = null; // Remove this column from consideration
     const position_config = getChromPosRefAltColumns(headers, data_rows);
     if (!position_config) {
         return null;

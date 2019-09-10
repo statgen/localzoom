@@ -8,7 +8,7 @@ const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end'
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
-        this.params = init.params; // delimiter, marker_col, pval_col, is_log_pval
+        this.params = init.params; // Used to create a parser
         this.parser = makeParser(this.params);
         this.reader = init.tabix_reader;
     },

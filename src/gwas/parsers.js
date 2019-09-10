@@ -4,18 +4,18 @@ import { parseAlleleFrequency, parseMarker, parsePvalToLog } from './parser_util
  * Specify how to parse a GWAS file, given certain column information.
  * Outputs an object with fields in portal API format.
  * @param [marker_col]
- * @param [chr_col]
+ * @param [chrom_col]
  * @param [pos_col]
  * @param [ref_col]
  * @param [alt_col]
- * @param pval_col
+ * @param pvalue_col
  * @param [beta_col]
- * @param [stderr_col]
+ * @param [stderr_beta_col]
  * @param [allele_freq_col]
  * @param [allele_count_col]
  * @param [n_samples_col]
  * @param [is_alt_effect=true]
- * @param [is_log_pval=false]
+ * @param [is_neg_log_pvalue=false]
  * @param [delimiter='\t']
  * @return {function(*): {chromosome: *, position: number, ref_allele: *,
  *          log_pvalue: number, variant: string}}
@@ -24,27 +24,27 @@ function makeParser(
     {
         // Required fields
         marker_col, // position
-        chr_col,
+        chrom_col,
         pos_col,
         ref_col,
         alt_col,
-        pval_col, // pvalue
+        pvalue_col, // pvalue
         // Optional fields
         beta_col,
-        stderr_col,
+        stderr_beta_col,
         allele_freq_col, // Frequency: given directly, OR in terms of counts
         allele_count_col,
         n_samples_col,
         is_alt_effect = true, // whether effect allele is oriented towards alt
-        is_log_pval = false,
+        is_neg_log_pvalue = false,
         delimiter = '\t',
     } = {},
 ) {
     // Column IDs should be 1-indexed (human friendly)
-    if (marker_col !== undefined && chr_col !== undefined && pos_col !== undefined) {
+    if (marker_col !== undefined && chrom_col !== undefined && pos_col !== undefined) {
         throw new Error('Must specify either marker OR chr + pos');
     }
-    if (!(marker_col !== undefined || (chr_col !== undefined && pos_col !== undefined))) {
+    if (!(marker_col !== undefined || (chrom_col !== undefined && pos_col !== undefined))) {
         throw new Error('Must specify how to locate marker');
     }
 
@@ -70,8 +70,8 @@ function makeParser(
 
         if (marker_col !== undefined) {
             [chr, pos, ref, alt] = parseMarker(fields[marker_col - 1], false);
-        } else if (chr_col !== undefined && pos_col !== undefined) {
-            chr = fields[chr_col - 1].replace(/^chr/g, '');
+        } else if (chrom_col !== undefined && pos_col !== undefined) {
+            chr = fields[chrom_col - 1].replace(/^chr/g, '');
             pos = fields[pos_col - 1];
             ref = fields[ref_col - 1];
             alt = fields[alt_col - 1];
@@ -79,7 +79,7 @@ function makeParser(
             throw new Error('Must specify how to parse file');
         }
 
-        const log_pval = parsePvalToLog(fields[pval_col - 1], is_log_pval);
+        const log_pval = parsePvalToLog(fields[pvalue_col - 1], is_neg_log_pvalue);
         ref = ref || null;
         alt = alt || null;
 
@@ -91,7 +91,7 @@ function makeParser(
             n_samples = fields[n_samples_col - 1];
         }
         const beta = beta_col !== undefined ? +fields[beta_col - 1] : null;
-        const stderr_beta = stderr_col !== undefined ? +fields[stderr_col - 1] : null;
+        const stderr_beta = stderr_beta_col !== undefined ? +fields[stderr_beta_col - 1] : null;
 
         if (allele_freq_col || allele_count_col) {
             alt_allele_freq = parseAlleleFrequency({
@@ -118,14 +118,14 @@ function makeParser(
 
 // Preconfigured parser with defaults for a standard file format
 const standard_gwas_parser = makeParser({
-    chr_col: 1,
+    chrom_col: 1,
     pos_col: 2,
     ref_col: 3,
     alt_col: 4,
-    pval_col: 5,
+    pvalue_col: 5,
     beta_col: 6,
-    stderr_col: 7,
-    is_log_pval: true,
+    stderr_beta_col: 7,
+    is_neg_log_pvalue: true,
     delimiter: '\t',
 });
 

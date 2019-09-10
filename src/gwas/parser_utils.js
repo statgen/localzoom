@@ -36,15 +36,15 @@ function parseMarker(value, test = false) {
 /**
  * Parse (and validate) a given number, and return the -log10 pvalue.
  * @param value
- * @param {boolean} is_log_pval
+ * @param {boolean} is_neg_log
  * @returns {number||null} The -log10 pvalue
  */
-function parsePvalToLog(value, is_log_pval = false) {
+function parsePvalToLog(value, is_neg_log = false) {
     if (value === null) {
         return value;
     }
     const val = +value;
-    if (is_log_pval) { // Take as is
+    if (is_neg_log) { // Take as is
         return val;
     }
     // Regular pvalue: validate and convert
