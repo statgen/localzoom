@@ -3,8 +3,7 @@
  * A modal dialog window used to specify file parsing configuration options
  * See: https://vuejs.org/v2/examples/modal.html -->
  */
-import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
-import bsTab from 'bootstrap-vue/es/components/tabs/tab';
+import { BTabs, BTab } from 'bootstrap-vue/esm/';
 
 import { isHeader, guessGWAS } from '../gwas/sniffers';
 import { makeParser } from '../gwas/parsers';
@@ -175,8 +174,8 @@ export default {
         },
     },
     components: {
-        bsTab,
-        bsTabs,
+        BTab,
+        BTabs,
     },
 };
 </script>
@@ -202,8 +201,8 @@ export default {
               </div>
 
               <div v-else-if="current_page === PAGES.variant">
-                <bs-tabs v-model="variant_spec_tab">
-                  <bs-tab title="Variant from columns" class="pt-3">
+                <b-tabs v-model="variant_spec_tab">
+                  <b-tab title="Variant from columns" class="pt-3">
                     <div class="form-group row">
                       <label for="vs-chr" class="col-sm-2">Chromosome</label>
                       <div class="col-sm-4">
@@ -244,8 +243,8 @@ export default {
                         </select>
                       </div>
                     </div>
-                  </bs-tab>
-                  <bs-tab title="Variant from marker" class="pt-3">
+                  </b-tab>
+                  <b-tab title="Variant from marker" class="pt-3">
                     <div class="form-group row">
                       <label for="vs-marker" class="col-sm-2">Marker</label>
                       <div class="col-sm-4">
@@ -257,8 +256,8 @@ export default {
                         </select>
                       </div>
                     </div>
-                  </bs-tab>
-                </bs-tabs>
+                  </b-tab>
+                </b-tabs>
                 <div class="form-group row">
                   <label for="vs-pval" class="col-sm-2">P-value column</label>
                   <div class="col-sm-4">

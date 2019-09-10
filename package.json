@@ -20,7 +20,7 @@
     "lodash": "^4.17.11",
     "tabix-reader": "abought/tabix-reader",
     "tabulator-tables": "^4.1.4",
-    "vue": "^2.5.17",
+    "vue": "^2.6.10",
     "vue-bootstrap-typeahead": "^0.2.6"
   },
   "devDependencies": {

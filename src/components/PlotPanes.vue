@@ -2,9 +2,7 @@
 /**
  * Show a group of interconnected plots and export tables, for the provided data
  */
-import bsCard from 'bootstrap-vue/es/components/card/card';
-import bsTab from 'bootstrap-vue/es/components/tabs/tab';
-import bsTabs from 'bootstrap-vue/es/components/tabs/tabs';
+import { BCard, BTab, BTabs } from 'bootstrap-vue/esm/';
 
 import ExportData from './ExportData.vue';
 import LzPlot from './LzPlot.vue';
@@ -107,19 +105,19 @@ export default {
         ExportData,
         LzPlot,
         PhewasMaker,
-        bsCard,
-        bsTab,
-        bsTabs,
+        BCard,
+        BTab,
+        BTabs,
     },
 };
 </script>
 
 <template>
   <div>
-    <bs-card no-body>
-      <bs-tabs pills card vertical v-model="selected_tab"
+    <b-card no-body>
+      <b-tabs pills card vertical v-model="selected_tab"
                style="min-height:1000px;">
-        <bs-tab title="GWAS">
+        <b-tab title="GWAS">
           <lz-plot v-if="has_studies"
                    :show_loading="true"
                    :base_layout="assoc_layout"
@@ -135,8 +133,8 @@ export default {
                 Please add a GWAS track to continue
               </span>
             </div>
-        </bs-tab>
-        <bs-tab :disabled="!has_studies || !allow_phewas">
+        </b-tab>
+        <b-tab :disabled="!has_studies || !allow_phewas">
           <template slot="title">
             <span title="Only available for build GRCh37 datasets">PheWAS</span>
           </template>
@@ -144,16 +142,16 @@ export default {
                         :your_study="tmp_phewas_study"
                         :your_logpvalue="tmp_phewas_logpvalue"
                         :allow_render="selected_tab === PHEWAS_TAB"/>
-        </bs-tab>
-        <bs-tab title="Export" :disabled="!has_studies">
+        </b-tab>
+        <b-tab title="Export" :disabled="!has_studies">
           <export-data :has_credible_sets="has_credible_sets"
                        :study_names="study_names"
                        :table_data="table_data"
                        @requested-data="subscribeFields"/>
-        </bs-tab>
+        </b-tab>
 
-      </bs-tabs>
-    </bs-card>
+      </b-tabs>
+    </b-card>
   </div>
 </template>
 

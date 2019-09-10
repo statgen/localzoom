@@ -1,9 +1,5 @@
 <script>
-import bsCard from 'bootstrap-vue/es/components/card/card';
-import bsCollapse from 'bootstrap-vue/es/components/collapse/collapse';
-import bsNav from 'bootstrap-vue/es/components/nav/nav';
-import bsNavItem from 'bootstrap-vue/es/components/nav/nav-item';
-import bsToggle from 'bootstrap-vue/es/directives/toggle/toggle';
+import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/esm/';
 
 import {
     getBasicSources, getBasicLayout,
@@ -74,13 +70,11 @@ export default {
     },
     components: {
         GwasToolbar,
-        bsCollapse,
-        bsCard,
-        bsNav,
-        bsNavItem,
+        BCollapse,
+        BCard,
         PlotPanes,
     },
-    directives: { 'b-toggle': bsToggle },
+    directives: { VBToggle },
 };
 </script>
 
@@ -90,9 +84,9 @@ export default {
       <div class="col-md-12">
         <h1><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>
         <hr>
-        <button class="btn-link" v-b-toggle.instructions>Instructions</button>
-        <bs-collapse id="instructions" class="mt-2">
-          <bs-card>
+        <button class="btn-link" v-v-b-toggle.instructions>Instructions</button>
+        <b-collapse id="instructions" class="mt-2">
+          <b-card>
             <div class="card-text">
             This is a demonstration of loading GWAS results via the web browser, fetching only the
             data
@@ -132,8 +126,8 @@ export default {
               uploading your own custom credible set annotations.
             </p>
             </div>
-          </bs-card>
-        </bs-collapse>
+          </b-card>
+        </b-collapse>
       </div>
     </div>
 
