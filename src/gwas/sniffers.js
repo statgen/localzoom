@@ -3,7 +3,7 @@
  *  TODO: Reorganize code base and move more logic here
  */
 
-import { MISSING_VALUES, _parsePvalToLog, _parseMarker, _missingToNull } from './parser_utils';
+import { MISSING_VALUES, parsePvalToLog, parseMarker, _missingToNull } from './parser_utils';
 
 function isNumeric(val) {
     // Check whether an unparsed string is a numeric value"
@@ -104,7 +104,7 @@ function getPvalColumn(header_row, data_rows) {
     const validateP = (col, data, is_log) => { // Validate pvalues
         const cleaned_vals = _missingToNull(data.map(row => row[col]));
         try {
-            ps = cleaned_vals.map(p => _parsePvalToLog(p, is_log));
+            ps = cleaned_vals.map(p => parsePvalToLog(p, is_log));
         } catch (e) {
             return false;
         }
@@ -145,7 +145,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
 
     const first_row = data_rows[0];
     let marker_col = findColumn(MARKER_FIELDS, header_row);
-    if (marker_col !== null && _parseMarker(first_row[marker_col], true)) {
+    if (marker_col !== null && parseMarker(first_row[marker_col], true)) {
         marker_col += 1;
         return { marker_col };
     }

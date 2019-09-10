@@ -30,6 +30,7 @@ describe('GWAS parsing', () => {
                 variant: '1:76792_A/C',
                 beta: null,
                 stderr_beta: null,
+                alt_allele_freq: null,
             });
         });
 
@@ -42,6 +43,7 @@ describe('GWAS parsing', () => {
                 alt_col: 4,
                 pval_col: 16,
                 is_log_pval: false,
+                alt_allele_freq: null,
             });
             const actual = parser(rvtests_sample);
             assert.deepEqual(actual, {
@@ -53,6 +55,7 @@ describe('GWAS parsing', () => {
                 variant: '1:761893_G/T',
                 beta: null,
                 stderr_beta: null,
+                alt_allele_freq: null,
             });
         });
         it('parses beta and stderr where appropriate', () => {
@@ -69,6 +72,7 @@ describe('GWAS parsing', () => {
                 log_pvalue: 1,
                 beta: 0.5,
                 stderr_beta: 0.6,
+                alt_allele_freq: null,
             });
         });
     });

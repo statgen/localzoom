@@ -4,6 +4,7 @@
 
 const MISSING_VALUES = new Set(['', '.', 'NA', 'N/A', 'n/a', 'nan', '-nan', 'NaN', '-NaN', 'null', 'NULL', 'None', null]);
 const REGEX_MARKER = /^(?:chr)?([a-zA-Z0-9]+?):(\d+)[_:]?(\w+)?[/:|]?([^_]+)?_?(.*)?/;
+const REGEX_PVAL = /([\d.-]+)([\sxeE]*)([0-9-]*)/;
 
 /**
  * Convert all missing values to a standardized input form
@@ -50,14 +51,66 @@ function parsePvalToLog(value, is_log_pval = false) {
     if (val < 0 || val > 1) {
         throw new Error('p value is not in the allowed range');
     }
-    // 0-values are explicitly allowed and will convert to infinity by design
+    //  0-values are explicitly allowed and will convert to infinity by design, as they often
+    //    indicate underflow errors in the input data.
+    if (val === 0) {
+        // Determine whether underflow is due to the source data, or value conversion
+        if (value === '0') {
+            // The source data is bad, so insert an obvious placeholder value
+            return Infinity;
+        }
+        // h/t @welchr: aggressively turn the underflowing string value into -log10 via regex
+        // Only do this if absolutely necessary, because it is a performance hit
+
+        let [, base, , exponent] = value.match(REGEX_PVAL);
+        base = +base;
+
+        if (exponent !== '') {
+            exponent = +exponent;
+        } else {
+            exponent = 0;
+        }
+        if (base === 0) {
+            return Infinity;
+        }
+        return -(Math.log10(+base) + +exponent);
+    }
     return -Math.log10(val);
+}
+
+function parseAlleleFrequency({ freq, allele_count, n_samples, is_alt_effect = true }) {
+    if (freq !== undefined && allele_count !== undefined) {
+        throw new Error('Frequency and allele count options are mutually exclusive');
+    }
+
+    let result;
+    if (freq === undefined && (MISSING_VALUES.has(allele_count) || MISSING_VALUES.has(n_samples))) {
+        // Allele count parsing
+        return null;
+    }
+    if (freq === undefined && allele_count !== undefined) {
+        result = +allele_count / +n_samples;
+    } else if (MISSING_VALUES.has(freq)) { // Frequency-based parsing
+        return null;
+    } else {
+        result = +freq;
+    }
+
+    // No matter how the frequency is specified, this stuff is always done
+    if (result < 0 || result > 1) {
+        throw new Error('Allele frequency is not in the allowed range');
+    }
+    if (!is_alt_effect) { // Orient the frequency to the alt allele
+        return 1 - result;
+    }
+    return result;
 }
 
 export {
     MISSING_VALUES, REGEX_MARKER,
     missingToNull as _missingToNull,
     // Exports for unit testing
-    parseMarker as _parseMarker,
-    parsePvalToLog as _parsePvalToLog,
+    parseAlleleFrequency,
+    parseMarker,
+    parsePvalToLog,
 };
