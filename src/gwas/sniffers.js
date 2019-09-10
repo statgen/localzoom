@@ -181,8 +181,7 @@ function getChromPosRefAltColumns(header_row, data_rows) {
  */
 function getEffectSizeColumns(header_names, data_rows) {
     const BETA_FIELDS = ['beta', 'effect_size', 'alt_effsize', 'effect'];
-    const STDERR_BETA_FIELDS = ['stderr_beta', 'stderr', 'effect_size_sd', 'se'];
-
+    const STDERR_BETA_FIELDS = ['stderr_beta', 'stderr', 'sebeta', 'effect_size_sd', 'se'];
 
     function validate_numeric(col, data) {
         const cleaned_vals = _missingToNull(data.map(row => row[col]));

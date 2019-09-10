@@ -148,6 +148,21 @@ describe('guessGWAS format detection', () => {
         assert.deepEqual(actual, { marker_col: 4, pvalue_col: 9, is_neg_log_pvalue: false });
     });
 
+    it('handles EMMAX-EPACTS', () => {
+        // Sample from a file that used multiple tools
+        const headers = ['#CHROM', 'BEG', 'END', 'MARKER_ID', 'NS', 'AC', 'CALLRATE', 'GENOCNT', 'MAF', 'STAT', 'PVALUE', 'BETA', 'SEBETA', 'R2'];
+        const data = [['1', '762320', '762320', '1:762320_C/T_rs75333668', '3805', '100.00', '1.00000', '3707/96/2', '0.01314', '0.7942', '0.4271', '0.08034', '0.1012', '0.0001658']];
+
+        const actual = guessGWAS(headers, data);
+        assert.deepEqual(actual, {
+            marker_col: 4,
+            pvalue_col: 11,
+            is_neg_log_pvalue: false,
+            beta_col: 12,
+            stderr_beta_col: 13,
+        });
+    });
+
     it('handles METAL', () => {
         const headers = ['#CHROM', 'POS', 'REF', 'ALT', 'N', 'POOLED_ALT_AF', 'DIRECTION_BY_STUDY', 'EFFECT_SIZE', 'EFFECT_SIZE_SD', 'H2', 'PVALUE'];
         const data = [['1', '10177', 'A', 'AC', '491984', '0.00511094', '?-????????????????-????+???????????????????????????????????????????????????????????????????-????????????????????????????????????????????????????????????????????????????????', '-0.0257947', '0.028959', '1.61266e-06', '0.373073']];
@@ -177,7 +192,14 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { chrom_col: 1, pos_col: 3, ref_col: 4, alt_col: 7, pvalue_col: 9, is_neg_log_pvalue: false },
+            {
+                chrom_col: 1,
+                pos_col: 3,
+                ref_col: 4,
+                alt_col: 7,
+                pvalue_col: 9,
+                is_neg_log_pvalue: false
+            },
         );
     });
 
@@ -248,7 +270,13 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { marker_col: 3, pvalue_col: 12, is_neg_log_pvalue: false, beta_col: 9, stderr_beta_col: 10 },
+            {
+                marker_col: 3,
+                pvalue_col: 12,
+                is_neg_log_pvalue: false,
+                beta_col: 9,
+                stderr_beta_col: 10
+            },
         );
     });
 
