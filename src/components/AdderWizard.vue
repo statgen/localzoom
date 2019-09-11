@@ -3,13 +3,15 @@
  * A modal dialog window used to specify file parsing configuration options
  * See: https://vuejs.org/v2/examples/modal.html -->
  */
-import { BTabs, BTab } from 'bootstrap-vue/esm/';
+import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/esm/';
 
 import { isHeader, guessGWAS } from '../gwas/sniffers';
 import { makeParser } from '../gwas/parsers';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
+
+const AF_SPEC = { freq: 1, count: 2 };
 
 const PAGES = {
     filename: 0,
@@ -20,7 +22,9 @@ const PAGES = {
 export default {
     name: 'adder-wizard',
     beforeCreate() {
+        // Makes enums available within vue template
         this.PAGES = PAGES;
+        this.AF_SPEC = AF_SPEC;
     },
     mounted() {
         document.body.addEventListener('keyup', (e) => {
@@ -38,6 +42,8 @@ export default {
             // Which part of the UI should we show?
             current_page: this.filename ? PAGES.filename : PAGES.variant,
             variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
+            freq_spec_option: null,
+
             // Configuration options for variant data
             marker_col: null,
 
@@ -51,10 +57,15 @@ export default {
             pvalue_col: null,
             is_neg_log_pvalue: false,
 
-            // These fields are optional. They're more useful for a standalone upload service
-            //  but we can add tooltip fields in the future for UI.
+            // These fields are each optional and standalone.
             beta_col: null,
             stderr_beta_col: null,
+
+            // Optional AF info is provided by 2-3 fields: `is_alt_effect` + (freq OR 2 counts)
+            allele_freq_col: null,
+            allele_count_col: null,
+            n_samples_col: null,
+            is_alt_effect: null,
         };
     },
     watch: {
@@ -113,6 +124,28 @@ export default {
         },
     },
     computed: {
+        freqSpec() {
+            const {
+                freq_spec_option,
+                allele_freq_col,
+                allele_count_col,
+                n_samples_col,
+                is_alt_effect,
+            } = this;
+            const res = { is_alt_effect };
+            let is_valid = (is_alt_effect !== null);
+
+            if (freq_spec_option === AF_SPEC.freq) {
+                is_valid = is_valid && (allele_freq_col !== null);
+                res.allele_freq_col = allele_freq_col;
+            } else if (freq_spec_option === AF_SPEC.count) {
+                is_valid = is_valid && (allele_count_col !== null && n_samples_col !== null);
+                res.allele_count_col = allele_count_col;
+                res.n_samples_col = n_samples_col;
+            }
+            return is_valid ? res : {};
+        },
+
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
             const { marker_col, chrom_col, pos_col, ref_col, alt_col } = this;
@@ -138,7 +171,8 @@ export default {
                 is_neg_log_pvalue,
                 beta_col,
                 stderr_beta_col,
-            }, this.variantSpec);
+            }, this.variantSpec,
+            this.freqSpec);
         },
         isValid() {
             const hasVariant = Object.keys(this.variantSpec).length !== 0;
@@ -174,6 +208,8 @@ export default {
         },
     },
     components: {
+        BFormGroup,
+        BFormRadio,
         BTab,
         BTabs,
     },
@@ -281,22 +317,6 @@ export default {
                     </div>
                   </div>
                 </div>
-
-                <div class="row">
-                  <div class="card card-body bg-light">
-                    <div v-if="isValid && preview.error">
-                      <span class="text-danger">{{ preview.error }}</span>
-                    </div>
-                    <div v-else-if="isValid">
-                      Variant: {{ preview.variant }}<br>
-                      -log<sub>10</sub>(p): {{ preview.log_pvalue.toFixed(3) }}
-                    </div>
-                    <div v-else>
-                      Please select options to preview parsed data
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
               <div v-else-if="current_page === PAGES.optional">
@@ -324,7 +344,106 @@ export default {
                     </select>
                   </div>
                 </div>
+                <h4>Allele Frequency</h4>
+                <div class="form-group row">
+                  <label class="col-sm-2">Minor allele:</label>
+                  <div class="col-sm-10">
+                    <b-form-radio inline :value="false" v-model="is_alt_effect">Ref</b-form-radio>
+                    <b-form-radio inline :value="true" v-model="is_alt_effect">Alt</b-form-radio>
+                  </div>
+                </div>
+
+                <div class="form-group row">
+                  <label class="col-sm-2">Specify from:</label>
+                  <div class="col-sm-10">
+                    <b-form-radio inline :value="AF_SPEC.freq"
+                                  v-model="freq_spec_option">Frequency</b-form-radio>
+                    <b-form-radio inline :value="AF_SPEC.count"
+                                  v-model="freq_spec_option">Counts</b-form-radio>
+                  </div>
+                </div>
+
+                  <div v-if="freq_spec_option === AF_SPEC.freq">
+                    <div class="form-group row">
+                      <label for="vs-af-freq" class="col-sm-2">Frequency</label>
+                      <div class="col-sm-4">
+                        <select id="vs-af-freq" v-model="allele_freq_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-sm-6"></div>
+                    </div>
+                  </div>
+                  <div v-else-if="freq_spec_option === AF_SPEC.count">
+                    <div class="form-group row">
+                      <label for="vs-af-count" class="col-sm-2">Count</label>
+                      <div class="col-sm-4">
+                        <select id="vs-af-count" v-model="allele_count_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                      <label for="vs-af-ns" class="col-sm-2"># Samples</label>
+                      <div class="col-sm-4">
+                        <select id="vs-af-ns" v-model="n_samples_col" class="form-control">
+                          <option v-for="(item, index) in column_titles"
+                                  :value="index + 1" :key="index">
+                            {{ item }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <span class="text-muted">
+                      Please select a frequency option in order to use this feature
+                    </span>
+                  </div>
+
               </div>
+
+              <div class="row">
+                  <div class="card card-body bg-light">
+                    <div v-if="isValid && preview.error">
+                      <span class="text-danger">{{ preview.error }}</span>
+                    </div>
+                    <div v-else-if="isValid">
+                      <table class="preview-table">
+                        <tr>
+                          <td>Variant</td>
+                          <td>{{ preview.variant }}</td>
+                        </tr>
+                        <tr>
+                          <td>-log<sub>10</sub>(p)</td>
+                          <td>{{ preview.log_pvalue.toFixed(3) }}</td>
+                        </tr>
+                        <tr>
+                          <td>&beta;</td>
+                          <td>{{ preview.beta ? preview.beta.toFixed(3) : '' }}</td>
+                        </tr>
+                        <tr>
+                          <td>SE(&beta;)</td>
+                          <td>{{ preview.stderr_beta ? preview.stderr_beta.toFixed(3): '' }}</td>
+                        </tr>
+                        <tr>
+                          <td>Allele freq</td>
+                          <td>
+                            {{ preview.alt_allele_freq ? preview.alt_allele_freq.toFixed(3) : '' }}
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                    <div v-else>
+                      Please select options to preview parsed data.
+                    </div>
+                  </div>
+                </div>
+
               <div class="row mt-3">
                 <button v-if="current_page === PAGES.optional" class="btn btn-success ml-auto"
                         :disabled="!isValid" @click="sendOptions">
@@ -364,7 +483,7 @@ export default {
     width: 800px;
     height: 85%;
     overflow-y: auto;
-    margin: 0px auto;
+    margin: 0 auto;
     padding: 20px 30px;
     background-color: #fff;
     border-radius: 2px;
@@ -380,6 +499,7 @@ export default {
 
   .modal-body {
     margin: 20px 0;
+    overflow-y: scroll;
   }
 
   /*
@@ -402,5 +522,10 @@ export default {
   .modal-leave-active .modal-container {
     -webkit-transform: scale(1.1);
     transform: scale(1.1);
+  }
+
+  .preview-table td {
+    text-align: right;
+    padding-right: 20px;
   }
 </style>

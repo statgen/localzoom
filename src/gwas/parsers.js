@@ -1,5 +1,9 @@
 import { parseAlleleFrequency, parseMarker, parsePvalToLog } from './parser_utils';
 
+function has(num) {
+    return Number.isInteger(num);
+}
+
 /**
  * Specify how to parse a GWAS file, given certain column information.
  * Outputs an object with fields in portal API format.
@@ -41,17 +45,17 @@ function makeParser(
     } = {},
 ) {
     // Column IDs should be 1-indexed (human friendly)
-    if (marker_col !== undefined && chrom_col !== undefined && pos_col !== undefined) {
+    if (has(marker_col) && has(chrom_col) && has(pos_col)) {
         throw new Error('Must specify either marker OR chr + pos');
     }
-    if (!(marker_col !== undefined || (chrom_col !== undefined && pos_col !== undefined))) {
+    if (!(has(marker_col) || (has(chrom_col) && has(pos_col)))) {
         throw new Error('Must specify how to locate marker');
     }
 
-    if (allele_count_col !== undefined && allele_freq_col !== undefined) {
+    if (has(allele_count_col) && has(allele_freq_col)) {
         throw new Error('Allele count and frequency options are mutually exclusive');
     }
-    if (allele_count_col !== undefined && n_samples_col === undefined) {
+    if (has(allele_count_col) && !has(n_samples_col)) {
         throw new Error('To calculate allele frequency from counts, you must also provide n_samples');
     }
 
@@ -68,9 +72,9 @@ function makeParser(
         let allele_count;
         let n_samples;
 
-        if (marker_col !== undefined) {
+        if (has(marker_col)) {
             [chr, pos, ref, alt] = parseMarker(fields[marker_col - 1], false);
-        } else if (chrom_col !== undefined && pos_col !== undefined) {
+        } else if (has(chrom_col) && has(pos_col)) {
             chr = fields[chrom_col - 1].replace(/^chr/g, '');
             pos = fields[pos_col - 1];
             ref = fields[ref_col - 1];
@@ -83,15 +87,15 @@ function makeParser(
         ref = ref || null;
         alt = alt || null;
 
-        if (allele_freq_col !== undefined) {
+        if (has(allele_freq_col)) {
             freq = fields[allele_freq_col - 1];
         }
-        if (allele_count_col !== undefined) {
+        if (has(allele_count_col)) {
             allele_count = fields[allele_count_col - 1];
             n_samples = fields[n_samples_col - 1];
         }
-        const beta = beta_col !== undefined ? +fields[beta_col - 1] : null;
-        const stderr_beta = stderr_beta_col !== undefined ? +fields[stderr_beta_col - 1] : null;
+        const beta = has(beta_col) ? +fields[beta_col - 1] : null;
+        const stderr_beta = has(stderr_beta_col) ? +fields[stderr_beta_col - 1] : null;
 
         if (allele_freq_col || allele_count_col) {
             alt_allele_freq = parseAlleleFrequency({
