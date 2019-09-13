@@ -346,7 +346,7 @@ export default {
                 </div>
                 <h4>Allele Frequency</h4>
                 <div class="form-group row">
-                  <label class="col-sm-2">Minor allele:</label>
+                  <label class="col-sm-2">Effect allele:</label>
                   <div class="col-sm-10">
                     <b-form-radio inline :value="false" v-model="is_alt_effect">Ref</b-form-radio>
                     <b-form-radio inline :value="true" v-model="is_alt_effect">Alt</b-form-radio>
