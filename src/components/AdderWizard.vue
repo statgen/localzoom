@@ -48,8 +48,8 @@ export default {
             marker_col: null,
 
             // These are set by tabix but can be overridden
-            chrom_col: this.file_reader.colSeq,
-            pos_col: this.file_reader.colStart,
+            chrom_col: this.file_reader.colSeq || null,
+            pos_col: this.file_reader.colStart || null,
 
             // User must define these
             ref_col: null,
@@ -346,7 +346,7 @@ export default {
                 </div>
                 <h4>Allele Frequency</h4>
                 <div class="form-group row">
-                  <label class="col-sm-2">Effect allele:</label>
+                  <label class="col-sm-2">Effect allele</label>
                   <div class="col-sm-10">
                     <b-form-radio inline :value="false" v-model="is_alt_effect">Ref</b-form-radio>
                     <b-form-radio inline :value="true" v-model="is_alt_effect">Alt</b-form-radio>
@@ -354,7 +354,7 @@ export default {
                 </div>
 
                 <div class="form-group row">
-                  <label class="col-sm-2">Specify from:</label>
+                  <label class="col-sm-2">Specify from</label>
                   <div class="col-sm-10">
                     <b-form-radio inline :value="AF_SPEC.freq"
                                   v-model="freq_spec_option">Frequency</b-form-radio>
