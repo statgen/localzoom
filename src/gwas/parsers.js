@@ -1,4 +1,4 @@
-import { parseAlleleFrequency, parseMarker, parsePvalToLog } from './parser_utils';
+import { MISSING_VALUES, parseAlleleFrequency, parseMarker, parsePvalToLog } from './parser_utils';
 
 function has(num) {
     return Number.isInteger(num);
@@ -81,6 +81,13 @@ function makeParser(
             alt = fields[alt_col - 1];
         } else {
             throw new Error('Must specify how to parse file');
+        }
+
+        if (MISSING_VALUES.has(ref)) {
+            ref = null;
+        }
+        if (MISSING_VALUES.has(alt)) {
+            alt = null;
         }
 
         const log_pval = parsePvalToLog(fields[pvalue_col - 1], is_neg_log_pvalue);
