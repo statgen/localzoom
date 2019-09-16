@@ -7,6 +7,7 @@ import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/esm/';
 
 import { isHeader, guessGWAS } from '../gwas/sniffers';
 import { makeParser } from '../gwas/parsers';
+import { has } from '../gwas/parser_utils';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
@@ -105,7 +106,7 @@ export default {
                         if (guess) {
                             Object.assign(this, guess);
                             // If config is detected, set the UI to show best options
-                            this.variant_spec_tab = (guess.marker_col !== undefined)
+                            this.variant_spec_tab = has(guess.marker_col)
                                 ? TAB_FROM_MARKER : TAB_FROM_SEPARATE_COLUMNS;
                         }
                     } else {
@@ -136,10 +137,10 @@ export default {
             let is_valid = (is_alt_effect !== null);
 
             if (freq_spec_option === AF_SPEC.freq) {
-                is_valid = is_valid && (allele_freq_col !== null);
+                is_valid = is_valid && has(allele_freq_col);
                 res.allele_freq_col = allele_freq_col;
             } else if (freq_spec_option === AF_SPEC.count) {
-                is_valid = is_valid && (allele_count_col !== null && n_samples_col !== null);
+                is_valid = is_valid && (has(allele_count_col) && has(n_samples_col));
                 res.allele_count_col = allele_count_col;
                 res.n_samples_col = n_samples_col;
             }
@@ -149,11 +150,11 @@ export default {
         variantSpec() {
             // Only provide a value if the variant description is minimally complete
             const { marker_col, chrom_col, pos_col, ref_col, alt_col } = this;
-            if (this.variant_spec_tab === TAB_FROM_MARKER && marker_col !== null) {
+            if (this.variant_spec_tab === TAB_FROM_MARKER && has(marker_col)) {
                 return { marker_col };
             }
             if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
-                && pos_col !== null && chrom_col !== null) {
+                && has(pos_col) && has(chrom_col)) {
                 // Ref and alt are optional
                 return {
                     chrom_col,
@@ -176,20 +177,24 @@ export default {
         },
         isValid() {
             const hasVariant = Object.keys(this.variantSpec).length !== 0;
-            const hasP = this.parserOptions.pvalue_col !== null;
+            const hasP = has(this.parserOptions.pvalue_col);
             return hasVariant && hasP;
         },
         parser() {
             if (this.isValid) {
-                return makeParser(this.parserOptions);
+                try {
+                    return makeParser(this.parserOptions);
+                } catch (e) {
+                    return () => { throw new Error('Invalid parser configuration'); };
+                }
             }
-            return () => {
-            };
+            return () => {};
         },
         preview() {
             try {
                 return this.parser(this.sample_data[0]);
             } catch (e) {
+                console.error(e);
                 return { error: 'Could not parse column contents' };
             }
         },

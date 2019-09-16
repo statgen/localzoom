@@ -6,6 +6,17 @@ const MISSING_VALUES = new Set(['', '.', 'NA', 'N/A', 'n/a', 'nan', '-nan', 'NaN
 const REGEX_MARKER = /^(?:chr)?([a-zA-Z0-9]+?):(\d+)[_:]?(\w+)?[/:|]?([^_]+)?_?(.*)?/;
 const REGEX_PVAL = /([\d.-]+)([\sxeE]*)([0-9-]*)/;
 
+
+/**
+ * Utility helper that checks for the presence of a numeric value (incl 0),
+ *  eg "has column specified"
+ * @param num
+ * @returns {boolean}
+ */
+function has(num) {
+    return Number.isInteger(num);
+}
+
 /**
  * Convert all missing values to a standardized input form
  * Useful for columns like pvalue, where a missing value explicitly allowed
@@ -109,6 +120,7 @@ function parseAlleleFrequency({ freq, allele_count, n_samples, is_alt_effect = t
 export {
     MISSING_VALUES, REGEX_MARKER,
     missingToNull as _missingToNull,
+    has,
     // Exports for unit testing
     parseAlleleFrequency,
     parseMarker,

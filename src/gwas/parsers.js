@@ -1,8 +1,11 @@
-import { MISSING_VALUES, parseAlleleFrequency, parseMarker, parsePvalToLog } from './parser_utils';
+import {
+    MISSING_VALUES,
+    has,
+    parseAlleleFrequency,
+    parseMarker,
+    parsePvalToLog,
+} from './parser_utils';
 
-function has(num) {
-    return Number.isInteger(num);
-}
 
 /**
  * Specify how to parse a GWAS file, given certain column information.
