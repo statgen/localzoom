@@ -98,7 +98,7 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
 function getPvalColumn(header_row, data_rows) {
     // TODO: Allow overrides
     const LOGPVALUE_FIELDS = ['neg_log_pvalue', 'log_pvalue', 'log_pval', 'logpvalue'];
-    const PVALUE_FIELDS = ['pvalue', 'p.value', 'pval', 'p_score', 'p'];
+    const PVALUE_FIELDS = ['pvalue', 'p.value', 'p-value', 'pval', 'p_score', 'p'];
 
     let ps;
     const validateP = (col, data, is_log) => { // Validate pvalues

@@ -80,10 +80,16 @@ function makeParser(
         } else if (has(chrom_col) && has(pos_col)) {
             chr = fields[chrom_col - 1].replace(/^chr/g, '');
             pos = fields[pos_col - 1];
-            ref = fields[ref_col - 1];
-            alt = fields[alt_col - 1];
         } else {
             throw new Error('Must specify how to parse file');
+        }
+
+        if (has(ref_col)) {
+            ref = fields[ref_col - 1];
+        }
+
+        if (has(alt_col)) {
+            alt = fields[alt_col - 1];
         }
 
         if (MISSING_VALUES.has(ref)) {
