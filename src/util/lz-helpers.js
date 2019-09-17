@@ -75,9 +75,9 @@ function createStudyLayout(
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     const assoc_tooltip = assoc_layer.tooltip;
 
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|htmlescape}} </strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
 
     const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
