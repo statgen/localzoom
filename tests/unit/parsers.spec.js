@@ -58,6 +58,7 @@ describe('GWAS parsing', () => {
                 alt_allele_freq: null,
             });
         });
+
         it('parses beta and stderr where appropriate', () => {
             const line = 'X:12_A/T\t0.1\t0.5\t0.6';
             const parser = makeParser({
@@ -77,6 +78,29 @@ describe('GWAS parsing', () => {
                 log_pvalue: 1,
                 beta: 0.5,
                 stderr_beta: 0.6,
+                alt_allele_freq: null,
+            });
+        });
+
+        it('ensures that ref and alt are uppercase', () => {
+            const line = 'X:12\ta\tNA\t0.1';
+            const parser = makeParser({
+                marker_col: 1,
+                ref_col: 2,
+                alt_col: 3,
+                pvalue_col: 4,
+            });
+            const actual = parser(line);
+
+            assert.deepEqual(actual, {
+                chromosome: 'X',
+                position: 12,
+                ref_allele: 'A',
+                alt_allele: null,
+                variant: 'X:12',
+                log_pvalue: 1,
+                beta: null,
+                stderr_beta: null,
                 alt_allele_freq: null,
             });
         });

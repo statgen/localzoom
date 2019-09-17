@@ -198,7 +198,7 @@ describe('guessGWAS format detection', () => {
                 ref_col: 4,
                 alt_col: 7,
                 pvalue_col: 9,
-                is_neg_log_pvalue: false
+                is_neg_log_pvalue: false,
             },
         );
     });
@@ -275,7 +275,7 @@ describe('guessGWAS format detection', () => {
                 pvalue_col: 12,
                 is_neg_log_pvalue: false,
                 beta_col: 9,
-                stderr_beta_col: 10
+                stderr_beta_col: 10,
             },
         );
     });
@@ -329,7 +329,13 @@ describe('guessGWAS format detection', () => {
         const actual = guessGWAS(headers, data);
         assert.deepEqual(
             actual,
-            { marker_col: 1, pvalue_col: 6, is_neg_log_pvalue: false, beta_col: 4, stderr_beta_col: 5 },
+            {
+                marker_col: 1,
+                pvalue_col: 6,
+                is_neg_log_pvalue: false,
+                beta_col: 4,
+                stderr_beta_col: 5,
+            },
         );
     });
 });

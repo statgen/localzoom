@@ -125,8 +125,8 @@ function makeParser(
         return {
             chromosome: chr,
             position: +pos,
-            ref_allele: ref,
-            alt_allele: alt,
+            ref_allele: ref ? ref.toUpperCase() : null,
+            alt_allele: alt ? alt.toUpperCase() : null,
             log_pvalue: log_pval,
             variant: `${chr}:${pos}${ref_alt}`,
             beta,
