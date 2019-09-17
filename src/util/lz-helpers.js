@@ -75,6 +75,10 @@ function createStudyLayout(
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     const assoc_tooltip = assoc_layer.tooltip;
 
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|htmlescape}} </strong>{{/if}}';
+
     const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
         dash_extra.push({
@@ -89,7 +93,11 @@ function createStudyLayout(
             options: [],
         });
     }
-    const fields_extra = [];
+    const fields_extra = [
+        '{{namespace[assoc]}}beta',
+        '{{namespace[assoc]}}stderr_beta',
+        '{{namespace[assoc]}}alt_allele_freq',
+    ];
     if (annotations.credible_sets) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
