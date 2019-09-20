@@ -116,7 +116,9 @@ export default {
   <div>
     <b-card no-body>
       <b-tabs pills card vertical v-model="selected_tab"
-               style="min-height:1000px;">
+               style="min-height:1000px;" class="flex-nowrap"
+              content-class="scroll-extra"
+      >
         <b-tab title="GWAS">
           <lz-plot v-if="has_studies"
                    :show_loading="true"
@@ -156,10 +158,13 @@ export default {
 </template>
 
 
-<style scoped>
+<style>
   .placeholder-plot {
     width: 100%;
     height: 500px;
     border-style: dashed;
+  }
+  .scroll-extra {
+    overflow-x: scroll;
   }
 </style>
