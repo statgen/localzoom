@@ -80,7 +80,8 @@ export default {
 
             // TODO: Clean this up a bit to better match original display name
             const variant_data = deNamespace(lzEvent.data, 'assoc');
-            this.tmp_phewas_study = panel_name.replace(/^assoc_/, '');// FIXME: remove leading lzplot prefix
+            // Internally, LZ broadcasts `plotname.assoc_study`. Convert to `study` for display
+            this.tmp_phewas_study = panel_name.split('.')[1].replace(/^association_/, '');
             this.tmp_phewas_variant = variant_data.variant;
             this.tmp_phewas_logpvalue = variant_data.log_pvalue;
         },

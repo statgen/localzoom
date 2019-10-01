@@ -121,6 +121,12 @@ function createStudyLayout(
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
             id: `catalog_${source_name}`,
             namespace,
+            dashboard: { components: [] },
+            title: {
+                text: 'Hits in GWAS Catalog',
+                style: { 'font-size': '14px' },
+                x: 50,
+            },
         }));
     }
     return new_panels;

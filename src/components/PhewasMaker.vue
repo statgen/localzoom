@@ -102,11 +102,11 @@ export default {
     point in an association track.
   </p>
   <div v-else>
-    <h3>{{ variant_name }} in context</h3>
+    <h3>Known PheWAS Results: {{ variant_name }}</h3>
     <p>
       In your study <em style="word-break: break-word">{{ your_study }}</em>, this variant has a
       <span class="text-muted definition" :title="`p-value ${display_pvalue}`">
-        -log<sub>10</sub> p-value of: <strong>{{ display_logpvalue }}</strong>
+        -log<sub>10</sub> p-value of <strong>{{ display_logpvalue }}</strong>
       </span>. Below are other
       results for comparison.
     </p>
