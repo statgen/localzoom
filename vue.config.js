@@ -1,1 +1,1 @@
-module.exports = { baseUrl: './' };
+module.exports = { publicPath: './' };

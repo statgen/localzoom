@@ -1,19 +1,31 @@
 <script>
-/** A generic Vue component to wrap basic LZ components */
+/**
+ * A generic Vue component to wrap a LocusZoom instance
+ *
+ * This can handle any type of plot that LocusZoom supports, including multiple panels and
+ *  custom datasources
+ */
 
-// FIXME: Long term dependencies should all move to modules
-/* global LocusZoom */
+import LocusZoom from 'locuszoom';
+import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/dist/ext/lz-dynamic-urls.min';
+
+import { stateUrlMapping } from '../util/lz-helpers';
 
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {
     name: 'LzPlot',
     props: {
+        // The initial layout and datasources used to create this LZ instance.
         base_layout: { type: Object },
         base_sources: { type: Array },
-        pos_chr: { type: String },
-        pos_start: { type: Number },
-        pos_end: { type: Number },
-        show_loading: { type: Boolean, default: false },
+        // Plot region
+        chr: { type: String },
+        start: { type: Number },
+        end: { type: Number },
+
+        show_loading: { type: Boolean, default: false }, // Show loading indicators
+        // Change URL when plot updates. Only one plot on the page should use this.
+        dynamic_urls: { default: false },
     },
     beforeCreate() {
         uid += 1;
@@ -33,7 +45,7 @@ export default {
     },
     computed: {
         region() { // Hack: make sure that all 3 region properties get updated atomically
-            const { pos_chr: chr, pos_start: start, pos_end: end } = this;
+            const { chr, start, end } = this;
             return { chr, start, end };
         },
     },
@@ -88,6 +100,13 @@ export default {
                     this.$emit('region_changed', { chr, start, end });
                 }
             });
+
+            // Changes in the plot can be reflected in the URL, and vice versa (eg browser back
+            //  button can go back to a previously viewed region).
+            if (this.dynamic_urls) {
+                plotUpdatesUrl(plot, stateUrlMapping);
+                plotWatchesUrl(plot, stateUrlMapping);
+            }
         },
     },
     watch: {

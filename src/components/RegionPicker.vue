@@ -5,7 +5,7 @@
         v-model="region"
         :serializer="s => s.term"
         :min-matching-chars="3"
-        placeholder="chr:start-end"/>
+        placeholder="chr:start-end, rs, or gene"/>
     <button @click="selectRegion" class="btn btn-primary">Go to region</button>
   </div>
 </template>
@@ -14,7 +14,8 @@
 import { debounce } from 'lodash';
 import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBootstrapTypeahead.vue';
 
-import { REGEX_MARKER, REGEX_REGION } from '../util/constants';
+import { REGEX_REGION } from '../util/constants';
+import { REGEX_MARKER } from '../gwas/parser_utils';
 
 export default {
     name: 'region-picker',
@@ -22,7 +23,7 @@ export default {
     props: {
         max_range: {
             type: Number,
-            default: 1000000,
+            default: 500000,
         },
         search_url: {
             type: String,

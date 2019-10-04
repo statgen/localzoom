@@ -1,6 +1,6 @@
 <script>
-/* global LocusZoom */
-import LzPlot from '@/components/LzPlot.vue';
+import LocusZoom from 'locuszoom';
+import LzPlot from './LzPlot.vue';
 
 export default {
     name: 'PhewasMaker',
@@ -21,6 +21,13 @@ export default {
     computed: {
         display_logpvalue() {
             return LocusZoom.TransformationFunctions.get('scinotation')(this.your_logpvalue);
+        },
+        display_pvalue() {
+            const log = this.your_logpvalue;
+            if (!Number.isFinite(log)) {
+                return 0;
+            }
+            return LocusZoom.TransformationFunctions.get('scinotation')(10 ** -log);
         },
         base_phewas_layout() {
             const layer = LocusZoom.Layouts.get('data_layer', 'phewas_pvalues', {
@@ -95,10 +102,12 @@ export default {
     point in an association track.
   </p>
   <div v-else>
-    <h3>{{ variant_name }} in context</h3>
+    <h3>Known PheWAS Results: {{ variant_name }}</h3>
     <p>
       In your study <em style="word-break: break-word">{{ your_study }}</em>, this variant has a
-      -log<sub>10</sub> p-value of: <strong>{{ display_logpvalue }}</strong>. Below are other
+      <span class="text-muted definition" :title="`p-value ${display_pvalue}`">
+        -log<sub>10</sub> p-value of <strong>{{ display_logpvalue }}</strong>
+      </span>. Below are other
       results for comparison.
     </p>
 
@@ -119,5 +128,7 @@ export default {
 
 
 <style scoped>
-
+.definition {
+  text-decoration: dotted underline;
+}
 </style>

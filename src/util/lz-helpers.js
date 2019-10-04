@@ -1,11 +1,14 @@
-/* global LocusZoom */ // FIXME: do as modules
-import { makeParser } from '@/util/parsers';
+import LocusZoom from 'locuszoom';
+import 'locuszoom/dist/ext/lz-credible-sets.min'; // Import for side effects (globally register helpers)
 
-import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from '@/util/constants';
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from './constants';
+import { makeParser } from '../gwas/parsers';
+
+const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
 
 LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
     parseInit(init) {
-        this.params = init.params; // delimiter, marker_col, pval_col, is_log_p
+        this.params = init.params; // Used to create a parser
         this.parser = makeParser(this.params);
         this.reader = init.tabix_reader;
     },
@@ -72,6 +75,10 @@ function createStudyLayout(
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     const assoc_tooltip = assoc_layer.tooltip;
 
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
+
     const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
     if (Object.values(annotations).some(item => !!item)) {
         dash_extra.push({
@@ -86,7 +93,11 @@ function createStudyLayout(
             options: [],
         });
     }
-    const fields_extra = [];
+    const fields_extra = [
+        '{{namespace[assoc]}}beta',
+        '{{namespace[assoc]}}stderr_beta',
+        '{{namespace[assoc]}}alt_allele_freq',
+    ];
     if (annotations.credible_sets) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
@@ -110,6 +121,12 @@ function createStudyLayout(
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
             id: `catalog_${source_name}`,
             namespace,
+            dashboard: { components: [] },
+            title: {
+                text: 'Hits in GWAS Catalog',
+                style: { 'font-size': '14px' },
+                x: 50,
+            },
         }));
     }
     return new_panels;
@@ -158,16 +175,17 @@ function getBasicSources(study_sources = []) {
     ];
 }
 
-function getBasicLayout(initial_state = {}, study_panels = []) {
+function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     const panels = [
         ...study_panels,
         LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
     ];
 
-    return LocusZoom.Layouts.get('plot', 'standard_association', {
+    const extra = Object.assign({
         state: initial_state,
         panels,
-    });
+    }, mods);
+    return LocusZoom.Layouts.get('plot', 'standard_association', extra);
 }
 
 /**
@@ -185,8 +203,8 @@ function getBasicLayout(initial_state = {}, study_panels = []) {
 function deNamespace(data, prefer) {
     return Object.keys(data).reduce((acc, key) => {
         const new_key = key.replace(/.*?:/, '');
-        if (!Object.prototype.hasOwnProperty.call(acc, new_key) ||
-            (!prefer || key.startsWith(prefer))) {
+        if (!Object.prototype.hasOwnProperty.call(acc, new_key)
+            || (!prefer || key.startsWith(prefer))) {
             acc[new_key] = data[key];
         }
         return acc;
@@ -201,4 +219,6 @@ export {
     sourceName, addPanels,
     // General helpers
     deNamespace,
+    // Constants
+    stateUrlMapping,
 };

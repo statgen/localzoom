@@ -3,7 +3,7 @@
 This is a demonstration of loading GWAS results via the web browser, fetching only the data 
 required for that region. It works with Tabixed GWAS data files in a variety of formats.
 
-A live [demonstration](https://abought.github.io/locuszoom-tabix/) is available. 
+A live [demonstration](https://statgen.github.io/localzoom/) is available. 
 
 
 ## Getting help

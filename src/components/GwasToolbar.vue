@@ -1,6 +1,5 @@
 <script>
-import bsDropdown from 'bootstrap-vue/es/components/dropdown/dropdown';
-import bsDropdownItem from 'bootstrap-vue/es/components/dropdown/dropdown-item';
+import { BDropdown } from 'bootstrap-vue/esm/';
 
 import AdderWizard from './AdderWizard.vue';
 import RegionPicker from './RegionPicker.vue';
@@ -88,8 +87,7 @@ export default {
         },
     },
     components: {
-        bsDropdown,
-        bsDropdownItem,
+        BDropdown,
         AdderWizard,
         RegionPicker,
         TabixFile,
@@ -105,11 +103,11 @@ export default {
         <div v-if="study_count < max_studies">
           <tabix-file class="mr-1"
                       @ready="connectReader" @fail="showMessage" />
-          <bs-dropdown text="Add from URL" variant="success">
+          <b-dropdown text="Add from URL" variant="success">
             <div class="px-3">
               <tabix-url @ready="connectReader" @fail="showMessage" />
             </div>
-          </bs-dropdown>
+          </b-dropdown>
           <adder-wizard v-if="show_modal"
                         :file_reader="file_reader"
                         :file_name.sync="display_name"
@@ -122,8 +120,9 @@ export default {
                        @ready="selectRange"
                        @fail="showMessage" class="float-right"
                        :build="build"
+                       :max_range="1000000"
                        search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/" />
-        <bs-dropdown v-else text="Plot options" variant="info"
+        <b-dropdown v-else text="Plot options" variant="info"
                      class="float-right">
           <div class="px-3">
             <strong>Annotations</strong><br>
@@ -149,7 +148,7 @@ export default {
               <label class="form-check-label" for="build-38">GRCh38</label>
             </div>
           </div>
-        </bs-dropdown>
+        </b-dropdown>
       </div>
     </div>
     <div class="row" v-if="message">
@@ -160,4 +159,3 @@ export default {
 
 <style>
 </style>
-

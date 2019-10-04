@@ -1,12 +1,12 @@
 <script>
-/* global LocusZoom */
-
 /**
  * A LocalZoom-specific export widget. This wraps creation of a fields array + table config based
  * on the currently selected dataset. It emits a fields list event
  */
 
-import { sourceName } from '@/util/lz-helpers';
+import LocusZoom from 'locuszoom';
+
+import { sourceName } from '../util/lz-helpers';
 import TabulatorTable from './TabulatorTable.vue';
 
 function formatSciNotation(cell, params) {
@@ -35,16 +35,33 @@ export default {
         table_config() {
             // How should the table display this set of fields? Determined once at component load.
             const base = [
-                { title: 'Variant', field: 'variant' },
                 { title: 'Chrom', field: 'chromosome' },
                 { title: 'Pos', field: 'position' },
                 { title: 'Ref', field: 'ref_allele' },
                 { title: 'Alt', field: 'alt_allele' },
-                { title: '-log10 pvalue', field: 'log_pvalue', formatter: formatSciNotation },
+                { title: '-log<sub>10</sub>(p)', field: 'log_pvalue', formatter: formatSciNotation },
+                {
+                    title: '&beta;',
+                    field: 'beta',
+                    formatter: 'money',
+                    formatterParams: { precision: 3 },
+                },
+                {
+                    title: 'SE(&beta;)',
+                    field: 'stderr_beta',
+                    formatter: 'money',
+                    formatterParams: { precision: 3 },
+                },
+                {
+                    title: 'Alt freq.',
+                    field: 'alt_allele_freq',
+                    formatter: 'money',
+                    formatterParams: { precision: 3 },
+                },
             ];
             if (this.has_credible_sets) {
                 base.push(
-                    { title: 'In credible set?', field: 'is_member', formatter: 'tickCross' },
+                    { title: 'Cred. set', field: 'is_member', formatter: 'tickCross' },
                     { title: 'Posterior probability', field: 'posterior_prob', formatter: formatSciNotation },
                 );
             }
@@ -61,9 +78,14 @@ export default {
                 return;
             }
             const fields = [
-                `assoc_${source_name}:variant`, `assoc_${source_name}:chromosome`,
-                `assoc_${source_name}:position`, `assoc_${source_name}:ref_allele`,
-                `assoc_${source_name}:alt_allele`, `assoc_${source_name}:log_pvalue`,
+                `assoc_${source_name}:chromosome`,
+                `assoc_${source_name}:position`,
+                `assoc_${source_name}:ref_allele`,
+                `assoc_${source_name}:alt_allele`,
+                `assoc_${source_name}:log_pvalue`,
+                `assoc_${source_name}:alt_allele_freq`,
+                `assoc_${source_name}:beta`,
+                `assoc_${source_name}:stderr_beta`,
             ];
 
             if (this.has_credible_sets) {

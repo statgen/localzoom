@@ -1,8 +1,9 @@
 <script type="application/javascript">
-/* global blobReader */
 /**
  * Create a reader instance by picking files from a local machine
  */
+
+import { blobReader } from 'tabix-reader';
 
 export default {
     methods: {

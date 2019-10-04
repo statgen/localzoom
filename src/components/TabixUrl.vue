@@ -1,5 +1,4 @@
 <script type="application/javascript">
-/* global urlReader */
 /**
 * Given a URL, connect and create a reader instance. Also returns config options that can be used
 * with the reader instance.
@@ -7,6 +6,9 @@
  * FIXME: Warning: This is highly experimental, and performs no validation.
  *  Server MUST support byte-range requests- many local servers do not. Use at your own risk.
 */
+
+import { urlReader } from 'tabix-reader';
+
 export default {
     data() {
         return { url: '' };
