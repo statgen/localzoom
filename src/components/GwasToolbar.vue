@@ -121,7 +121,7 @@ export default {
                        @fail="showMessage" class="float-right"
                        :build="build"
                        :max_range="1000000"
-                       search_url="https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/" />
+                       search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/" />
         <b-dropdown v-else text="Plot options" variant="info"
                      class="float-right">
           <div class="px-3">

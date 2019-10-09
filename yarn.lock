@@ -5412,10 +5412,9 @@ locate-path@^3.0.0:
     p-locate "^3.0.0"
     path-exists "^3.0.0"
 
-locuszoom@locuszoom@0.10.0-beta.1:
+"locuszoom@https://github.com/statgen/locuszoom#8b06580":
   version "0.10.0-beta.1"
-  resolved "https://registry.yarnpkg.com/locuszoom/-/locuszoom-0.10.0-beta.1.tgz#bb98b0ca1686ec9f6e61018f104bb938c7e6ca37"
-  integrity sha512-WCfR5L9hUu132SfqaZyTW7Ld8ScO0c47gMEez3V/7Tiesr/Q2uoyU76ZrfSGHRxY7q08z66lAVH12CA2u7LJng==
+  resolved "https://github.com/statgen/locuszoom#8b065804188279ff33cb30619aa555566c834d36"
   dependencies:
     d3 "3.5.17"
     promise-polyfill "^8.1.3"

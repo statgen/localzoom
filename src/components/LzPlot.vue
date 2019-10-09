@@ -57,9 +57,13 @@ export default {
          */
         createLZ(base_layout, base_sources) {
             // Create and populate the plot
+            // The layout comes from properties assigned to a vue instance, which are automatically
+            //   wrapped (deeply) with Vue observable getters/setters. This can confuse LocusZoom,
+            //   so we will deep-copy to ensure this is just pure JS primitives
+            const layout = JSON.parse(JSON.stringify(base_layout));
             const data_sources = new LocusZoom.DataSources();
             base_sources.forEach(([name, config]) => data_sources.add(name, config));
-            const plot = LocusZoom.populate(`#${this.dom_id}`, data_sources, base_layout);
+            const plot = LocusZoom.populate(`#${this.dom_id}`, data_sources, layout);
 
             if (this.show_loading) {
                 // Add loading indicator to every panel if appropriate
@@ -115,8 +119,9 @@ export default {
                 // FIXME: this component receives notifications of a value it changes, a design
                 //   quirk that risks infinite update loops
                 // Only apply new region information if it has changed
-                const diffs = Object.keys(this.region).reduce((acc, key) => {
-                    const new_val = this.region[key];
+                const region = Object.assign({}, this.region);
+                const diffs = Object.keys(region).reduce((acc, key) => {
+                    const new_val = region[key];
                     if (new_val !== this.plot.state[key]) {
                         acc[key] = new_val;
                     }
