@@ -36,27 +36,35 @@ export default {
             // How should the table display this set of fields? Determined once at component load.
             const base = [
                 { title: 'Chrom', field: 'chromosome' },
-                { title: 'Pos', field: 'position' },
+                { title: 'Pos', field: 'position', sorter: 'number' },
                 { title: 'Ref', field: 'ref_allele' },
                 { title: 'Alt', field: 'alt_allele' },
-                { title: '-log<sub>10</sub>(p)', field: 'log_pvalue', formatter: formatSciNotation },
+                {
+                    title: '-log<sub>10</sub>(p)',
+                    field: 'log_pvalue',
+                    formatter: formatSciNotation,
+                    sorter: 'number',
+                },
                 {
                     title: '&beta;',
                     field: 'beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
+                    sorter: 'number',
                 },
                 {
                     title: 'SE(&beta;)',
                     field: 'stderr_beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
+                    sorter: 'number',
                 },
                 {
                     title: 'Alt freq.',
                     field: 'alt_allele_freq',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
+                    sorter: 'number',
                 },
             ];
             if (this.has_credible_sets) {
