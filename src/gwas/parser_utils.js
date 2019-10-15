@@ -100,7 +100,7 @@ function parseAlleleFrequency({ freq, allele_count, n_samples, is_alt_effect = t
         return null;
     }
     if (freq === undefined && allele_count !== undefined) {
-        result = +allele_count / +n_samples;
+        result = +allele_count / +n_samples / 2;
     } else if (MISSING_VALUES.has(freq)) { // Frequency-based parsing
         return null;
     } else {
