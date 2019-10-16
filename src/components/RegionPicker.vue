@@ -27,7 +27,7 @@ export default {
         },
         search_url: {
             type: String,
-            default: 'https://portaldev.sph.umich.edu/api_internal_dev/v1/annotation/omnisearch/',
+            default: 'https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/',
         },
         build: {
             type: String,

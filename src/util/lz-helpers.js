@@ -1,7 +1,7 @@
 import LocusZoom from 'locuszoom';
 import 'locuszoom/dist/ext/lz-credible-sets.min'; // Import for side effects (globally register helpers)
 
-import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, PORTAL_DEV_API_BASE_URL } from './constants';
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
 import { makeParser } from '../gwas/parsers';
 
 const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
@@ -169,7 +169,7 @@ function getBasicSources(study_sources = []) {
         ['catalog', ['GwasCatalogLZ', { url: `${PORTAL_API_BASE_URL}annotation/gwascatalog/results/` }]],
         ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, params: { source: '1000G', population: 'ALL' } }]],
         ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
-        ['recomb', ['RecombLZ', { url: `${PORTAL_DEV_API_BASE_URL}annotation/recomb/results/` }]],
+        ['recomb', ['RecombLZ', { url: `${PORTAL_API_BASE_URL}annotation/recomb/results/` }]],
         // TODO: This source is broken on https; I wish we had an alternative
         ['constraint', ['GeneConstraintLZ', { url: 'http://exac.broadinstitute.org/api/constraint' }]],
     ];

@@ -48,12 +48,12 @@ describe('parseAlleleFrequency', () => {
 
     it('calculates freq from counts', () => {
         const res = parseAlleleFrequency({ allele_count: '25', n_samples: '100' });
-        assert.equal(res, 0.25);
+        assert.equal(res, 0.125);
     });
 
     it('calculates freq from counts, and orients to alt', () => {
         const res = parseAlleleFrequency({ allele_count: '75', n_samples: '100', is_alt_effect: false });
-        assert.equal(res, 0.25);
+        assert.equal(res, 0.625);
     });
 
     it('handles missing data when working with counts', () => {
