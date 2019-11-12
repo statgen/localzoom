@@ -181,8 +181,11 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
         LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
     ];
 
+    const dashboard = LocusZoom.Layouts.get('dashboard', 'standard_plot', { unnamespaced: true });
+    dashboard.components.push(LocusZoom.Layouts.get('dashboard_components', 'ldlz2_pop_selector'));
     const extra = Object.assign({
         state: initial_state,
+        dashboard,
         panels,
     }, mods);
     return LocusZoom.Layouts.get('plot', 'standard_association', extra);

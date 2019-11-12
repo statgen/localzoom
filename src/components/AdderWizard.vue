@@ -90,6 +90,7 @@ export default {
                         first_data_index = this.file_reader.skip;
                     } else {
                         // Some files use headers that are not comment lines.
+                        // FIXME: handle case where no data rows are found
                         first_data_index = rows.findIndex(text => !isHeader(text));
                     }
                     this.sample_data = rows.slice(first_data_index);
