@@ -20,6 +20,17 @@
     }
   </style>
 
+  <!--  Build enhancement: configure google analytics key if environment provides one -->
+  <% if (process.env.NODE_ENV === 'production' && process.env.VUE_APP_GOOGLE_ANALYTICS_KEY) { %>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=<%= VUE_APP_GOOGLE_ANALYTICS_KEY %>"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '<%= VUE_APP_GOOGLE_ANALYTICS_KEY %>');
+      </script>
+  <% }  %>
+
 </head>
 
 <body>

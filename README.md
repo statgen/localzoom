@@ -27,10 +27,12 @@ yarn run serve
 ### Building for production
 The production build is a minified, concatenated bundle suitable for distribution on a server.
 
-In order to use the Sentry error logging feature, you will need to create a file named 
-*.env.production.local* (ignored by git) with the following contents: 
+In order to use the Sentry error logging and Google Analytics feature, you will need to create a 
+file named *.env.production.local* (ignored by git) with the following contents 
+(both values are optional if you don't want to use these features): 
 ```dotenv
 VUE_APP_SENTRY_DSN=https://dsn.example
+VUE_APP_GOOGLE_ANALYTICS_KEY=UA-YOURKEY-1
 ```
 
 Then build the assets to the `dist/` folder.
