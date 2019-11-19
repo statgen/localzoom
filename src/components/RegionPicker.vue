@@ -14,8 +14,7 @@
 import { debounce } from 'lodash';
 import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBootstrapTypeahead.vue';
 
-import { REGEX_REGION } from '../util/constants';
-import { REGEX_MARKER } from '../gwas/parser_utils';
+import { parseRegion, positionToRange } from '../util/entity-helpers';
 
 export default {
     name: 'region-picker',
@@ -41,17 +40,11 @@ export default {
         };
     },
     methods: {
-        positionToRange(pos) {
-            const bounds = Math.floor(this.max_range / 2);
-            return [pos - bounds, pos + bounds];
-        },
         selectRegion() {
             if (!this.region) {
                 this.$emit('fail', 'Please specify a region');
                 return;
             }
-            const range_match = this.region.match(REGEX_REGION);
-            const single_match = this.region.match(REGEX_MARKER);
 
             let chr;
             let start;
@@ -61,24 +54,18 @@ export default {
                 // For genes and rsids, the suggested range is often too narrow.
                 //   Pick a region centered on the midpoint of the range.
                 ({ chrom: chr, start, end } = search_result);
-                [start, end] = this.positionToRange((start + end) / 2);
-            } else if (range_match) {
-                [chr, start, end] = range_match.slice(1);
-                // Ensure that returned values are numeric
-                start = +start;
-                end = +end;
+                [start, end] = positionToRange((start + end) / 2, { region_size: this.max_range });
+            } else {
+                try {
+                    [chr, start, end] = parseRegion(this.region, { region_size: this.max_range });
+                } catch (e) {
+                    this.$emit('fail', 'Could not parse specified range');
+                    return;
+                }
                 if ((end - start) > this.max_range) {
                     this.$emit('fail', `Maximum allowable range is ${this.max_range.toLocaleString()}`);
                     return;
                 }
-            } else if (single_match) {
-                let pos;
-                [chr, pos] = single_match.slice(1);
-                pos = +pos;
-                [start, end] = this.positionToRange(pos);
-            } else {
-                this.$emit('fail', 'Could not parse specified range');
-                return;
             }
             this.$emit('ready', { chr, start, end });
         },
