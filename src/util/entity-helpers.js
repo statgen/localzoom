@@ -1,5 +1,6 @@
 /**
  * Helper functions for handling various entities, like identifier strings (genes, regions, etc)
+ *  that appear in a wide range of genetic datasets
  */
 
 import { REGEX_POSITION, REGEX_REGION } from './constants';
@@ -21,7 +22,7 @@ function positionToRange(position, { region_size = 500000 }) {
  * and end positions.
  *
  * @param {string} spec
- * @param {number} [region_size=500000] Only used when inflating a single position to a range
+ * @param {number} [region_size=500000] If specified, enforces a max region size.
  * @returns {[string, number, number]} [chr, start, end]
  */
 function parseRegion(spec, { region_size = 500000 }) {
@@ -42,6 +43,10 @@ function parseRegion(spec, { region_size = 500000 }) {
         [start, end] = positionToRange(pos, { region_size });
     } else {
         throw new Error(`Could not parse the specified range: ${spec}`);
+    }
+
+    if (region_size && (end - start) > region_size) {
+        throw new Error(`Maximum allowable range is ${region_size.toLocaleString()}`);
     }
     return [chr, start, end];
 }
