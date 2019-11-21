@@ -1,0 +1,55 @@
+<script>
+/**
+ * Show a "scroll through a list of regions" toolbar
+ */
+export default {
+    name: 'BatchScroller',
+    props: ['regions'],
+    data() {
+        return { current_index: null };
+    },
+    methods: {
+        cancelNavigation() {
+            this.$emit('cancel');
+        },
+        goToItem(increment) {
+            this.$emit('navigate', this.current_region);
+            this.current_index += increment;
+        },
+    },
+    computed: {
+        current_region() {
+            return this.current_index === null ? null : this.regions[this.current_index];
+        },
+        current_region_display() {
+            const region = this.current_region;
+            if (!region) {
+                return '(none)';
+            }
+            const { chr, start, end } = region;
+            return `${chr}: ${start.toLocaleString()}-${end.toLocaleString()}`;
+        },
+    },
+};
+</script>
+
+
+<template>
+<div class="alert-success d-flex justify-content-between align-items-center">
+  <button class="btn btn-link"
+          @click="goToItem(-1)"
+          :disabled="this.current_index <= 0"
+  >&lt; Prev</button>
+  <span>Batch mode (<button @click="cancelNavigation"
+                            class="btn btn-link p-0"
+                            title="Cancel navigation"
+  >cancel</button>) -
+    Current Locus: {{current_region_display}}</span>
+  <button class="btn btn-link"
+          @click="goToItem(+1)"
+          :disabled="this.current_index >= this.regions.length - 1"
+  >Next &gt;</button>
+</div>
+</template>
+
+<style scoped></style>

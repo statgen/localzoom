@@ -48,7 +48,7 @@ function parseRegion(spec, { region_size = 500000 }) {
     if (region_size && (end - start) > region_size) {
         throw new Error(`Maximum allowable range is ${region_size.toLocaleString()}`);
     }
-    return [chr, start, end];
+    return { chr, start, end };
 }
 
 export { parseRegion, positionToRange };

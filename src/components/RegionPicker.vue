@@ -41,6 +41,7 @@ export default {
     },
     methods: {
         selectRegion() {
+            const { max_range } = this;
             if (!this.region) {
                 this.$emit('fail', 'Please specify a region');
                 return;
@@ -54,16 +55,16 @@ export default {
                 // For genes and rsids, the suggested range is often too narrow.
                 //   Pick a region centered on the midpoint of the range.
                 ({ chrom: chr, start, end } = search_result);
-                [start, end] = positionToRange((start + end) / 2, { region_size: this.max_range });
+                [start, end] = positionToRange((start + end) / 2, { region_size: max_range });
             } else {
                 try {
-                    [chr, start, end] = parseRegion(this.region, { region_size: this.max_range });
+                    ({ chr, start, end } = parseRegion(this.region, { region_size: max_range }));
                 } catch (e) {
                     this.$emit('fail', 'Could not parse specified range');
                     return;
                 }
                 if ((end - start) > this.max_range) {
-                    this.$emit('fail', `Maximum allowable range is ${this.max_range.toLocaleString()}`);
+                    this.$emit('fail', `Maximum allowable range is ${max_range.toLocaleString()}`);
                     return;
                 }
             }

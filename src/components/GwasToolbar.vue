@@ -2,9 +2,13 @@
 import { BDropdown } from 'bootstrap-vue/esm/';
 
 import AdderWizard from './AdderWizard.vue';
+import BatchSpec from './BatchSpec.vue';
+import BatchScroller from './BatchScroller.vue';
 import RegionPicker from './RegionPicker.vue';
 import TabixFile from './TabixFile.vue';
 import TabixUrl from './TabixUrl.vue';
+
+const MAX_REGION_SIZE = 1000000;
 
 export default {
     name: 'gwas-toolbar',
@@ -16,6 +20,9 @@ export default {
     },
     data() {
         return {
+            // make constant available
+            max_region_size: MAX_REGION_SIZE,
+
             // Whether to show the "add a gwas" UI
             show_modal: false,
             num_studies_added: 0,
@@ -32,6 +39,10 @@ export default {
             has_catalog: false,
             has_credible_sets: false,
             build: 'GRCh37',
+
+            // Controls for "batch view" mode
+            batch_mode_active: false,
+            batch_mode_regions: [],
         };
     },
     computed: {
@@ -44,6 +55,8 @@ export default {
             // Reset state in the component
             this.file_reader = null;
             this.display_name = null;
+            this.batch_mode_active = false;
+            this.batch_mode_regions = [];
             this.showMessage('', '');
         },
         showMessage(message, style = 'text-danger') {
@@ -58,6 +71,10 @@ export default {
             this.file_reader = reader;
             this.display_name = name;
             this.show_modal = true;
+        },
+        activateBatchMode(regions) {
+            this.batch_mode_active = true;
+            this.batch_mode_regions = regions;
         },
         sendConfig(parser_options, state) {
             // This particular app captures reader options for display, then relays them to the plot
@@ -89,6 +106,8 @@ export default {
     components: {
         BDropdown,
         AdderWizard,
+        BatchScroller,
+        BatchSpec,
         RegionPicker,
         TabixFile,
         TabixUrl,
@@ -116,12 +135,24 @@ export default {
         </div>
       </div>
       <div class="col-sm-6">
-        <region-picker v-if="study_count"
-                       @ready="selectRange"
-                       @fail="showMessage" class="float-right"
-                       :build="build"
-                       :max_range="1000000"
-                       search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/" />
+        <div v-if="study_count">
+          <div v-if="batch_mode_active">
+            <batch-scroller :regions="batch_mode_regions"
+                            @navigate="selectRange"
+                            @cancel="batch_mode_active = false" />
+          </div>
+          <div v-else
+               class="d-flex justify-content-end">
+            <region-picker @ready="selectRange"
+                           @fail="showMessage"
+                           :build="build"
+                           :max_range="max_region_size"
+                           search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/" />
+            <batch-spec class="ml-1"
+                :max_range="max_region_size"
+                        @ready="activateBatchMode"/>
+          </div>
+        </div>
         <b-dropdown v-else text="Plot options" variant="info"
                      class="float-right">
           <div class="px-3">
