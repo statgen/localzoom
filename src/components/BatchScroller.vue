@@ -14,7 +14,11 @@ export default {
         },
         goToItem(increment) {
             this.$emit('navigate', this.current_region);
-            this.current_index += increment;
+            if (this.current_index === null) {
+                this.current_index = 0;
+            } else {
+                this.current_index += increment;
+            }
         },
     },
     computed: {
@@ -40,11 +44,16 @@ export default {
           @click="goToItem(-1)"
           :disabled="this.current_index <= 0"
   >&lt; Prev</button>
-  <span>Batch mode (<button @click="cancelNavigation"
-                            class="btn btn-link p-0"
-                            title="Cancel navigation"
-  >cancel</button>) -
-    Current Locus: {{current_region_display}}</span>
+  <span>
+    Current Locus: {{current_region_display}} -
+    <span v-if="this.current_index !==null">
+      ({{this.current_index + 1}} of {{this.regions.length}}) -
+    </span>
+    <button @click="cancelNavigation"
+            class="btn btn-link p-0 border-0"
+            title="Cancel navigation"
+    >cancel batch mode</button>
+  </span>
   <button class="btn btn-link"
           @click="goToItem(+1)"
           :disabled="this.current_index >= this.regions.length - 1"

@@ -14,7 +14,7 @@ import { REGEX_POSITION, REGEX_REGION } from './constants';
  */
 function positionToRange(position, { region_size = 500000 }) {
     const bounds = Math.floor(region_size / 2);
-    return [position - bounds, position + bounds];
+    return [Math.max(position - bounds, 1), position + bounds];
 }
 
 /**

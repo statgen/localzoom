@@ -14,9 +14,15 @@ export default {
     name: 'gwas-toolbar',
     props: {
         // Limit how many studies can be added (due to browser performance)
-        max_studies: { type: Number, default: 3 },
+        max_studies: {
+            type: Number,
+            default: 3,
+        },
         // Toolbar can optionally consider a list of studies already on plot
-        study_names: { type: [Array, null], default: null },
+        study_names: {
+            type: [Array, null],
+            default: null,
+        },
     },
     data() {
         return {
@@ -118,43 +124,35 @@ export default {
 <template>
   <div>
     <div class="row">
-      <div class="col-sm-6">
+      <div v-if="!batch_mode_active" class="col-sm-6">
         <div v-if="study_count < max_studies">
           <tabix-file class="mr-1"
-                      @ready="connectReader" @fail="showMessage" />
+                      @ready="connectReader" @fail="showMessage"/>
           <b-dropdown text="Add from URL" variant="success">
             <div class="px-3">
-              <tabix-url @ready="connectReader" @fail="showMessage" />
+              <tabix-url @ready="connectReader" @fail="showMessage"/>
             </div>
           </b-dropdown>
           <adder-wizard v-if="show_modal"
                         :file_reader="file_reader"
                         :file_name.sync="display_name"
                         @ready="sendConfig"
-                        @close="show_modal = false" />
+                        @close="show_modal = false"/>
         </div>
       </div>
-      <div class="col-sm-6">
-        <div v-if="study_count">
-          <div v-if="batch_mode_active">
-            <batch-scroller :regions="batch_mode_regions"
-                            @navigate="selectRange"
-                            @cancel="batch_mode_active = false" />
-          </div>
-          <div v-else
-               class="d-flex justify-content-end">
-            <region-picker @ready="selectRange"
-                           @fail="showMessage"
-                           :build="build"
-                           :max_range="max_region_size"
-                           search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/" />
-            <batch-spec class="ml-1"
-                :max_range="max_region_size"
-                        @ready="activateBatchMode"/>
-          </div>
+      <div v-if="!batch_mode_active" class="col-sm-6">
+        <div v-if="study_count" class="d-flex justify-content-end">
+          <region-picker @ready="selectRange"
+                         @fail="showMessage"
+                         :build="build"
+                         :max_range="max_region_size"
+                         search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/"/>
+          <batch-spec class="ml-1"
+                      :max_range="max_region_size"
+                      @ready="activateBatchMode"/>
         </div>
         <b-dropdown v-else text="Plot options" variant="info"
-                     class="float-right">
+                    class="float-right">
           <div class="px-3">
             <strong>Annotations</strong><br>
             <div class="form-check form-check-inline">
@@ -181,9 +179,15 @@ export default {
           </div>
         </b-dropdown>
       </div>
-    </div>
-    <div class="row" v-if="message">
-      <div class="col-sm-12"><span :class="[message_class]">{{message}}</span></div>
+
+      <div v-if="batch_mode_active" class="col-md-12">
+        <batch-scroller :regions="batch_mode_regions"
+                        @navigate="selectRange"
+                        @cancel="batch_mode_active = false"/>
+      </div>
+      <div class="row" v-if="message">
+        <div class="col-sm-12"><span :class="[message_class]">{{message}}</span></div>
+      </div>
     </div>
   </div>
 </template>

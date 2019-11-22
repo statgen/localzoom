@@ -13,20 +13,15 @@ export default {
     data() {
         return {
             region_text: '',
+            show_loader: false,
             message: null, // display validation errors
         };
     },
     methods: {
         getRegionsFromTextBox() {
-            const text = this.region_text.trim().split(/\r?\n/);
-            try {
-                return text.map(
-                    item => parseRegion(item, { region_size: this.max_range }),
-                );
-            } catch (e) {
-                this.message = e.toString();
-                return [];
-            }
+            // Regions are one per line, and eliminate empty lines
+            const text = this.region_text.trim().split(/\r?\n/).filter(value => !!value);
+            return text.map(item => parseRegion(item, { region_size: this.max_range }));
         },
         validateRegions(items) {
             // There must be at least one region selected. Can add other checks in the future.
@@ -36,22 +31,29 @@ export default {
             // Receive a list of regions, and store them in the textbox
             // Sometimes we may want to handle fetching items from a network request; wrap in a
             //   promise to be sure this handles async behavior or values, consistently
+            this.show_loader = true;
             Promise.resolve(content)
                 .then(items => items.map(({ chr, start, end }) => `${chr}:${start}-${end}`).join('\n'))
                 .then((result) => { this.region_text = result; })
-                .catch((e) => { this.message = 'Unable to retrieve items'; });
+                .catch((e) => { this.message = 'Unable to retrieve items'; })
+                .finally(() => { this.show_loader = false; });
         },
         sendRegions() {
             // Fetch, parse, and send the list of regions
-            const items = this.getRegionsFromTextBox();
-            if (!this.validateRegions(items)) {
-                // FIXME: This removes a more helpful error message superimposed if parsing fails
-                this.message = 'Invalid regions specified';
-            } else {
-                this.message = '';
-                this.$emit('ready', items);
-                this.$refs.dropdown.hide();
+            let items;
+            try {
+                items = this.getRegionsFromTextBox();
+            } catch (e) {
+                this.message = e.toString();
+                return;
             }
+            if (!items.length) {
+                this.message = 'Must specify at least one region';
+                return;
+            }
+            this.message = '';
+            this.$emit('ready', items);
+            this.$refs.dropdown.hide();
         },
     },
     components: { BDropdown },
@@ -65,12 +67,15 @@ export default {
         <label for="batch-region-list">Specify regions to plot (one per line):</label>
         <textarea id="batch-region-list" v-model="region_text"
                   rows="10" placeholder="chr:start-end or chr:pos"></textarea>
-        <!-- Optional spot for a button (like "fetch presets") -->
-        <div class="float-right">
-        <slot name="preset-button" :updateRegions="updateRegions"></slot>
-        <button @click="sendRegions"  class="btn btn-success ml-1">Go</button>
-        <span v-if="message" class="text-danger"><br>{{message}}</span>
+        <div v-if="message" class="text-danger">{{message}}</div>
+        <div class="d-flex justify-content-end">
+          <div v-if="show_loader"  class="spinner-border text-warning" role="status">
+            <span class="sr-only">Loading...</span>
           </div>
+          <!-- Optional spot for a button (like "fetch presets") -->
+          <slot name="preset-button" :updateRegions="updateRegions"></slot>
+          <button @click="sendRegions"  class="btn btn-success ml-1">Go</button>
+        </div>
       </div>
     </b-dropdown>
   </div>
