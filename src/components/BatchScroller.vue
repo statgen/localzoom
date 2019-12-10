@@ -13,12 +13,12 @@ export default {
             this.$emit('cancel');
         },
         goToItem(increment) {
-            this.$emit('navigate', this.current_region);
             if (this.current_index === null) {
                 this.current_index = 0;
             } else {
                 this.current_index += increment;
             }
+            this.$emit('navigate', this.current_region);
         },
     },
     computed: {
@@ -50,7 +50,7 @@ export default {
       ({{this.current_index + 1}} of {{this.regions.length}}) -
     </span>
     <button @click="cancelNavigation"
-            class="btn btn-link p-0 border-0"
+            class="btn btn-link p-0 border-0 align-bottom"
             title="Cancel navigation"
     >cancel batch mode</button>
   </span>
