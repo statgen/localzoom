@@ -56,7 +56,7 @@ export default {
   </span>
   <button class="btn btn-link"
           @click="goToItem(+1)"
-          :disabled="this.current_index >= this.regions.length - 1"
+          :disabled="this.current_index !== null && this.current_index >= this.regions.length - 1"
   >Next &gt;</button>
 </div>
 </template>
