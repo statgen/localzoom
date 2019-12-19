@@ -71,15 +71,21 @@ export default {
             this.$emit('ready', { chr, start, end });
         },
         doSearch() {
-            // TODO: Generalize URL + parse for other apis in future
+            this.search_results = [];
             const url = `${this.search_url}?q=${encodeURIComponent(this.region)}&build=${encodeURIComponent(this.build)}`;
             fetch(url)
-                .then(resp => resp.json())
+                .then((resp) => {
+                    if (resp.ok) {
+                        return resp.json();
+                    }
+                    throw new Error('Server error');
+                })
                 .then((data) => {
                     // Limit the API response to a set of valid, and useful, search results
                     //   (omnisearch does some things we don't need)
                     this.search_results = data.data.filter(item => !item.error && (item.type !== 'region'));
-                });
+                })
+                .catch(() => this.$emit('fail', 'Could not perform the specified search'));
         },
     },
     // eslint-disable-next-line func-names
