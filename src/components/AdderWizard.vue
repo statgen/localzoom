@@ -90,13 +90,12 @@ export default {
                         first_data_index = this.file_reader.skip;
                     } else {
                         // Some files use headers that are not comment lines.
-                        // FIXME: handle case where no data rows are found
                         first_data_index = rows.findIndex(text => !isHeader(text));
                     }
                     this.sample_data = rows.slice(first_data_index);
                     const data_rows = this.sample_data.map(line => line.split('\t'));
                     // Get column titles (if present)
-                    if (first_data_index !== 0) {
+                    if (first_data_index > 0) { // 0 = no headers; -1 = no rows or no data found
                         // When data is first loaded, generate a suggested auto-config
                         this.column_titles = rows[first_data_index - 1]
                             .replace(/^#+/g, '')
@@ -113,7 +112,9 @@ export default {
                     } else {
                         // If column headers could not be found, then we can't guess config.
                         // Provide a set of UI-only labels so that dropdowns are not empty
-                        const num_cols = rows[0].split('\t').length;
+                        // TODO: We may be seeing files with no data (esp in non-tabix mode).
+                        //    Improve handling of such edge cases.
+                        const num_cols = rows.length ? rows[0].split('\t').length : 0;
                         this.column_titles = [...new Array(num_cols)]
                             .map((item, index) => `Column ${index + 1}`);
                     }
