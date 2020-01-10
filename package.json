@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "MIT",
   "main": "lib/LzTabix.umd.min.js",
   "scripts": {
