@@ -25,7 +25,7 @@
       <script async src="https://www.googletagmanager.com/gtag/js?id=<%= VUE_APP_GOOGLE_ANALYTICS_KEY %>"></script>
       <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        window.gtag = function gtag(){dataLayer.push(arguments);};
         gtag('js', new Date());
         gtag('config', '<%= VUE_APP_GOOGLE_ANALYTICS_KEY %>');
       </script>
