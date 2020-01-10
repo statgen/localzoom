@@ -15,6 +15,7 @@ module.exports = {
     'object-curly-newline': ['error', {'multiline': true}],
     'no-plusplus': ['error', {'allowForLoopAfterthoughts': true}],
     'no-param-reassign': [2, { 'props': false }],
+    'no-underscore-dangle': 'off',
     'no-unused-vars': ['error', { 'args': 'none' }]
 
   },
