@@ -157,13 +157,11 @@ export default {
             }
             if (this.variant_spec_tab === TAB_FROM_SEPARATE_COLUMNS
                 && has(pos_col) && has(chrom_col)) {
-                // Ref and alt are optional
-                return {
-                    chrom_col,
-                    pos_col,
-                    ref_col,
-                    alt_col,
-                };
+                const ret = { chrom_col, pos_col };
+                if (has(ref_col) && has(alt_col)) { // Must specify both, or neither.
+                    Object.assign(ret, { ref_col, alt_col });
+                }
+                return ret;
             }
             return {};
         },
