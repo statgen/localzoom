@@ -27,8 +27,8 @@ export default {
             // There must be at least one region selected. Can add other checks in the future.
             return !!items.length;
         },
-        updateRegions(content) { // List of [chr,start, end] entries, one per region
-            // Receive a list of regions, and store them in the textbox
+        updateRegions(content) { // List of {chr,start, end} entries, one per region
+            // This is used by scoped slots: Receive a list of regions, and populate textarea
             // Sometimes we may want to handle fetching items from a network request; wrap in a
             //   promise to be sure this handles async behavior or values, consistently
             this.show_loader = true;
@@ -62,18 +62,19 @@ export default {
 
 <template>
   <div>
-    <b-dropdown ref="dropdown" text="Batch view" variant="info">
+    <b-dropdown ref="dropdown" variant="info" right text="Batch view">
       <div class="px-3">
         <label for="batch-region-list">Specify regions to plot (one per line):</label>
         <textarea id="batch-region-list" v-model="region_text"
-                  rows="10" placeholder="chr:start-end or chr:pos"></textarea>
+                  rows="10" placeholder="chr:start-end or chr:pos"/>
         <div v-if="message" class="text-danger">{{message}}</div>
-        <div class="d-flex justify-content-end">
-          <div v-if="show_loader"  class="spinner-border text-warning" role="status">
+        <div class="d-flex justify-content-end align-items-center">
+          <div v-if="show_loader"
+               class="d-flex align-items-center spinner-border   text-secondary mr-1" role="status">
             <span class="sr-only">Loading...</span>
           </div>
           <!-- Optional spot for a button (like "fetch presets") -->
-          <slot name="preset-button" :updateRegions="updateRegions"></slot>
+          <slot name="preset-button" :updateRegions="updateRegions"/>
           <button @click="sendRegions"  class="btn btn-success ml-1">Go</button>
         </div>
       </div>

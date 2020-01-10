@@ -5,6 +5,7 @@ import {
     getBasicSources, getBasicLayout,
     createStudyTabixSources, createStudyLayout,
 } from './util/lz-helpers';
+import count_region_view from './util/metrics';
 
 import PlotPanes from './components/PlotPanes.vue';
 import GwasToolbar from './components/GwasToolbar.vue';
@@ -53,6 +54,8 @@ export default {
                     panels,
                     { responsive_resize: false },
                 );
+                // Collect metrics for first plot loaded
+                count_region_view();
             } else {
                 // Adding subsequent panels is a more advanced usage; manipulate the child widget
                 this.$refs.plotWidget.addStudy(panels, sources);
