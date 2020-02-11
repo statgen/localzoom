@@ -73,6 +73,16 @@ function createStudyLayout(
         namespace,
     });
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
+    assoc_layer.label = {
+        text: '{{{{namespace[assoc]}}variant}}',
+        spacing: 12,
+        lines: { style: { 'stroke-width': '2px', stroke: '#333333', 'stroke-dasharray': '2px 2px' } },
+        filters: [
+            { field: 'lz_show_label', operator: '=', value: true },
+        ],
+        style: { 'font-weight': 'bold' },
+    };
+    assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label', { namespace });
     const assoc_tooltip = assoc_layer.tooltip;
 
     assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
