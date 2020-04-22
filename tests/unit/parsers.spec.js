@@ -83,6 +83,11 @@ describe('GWAS parsing', () => {
                 stderr_beta: 0.6,
                 alt_allele_freq: null,
             });
+            // Also handles missing data for beta
+            const line2 = 'X:12_A/T\t0.1\t.\t.';
+            const actual2 = parser(line2);
+            assert.equal(actual2.beta, null);
+            assert.equal(actual2.stderr_beta, null);
         });
 
         it('ensures that ref and alt are uppercase', () => {

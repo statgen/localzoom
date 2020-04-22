@@ -91,6 +91,7 @@ export default {
                 `assoc_${source_name}:position`,
                 `assoc_${source_name}:ref_allele`,
                 `assoc_${source_name}:alt_allele`,
+                `assoc_${source_name}:rsid`,
                 `assoc_${source_name}:log_pvalue`,
                 `assoc_${source_name}:alt_allele_freq`,
                 `assoc_${source_name}:beta`,

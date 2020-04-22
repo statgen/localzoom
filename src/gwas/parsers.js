@@ -74,6 +74,8 @@ function makeParser(
         let rsid = null;
 
         let freq;
+        let beta = null;
+        let stderr_beta = null;
         let alt_allele_freq = null;
         let allele_count;
         let n_samples;
@@ -126,8 +128,16 @@ function makeParser(
             allele_count = fields[allele_count_col - 1];
             n_samples = fields[n_samples_col - 1];
         }
-        const beta = has(beta_col) ? +fields[beta_col - 1] : null;
-        const stderr_beta = has(stderr_beta_col) ? +fields[stderr_beta_col - 1] : null;
+
+        if (has(beta_col)) {
+            beta = fields[beta_col - 1];
+            beta = MISSING_VALUES.has(beta) ? null : (+beta);
+        }
+
+        if (has(stderr_beta_col)) {
+            stderr_beta = fields[stderr_beta_col - 1];
+            stderr_beta = MISSING_VALUES.has(stderr_beta) ? null : (+stderr_beta);
+        }
 
         if (allele_freq_col || allele_count_col) {
             alt_allele_freq = parseAlleleFrequency({
