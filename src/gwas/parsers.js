@@ -15,6 +15,7 @@ import {
  * @param [pos_col]
  * @param [ref_col]
  * @param [alt_col]
+ * @param [rsid_col]
  * @param pvalue_col
  * @param [beta_col]
  * @param [stderr_beta_col]
@@ -35,6 +36,7 @@ function makeParser(
         pos_col,
         ref_col,
         alt_col,
+        rsid_col,
         pvalue_col, // pvalue
         // Optional fields
         beta_col,
@@ -69,6 +71,7 @@ function makeParser(
         let pos;
         let ref;
         let alt;
+        let rsid = null;
 
         let freq;
         let alt_allele_freq = null;
@@ -92,11 +95,24 @@ function makeParser(
             alt = fields[alt_col - 1];
         }
 
+        if (has(rsid_col)) {
+            rsid = fields[rsid_col - 1];
+        }
+
         if (MISSING_VALUES.has(ref)) {
             ref = null;
         }
         if (MISSING_VALUES.has(alt)) {
             alt = null;
+        }
+
+        if (MISSING_VALUES.has(rsid)) {
+            rsid = null;
+        } else if (rsid) {
+            rsid = rsid.toLowerCase();
+            if (!rsid.startsWith('rs')) {
+                rsid = `rs${rsid}`;
+            }
         }
 
         const log_pval = parsePvalToLog(fields[pvalue_col - 1], is_neg_log_pvalue);
@@ -127,8 +143,9 @@ function makeParser(
             position: +pos,
             ref_allele: ref ? ref.toUpperCase() : null,
             alt_allele: alt ? alt.toUpperCase() : null,
-            log_pvalue: log_pval,
             variant: `${chr}:${pos}${ref_alt}`,
+            rsid,
+            log_pvalue: log_pval,
             beta,
             stderr_beta,
             alt_allele_freq,

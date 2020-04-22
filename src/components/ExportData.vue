@@ -39,6 +39,7 @@ export default {
                 { title: 'Pos', field: 'position', sorter: 'number' },
                 { title: 'Ref', field: 'ref_allele' },
                 { title: 'Alt', field: 'alt_allele' },
+                { title: 'rsID', field: 'rsid' },
                 {
                     title: '-log<sub>10</sub>(p)',
                     field: 'log_pvalue',
