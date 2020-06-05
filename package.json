@@ -16,7 +16,7 @@
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.0.0-rc.11",
     "gwas-credible-sets": "^0.1.0",
-    "locuszoom": "https://github.com/statgen/locuszoom#42f7c64127893f5f1b00ddf9b81acf369179dc36",
+    "locuszoom": "0.11.0-beta.1",
     "lodash": "^4.17.11",
     "tabix-reader": "https://github.com/abought/tabix-reader",
     "tabulator-tables": "^4.1.4",
