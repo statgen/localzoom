@@ -24,6 +24,7 @@
     "vue-bootstrap-typeahead": "^0.2.6"
   },
   "devDependencies": {
+    "autoprefixer": "^9.8.4",
     "@vue/cli-plugin-babel": "^3.0.0",
     "@vue/cli-plugin-eslint": "^3.0.0",
     "@vue/cli-plugin-unit-mocha": "^3.0.0",

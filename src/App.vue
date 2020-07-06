@@ -1,4 +1,6 @@
 <script>
+
+import 'locuszoom/dist/locuszoom.css';
 import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/esm/';
 
 import {

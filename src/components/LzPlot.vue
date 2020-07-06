@@ -7,7 +7,7 @@
  */
 
 import LocusZoom from 'locuszoom';
-import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/dist/ext/lz-dynamic-urls.min';
+import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/esm/ext/lz-dynamic-urls';
 
 import { stateUrlMapping } from '../util/lz-helpers';
 
