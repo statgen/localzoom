@@ -11,7 +11,16 @@ import TabixUrl from './TabixUrl.vue';
 const MAX_REGION_SIZE = 1000000;
 
 export default {
-    name: 'gwas-toolbar',
+    name: 'GwasToolbar',
+    components: {
+        BDropdown,
+        AdderWizard,
+        BatchScroller,
+        BatchSpec,
+        RegionPicker,
+        TabixFile,
+        TabixUrl,
+    },
     props: {
         // Limit how many studies can be added (due to browser performance)
         max_studies: {
@@ -109,84 +118,122 @@ export default {
             this.reset();
         },
     },
-    components: {
-        BDropdown,
-        AdderWizard,
-        BatchScroller,
-        BatchSpec,
-        RegionPicker,
-        TabixFile,
-        TabixUrl,
-    },
 };
 </script>
 
 <template>
   <div>
     <div class="row">
-      <div v-if="!batch_mode_active" class="col-sm-6">
+      <div 
+        v-if="!batch_mode_active" 
+        class="col-sm-6">
         <div v-if="study_count < max_studies">
-          <tabix-file class="mr-1"
-                      @ready="connectReader" @fail="showMessage"/>
-          <b-dropdown text="Add from URL" variant="success">
+          <tabix-file 
+            class="mr-1"
+            @ready="connectReader" 
+            @fail="showMessage"/>
+          <b-dropdown 
+            text="Add from URL" 
+            variant="success">
             <div class="px-3">
-              <tabix-url @ready="connectReader" @fail="showMessage"/>
+              <tabix-url 
+                @ready="connectReader" 
+                @fail="showMessage"/>
             </div>
           </b-dropdown>
-          <adder-wizard v-if="show_modal"
-                        :file_reader="file_reader"
-                        :file_name.sync="display_name"
-                        @ready="sendConfig"
-                        @close="show_modal = false"/>
+          <adder-wizard 
+            v-if="show_modal"
+            :file_reader="file_reader"
+            :file_name.sync="display_name"
+            @ready="sendConfig"
+            @close="show_modal = false"/>
         </div>
       </div>
-      <div v-if="!batch_mode_active" class="col-sm-6">
-        <div v-if="study_count" class="d-flex justify-content-end">
-          <region-picker @ready="selectRange"
-                         @fail="showMessage"
-                         :build="build"
-                         :max_range="max_region_size"
-                         search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/"/>
-          <batch-spec class="ml-1"
-                      :max_range="max_region_size"
-                      @ready="activateBatchMode"/>
+      <div 
+        v-if="!batch_mode_active" 
+        class="col-sm-6">
+        <div 
+          v-if="study_count" 
+          class="d-flex justify-content-end">
+          <region-picker 
+            :build="build"
+            :max_range="max_region_size"
+            search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/"
+            @ready="selectRange"
+            @fail="showMessage"/>
+          <batch-spec 
+            :max_range="max_region_size"
+            class="ml-1"
+            @ready="activateBatchMode"/>
         </div>
-        <b-dropdown v-else text="Plot options" variant="info"
-                    class="float-right">
+        <b-dropdown 
+          v-else 
+          text="Plot options" 
+          variant="info"
+          class="float-right">
           <div class="px-3">
             <strong>Annotations</strong><br>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="show-catalog"
-                     v-model="has_catalog">
-              <label class="form-check-label" for="show-catalog">GWAS Catalog</label>
+              <input 
+                id="show-catalog" 
+                v-model="has_catalog" 
+                class="form-check-input"
+                type="checkbox">
+              <label 
+                class="form-check-label" 
+                for="show-catalog">GWAS Catalog</label>
             </div>
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="show-credible-set"
-                     v-model="has_credible_sets">
-              <label class="form-check-label" for="show-credible-set">95% credible set</label>
+              <input 
+                id="show-credible-set" 
+                v-model="has_credible_sets" 
+                class="form-check-input"
+                type="checkbox">
+              <label 
+                class="form-check-label" 
+                for="show-credible-set">95% credible set</label>
             </div>
             <strong>Genome Build</strong><br>
             <div class="form-check">
-              <input class="form-check-input" type="radio" id="build-37"
-                     name="build" value="GRCh37" v-model="build">
-              <label class="form-check-label" for="build-37">GRCh37</label>
+              <input 
+                id="build-37" 
+                v-model="build" 
+                class="form-check-input"
+                type="radio" 
+                name="build" 
+                value="GRCh37">
+              <label 
+                class="form-check-label" 
+                for="build-37">GRCh37</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="radio" id="build-38"
-                     name="build" value="GRCh38" v-model="build">
-              <label class="form-check-label" for="build-38">GRCh38</label>
+              <input 
+                id="build-38" 
+                v-model="build" 
+                class="form-check-input"
+                type="radio" 
+                name="build" 
+                value="GRCh38">
+              <label 
+                class="form-check-label" 
+                for="build-38">GRCh38</label>
             </div>
           </div>
         </b-dropdown>
       </div>
 
-      <div v-if="batch_mode_active" class="col-md-12">
-        <batch-scroller :regions="batch_mode_regions"
-                        @navigate="selectRange"
-                        @cancel="batch_mode_active = false"/>
+      <div 
+        v-if="batch_mode_active" 
+        class="col-md-12">
+        <batch-scroller 
+          :regions="batch_mode_regions"
+          @navigate="selectRange"
+          @cancel="batch_mode_active = false"/>
       </div>
-      <div class="row" v-if="message">
-        <div class="col-sm-12"><span :class="[message_class]">{{message}}</span></div>
+      <div 
+        v-if="message" 
+        class="row">
+        <div class="col-sm-12"><span :class="[message_class]">{{ message }}</span></div>
       </div>
     </div>
   </div>

@@ -1,12 +1,14 @@
 <template>
   <div class="form-inline">
     <vue-bootstrap-typeahead
-        :data="search_results"
-        v-model="region"
-        :serializer="s => s.term"
-        :min-matching-chars="3"
-        placeholder="chr:start-end, rs, or gene"/>
-    <button @click="selectRegion" class="btn btn-primary">Go to region</button>
+      :data="search_results"
+      v-model="region"
+      :serializer="s => s.term"
+      :min-matching-chars="3"
+      placeholder="chr:start-end, rs, or gene"/>
+    <button
+      class="btn btn-primary"
+      @click="selectRegion">Go to region</button>
   </div>
 </template>
 
@@ -17,7 +19,7 @@ import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBoo
 import { parseRegion, positionToRange } from '../util/entity-helpers';
 
 export default {
-    name: 'region-picker',
+    name: 'RegionPicker',
     components: { VueBootstrapTypeahead },
     props: {
         max_range: {
@@ -39,6 +41,11 @@ export default {
             search_results: [],
         };
     },
+    watch: {
+        region: debounce(function () {
+            this.doSearch();
+        }, 500),
+    },
     methods: {
         selectRegion() {
             const { max_range } = this;
@@ -50,7 +57,7 @@ export default {
             let chr;
             let start;
             let end;
-            const search_result = this.search_results.find(item => this.region === item.term);
+            const search_result = this.search_results.find((item) => this.region === item.term);
             if (search_result) {
                 // For genes and rsids, the suggested range is often too narrow.
                 //   Pick a region centered on the midpoint of the range.
@@ -83,13 +90,11 @@ export default {
                 .then((data) => {
                     // Limit the API response to a set of valid, and useful, search results
                     //   (omnisearch does some things we don't need)
-                    this.search_results = data.data.filter(item => !item.error && (item.type !== 'region'));
+                    this.search_results = data.data.filter((item) => !item.error && (item.type !== 'region'));
                 })
                 .catch(() => this.$emit('fail', 'Could not perform the specified search'));
         },
     },
-    // eslint-disable-next-line func-names
-    watch: { region: debounce(function () { this.doSearch(); }, 500) },
 };
 </script>
 

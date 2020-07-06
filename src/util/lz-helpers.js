@@ -36,7 +36,7 @@ class TabixAssociationLZ extends AssociationLZ {
         // Some GWAS files will include variant rows, even if no pvalue can be calculated.
         // Eg, EPACTS fills in "NA" for pvalue in this case. These rows are not useful for a
         // scatter plot, and this data source should ignore them.
-        return data.map(this.parser).filter(item => !Number.isNaN(item.log_pvalue));
+        return data.map(this.parser).filter((item) => !Number.isNaN(item.log_pvalue));
     }
 }
 
@@ -99,7 +99,7 @@ function createStudyLayout(
     assoc_tooltip.html += '{{#if {{namespace[assoc]}}rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{{{namespace[assoc]}}rsid|htmlescape}}" target="_blank" rel="noopener">{{{{namespace[assoc]}}rsid|htmlescape}}</a>{{/if}}';
 
     const dash_extra = []; // Build Display options widget & add to toolbar iff features selected
-    if (Object.values(annotations).some(item => !!item)) {
+    if (Object.values(annotations).some((item) => !!item)) {
         dash_extra.push({
             type: 'display_options',
             position: 'right',
@@ -171,7 +171,7 @@ function createStudyTabixSources(label, tabix_reader, parser_options) {
 }
 
 function addPanels(plot, data_sources, panel_options, source_options) {
-    source_options.forEach(source => data_sources.add(...source));
+    source_options.forEach((source) => data_sources.add(...source));
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
         const panel = plot.addPanel(panel_layout);

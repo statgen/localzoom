@@ -13,5 +13,5 @@ Sentry.init({
     integrations: [new Sentry.Integrations.Vue({ Vue })],
 });
 
-new Vue({ render: h => h(App) })
+new Vue({ render: (h) => h(App) })
     .$mount('#app');

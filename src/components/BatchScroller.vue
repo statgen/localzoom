@@ -4,22 +4,11 @@
  */
 export default {
     name: 'BatchScroller',
-    props: ['regions'],
+    props: {
+        regions: { type: Array, default: () => [] },
+    },
     data() {
         return { current_index: null };
-    },
-    methods: {
-        cancelNavigation() {
-            this.$emit('cancel');
-        },
-        goToItem(increment) {
-            if (this.current_index === null) {
-                this.current_index = 0;
-            } else {
-                this.current_index += increment;
-            }
-            this.$emit('navigate', this.current_region);
-        },
     },
     computed: {
         current_region() {
@@ -34,31 +23,47 @@ export default {
             return `${chr}: ${start.toLocaleString()}-${end.toLocaleString()}`;
         },
     },
+    methods: {
+        cancelNavigation() {
+            this.$emit('cancel');
+        },
+        goToItem(increment) {
+            if (this.current_index === null) {
+                this.current_index = 0;
+            } else {
+                this.current_index += increment;
+            }
+            this.$emit('navigate', this.current_region);
+        },
+    },
 };
 </script>
 
 
 <template>
-<div class="alert-success d-flex justify-content-between align-items-center">
-  <button class="btn btn-link"
-          @click="goToItem(-1)"
-          :disabled="this.current_index <= 0"
-  >&lt; Prev</button>
-  <span>
-    Current Locus: {{current_region_display}} -
-    <span v-if="this.current_index !==null">
-      ({{this.current_index + 1}} of {{this.regions.length}}) -
+  <div class="alert-success d-flex justify-content-between align-items-center">
+    <button
+      :disabled="current_index <= 0"
+      class="btn btn-link"
+      @click="goToItem(-1)"
+    >&lt; Prev</button>
+    <span>
+      Current Locus: {{ current_region_display }} -
+      <span v-if="current_index !==null">
+        ({{ current_index + 1 }} of {{ regions.length }}) -
+      </span>
+      <button
+        class="btn btn-link p-0 border-0 align-bottom"
+        title="Cancel navigation"
+        @click="cancelNavigation"
+      >cancel batch mode</button>
     </span>
-    <button @click="cancelNavigation"
-            class="btn btn-link p-0 border-0 align-bottom"
-            title="Cancel navigation"
-    >cancel batch mode</button>
-  </span>
-  <button class="btn btn-link"
-          @click="goToItem(+1)"
-          :disabled="this.current_index !== null && this.current_index >= this.regions.length - 1"
-  >Next &gt;</button>
-</div>
+    <button
+      :disabled="current_index !== null && current_index >= regions.length - 1"
+      class="btn btn-link"
+      @click="goToItem(+1)"
+    >Next &gt;</button>
+  </div>
 </template>
 
 <style scoped></style>

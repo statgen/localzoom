@@ -40,9 +40,16 @@ export default {
 </script>
 
 <template>
-<span>
-  <label class="btn btn-success mb-0" for="file-picker">Add a file...</label>
-    <input id="file-picker" type="file" style="opacity: 0; width:0; height:0"
-           multiple accept="application/gzip,.tbi" @change="addSource($event)">
-</span>
+  <span>
+    <label
+      class="btn btn-success mb-0"
+      for="file-picker">Add a file...</label>
+    <input
+      id="file-picker"
+      type="file"
+      style="opacity: 0; width:0; height:0"
+      multiple
+      accept="application/gzip,.tbi"
+      @change="addSource($event)">
+  </span>
 </template>

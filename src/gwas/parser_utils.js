@@ -23,7 +23,7 @@ function has(num) {
  */
 function missingToNull(values, nulls = MISSING_VALUES, placeholder = null) {
     // TODO Make this operate on a single value; cache for efficiency?
-    return values.map(v => (nulls.has(v) ? placeholder : v));
+    return values.map((v) => (nulls.has(v) ? placeholder : v));
 }
 
 /**

@@ -12,19 +12,27 @@ import { addPanels, deNamespace } from '../util/lz-helpers';
 
 export default {
     name: 'PlotPanes',
+    components: {
+        ExportData,
+        LzPlot,
+        PhewasMaker,
+        BCard,
+        BTab,
+        BTabs,
+    },
     props: {
-        assoc_layout: { type: Object },
-        assoc_sources: { type: Array },
-        study_names: { type: Array }, // TODO: array --> label/id pairs?
+        assoc_layout: { type: Object, default: () => ({}) },
+        assoc_sources: { type: Array, default: () => [] },
+        study_names: { type: Array, default: () => [] }, // TODO: array --> label/id pairs?
 
         // Basic plot/ region
-        chr: { type: String },
-        start: { type: Number },
-        end: { type: Number },
+        chr: { type: String, default: null },
+        start: { type: Number, default: null },
+        end: { type: Number, default: null },
         build: { type: String, default: 'GRCh37' },
 
         // Control optional features (this could be done more nicely)
-        dynamic_urls: { default: false }, // Change URL when plot updates
+        dynamic_urls: { type: Boolean, default: false }, // Change URL when plot updates
         has_credible_sets: { type: Boolean, default: true }, // export tool
     },
     data() {
@@ -95,20 +103,12 @@ export default {
                 return;
             }
             this.tmp_export_callback = this.assoc_plot.subscribeToData(fields, (data) => {
-                this.table_data = data.map(item => deNamespace(item, 'assoc'));
+                this.table_data = data.map((item) => deNamespace(item, 'assoc'));
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
             this.assoc_plot.emit('data_rendered');
         },
-    },
-    components: {
-        ExportData,
-        LzPlot,
-        PhewasMaker,
-        BCard,
-        BTab,
-        BTabs,
     },
 };
 </script>
@@ -116,41 +116,57 @@ export default {
 <template>
   <div>
     <b-card no-body>
-      <b-tabs pills card vertical v-model="selected_tab"
-               style="min-height:1000px;" class="flex-nowrap"
-              content-class="scroll-extra"
+      <b-tabs
+        v-model="selected_tab"
+        pills
+        card
+        vertical
+        style="min-height:1000px;"
+        class="flex-nowrap"
+        content-class="scroll-extra"
       >
         <b-tab title="GWAS">
-          <lz-plot v-if="has_studies"
-                   :show_loading="true"
-                   :base_layout="assoc_layout"
-                   :base_sources="assoc_sources"
-                   :chr="chr"
-                   :start="start"
-                   :end="end"
-                   :dynamic_urls="dynamic_urls"
-                   @element_clicked="onVariantClick"
-                   @connected="receivePlot" />
-            <div v-else class="placeholder-plot" style="display:table;">
-              <span class="text-center" style="display: table-cell; vertical-align:middle">
-                Please add a GWAS track to continue
-              </span>
-            </div>
+          <lz-plot
+            v-if="has_studies"
+            :show_loading="true"
+            :base_layout="assoc_layout"
+            :base_sources="assoc_sources"
+            :chr="chr"
+            :start="start"
+            :end="end"
+            :dynamic_urls="dynamic_urls"
+            @element_clicked="onVariantClick"
+            @connected="receivePlot" />
+          <div
+            v-else
+            class="placeholder-plot"
+            style="display:table;">
+            <span
+              class="text-center"
+              style="display: table-cell; vertical-align:middle">
+              Please add a GWAS track to continue
+            </span>
+          </div>
         </b-tab>
         <b-tab :disabled="!has_studies || !allow_phewas">
           <template slot="title">
             <span title="Only available for build GRCh37 datasets">PheWAS</span>
           </template>
-          <phewas-maker :variant_name="tmp_phewas_variant" :build="build"
-                        :your_study="tmp_phewas_study"
-                        :your_logpvalue="tmp_phewas_logpvalue"
-                        :allow_render="selected_tab === PHEWAS_TAB"/>
+          <phewas-maker
+            :variant_name="tmp_phewas_variant"
+            :build="build"
+            :your_study="tmp_phewas_study"
+            :your_logpvalue="tmp_phewas_logpvalue"
+            :allow_render="selected_tab === PHEWAS_TAB"/>
         </b-tab>
-        <b-tab title="Export" :disabled="!has_studies">
-          <export-data :has_credible_sets="has_credible_sets"
-                       :study_names="study_names"
-                       :table_data="table_data"
-                       @requested-data="subscribeFields"/>
+        <b-tab
+          :disabled="!has_studies"
+          title="Export">
+          <export-data
+            :has_credible_sets="has_credible_sets"
+            :study_names="study_names"
+            :table_data="table_data"
+            @requested-data="subscribeFields"/>
         </b-tab>
 
       </b-tabs>
