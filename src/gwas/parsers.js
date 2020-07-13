@@ -15,6 +15,7 @@ import {
  * @param [pos_col]
  * @param [ref_col]
  * @param [alt_col]
+ * @param [rsid_col]
  * @param pvalue_col
  * @param [beta_col]
  * @param [stderr_beta_col]
@@ -35,6 +36,7 @@ function makeParser(
         pos_col,
         ref_col,
         alt_col,
+        rsid_col,
         pvalue_col, // pvalue
         // Optional fields
         beta_col,
@@ -69,8 +71,11 @@ function makeParser(
         let pos;
         let ref;
         let alt;
+        let rsid = null;
 
         let freq;
+        let beta = null;
+        let stderr_beta = null;
         let alt_allele_freq = null;
         let allele_count;
         let n_samples;
@@ -92,11 +97,24 @@ function makeParser(
             alt = fields[alt_col - 1];
         }
 
+        if (has(rsid_col)) {
+            rsid = fields[rsid_col - 1];
+        }
+
         if (MISSING_VALUES.has(ref)) {
             ref = null;
         }
         if (MISSING_VALUES.has(alt)) {
             alt = null;
+        }
+
+        if (MISSING_VALUES.has(rsid)) {
+            rsid = null;
+        } else if (rsid) {
+            rsid = rsid.toLowerCase();
+            if (!rsid.startsWith('rs')) {
+                rsid = `rs${rsid}`;
+            }
         }
 
         const log_pval = parsePvalToLog(fields[pvalue_col - 1], is_neg_log_pvalue);
@@ -110,8 +128,16 @@ function makeParser(
             allele_count = fields[allele_count_col - 1];
             n_samples = fields[n_samples_col - 1];
         }
-        const beta = has(beta_col) ? +fields[beta_col - 1] : null;
-        const stderr_beta = has(stderr_beta_col) ? +fields[stderr_beta_col - 1] : null;
+
+        if (has(beta_col)) {
+            beta = fields[beta_col - 1];
+            beta = MISSING_VALUES.has(beta) ? null : (+beta);
+        }
+
+        if (has(stderr_beta_col)) {
+            stderr_beta = fields[stderr_beta_col - 1];
+            stderr_beta = MISSING_VALUES.has(stderr_beta) ? null : (+stderr_beta);
+        }
 
         if (allele_freq_col || allele_count_col) {
             alt_allele_freq = parseAlleleFrequency({
@@ -127,8 +153,9 @@ function makeParser(
             position: +pos,
             ref_allele: ref ? ref.toUpperCase() : null,
             alt_allele: alt ? alt.toUpperCase() : null,
-            log_pvalue: log_pval,
             variant: `${chr}:${pos}${ref_alt}`,
+            rsid,
+            log_pvalue: log_pval,
             beta,
             stderr_beta,
             alt_allele_freq,

@@ -39,6 +39,7 @@ export default {
                 { title: 'Pos', field: 'position', sorter: 'number' },
                 { title: 'Ref', field: 'ref_allele' },
                 { title: 'Alt', field: 'alt_allele' },
+                { title: 'rsID', field: 'rsid' },
                 {
                     title: '-log<sub>10</sub>(p)',
                     field: 'log_pvalue',
@@ -90,6 +91,7 @@ export default {
                 `assoc_${source_name}:position`,
                 `assoc_${source_name}:ref_allele`,
                 `assoc_${source_name}:alt_allele`,
+                `assoc_${source_name}:rsid`,
                 `assoc_${source_name}:log_pvalue`,
                 `assoc_${source_name}:alt_allele_freq`,
                 `assoc_${source_name}:beta`,

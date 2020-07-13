@@ -28,6 +28,7 @@ describe('GWAS parsing', () => {
                 position: 76792,
                 ref_allele: 'A',
                 variant: '1:76792_A/C',
+                rsid: null,
                 beta: null,
                 stderr_beta: null,
                 alt_allele_freq: null,
@@ -53,6 +54,7 @@ describe('GWAS parsing', () => {
                 position: 761893,
                 ref_allele: 'G',
                 variant: '1:761893_G/T',
+                rsid: null,
                 beta: null,
                 stderr_beta: null,
                 alt_allele_freq: null,
@@ -75,11 +77,17 @@ describe('GWAS parsing', () => {
                 ref_allele: 'A',
                 alt_allele: 'T',
                 variant: 'X:12_A/T',
+                rsid: null,
                 log_pvalue: 1,
                 beta: 0.5,
                 stderr_beta: 0.6,
                 alt_allele_freq: null,
             });
+            // Also handles missing data for beta
+            const line2 = 'X:12_A/T\t0.1\t.\t.';
+            const actual2 = parser(line2);
+            assert.equal(actual2.beta, null);
+            assert.equal(actual2.stderr_beta, null);
         });
 
         it('ensures that ref and alt are uppercase', () => {
@@ -98,10 +106,33 @@ describe('GWAS parsing', () => {
                 ref_allele: 'A',
                 alt_allele: null,
                 variant: 'X:12',
+                rsid: null,
                 log_pvalue: 1,
                 beta: null,
                 stderr_beta: null,
                 alt_allele_freq: null,
+            });
+        });
+
+        it('handles rsid in various formats', () => {
+            const parser = makeParser({
+                marker_col: 1,
+                ref_col: 2,
+                alt_col: 3,
+                pvalue_col: 4,
+                rsid_col: 5,
+            });
+
+            const scenarios = [
+                ['.', null],
+                ['14', 'rs14'],
+                ['RS14', 'rs14'],
+            ];
+            const line = 'X:12\ta\tNA\t0.1\t';
+
+            scenarios.forEach(([raw, parsed]) => {
+                const actual = parser(line + raw);
+                assert.equal(actual.rsid, parsed);
             });
         });
     });

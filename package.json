@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "license": "MIT",
   "main": "lib/LzTabix.umd.min.js",
   "scripts": {
@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@sentry/browser": "^4.5.2",
-    "bootstrap": "^4.1.3",
+    "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.0.0-rc.11",
     "gwas-credible-sets": "^0.1.0",
-    "locuszoom": "https://github.com/statgen/locuszoom#42f7c64127893f5f1b00ddf9b81acf369179dc36",
+    "locuszoom": "0.11.0",
     "lodash": "^4.17.11",
     "tabix-reader": "https://github.com/abought/tabix-reader",
     "tabulator-tables": "^4.1.4",
@@ -33,7 +33,8 @@
     "chai": "^4.1.2",
     "node-sass": "^4.9.0",
     "sass-loader": "^7.0.1",
+    "source-map-loader": "^0.2.4",
     "vue-template-compiler": "^2.5.17",
-    "yarn": "^1.12.3"
+    "yarn": "^1.22.0"
   }
 }
