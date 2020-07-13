@@ -5601,10 +5601,10 @@ locate-path@^5.0.0:
   dependencies:
     p-locate "^4.1.0"
 
-locuszoom@0.11.0-beta.1:
-  version "0.11.0-beta.1"
-  resolved "https://registry.yarnpkg.com/locuszoom/-/locuszoom-0.11.0-beta.1.tgz#ae0b852b6a37fdd6dc54a635793c9354e43ad9c6"
-  integrity sha512-vtEorrux9gLx7YrGpyLia5Hp9w90EJ9vw6wXT4vENBoN1UA4Gzw6dFHIUcdCx0eoy+Qmi6pwpWPd7YHF4zmkmg==
+locuszoom@0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/locuszoom/-/locuszoom-0.11.0.tgz#d32b8be1c8134fe04986e17daeeedf4f6a876bd1"
+  integrity sha512-0aOqDOxKlviGft2VOrlwmRAR0IoTI6HYgflcSJcC8IpT237GX9z1j5VdoOkkQxjPYtTAd1D5BtpYoN/hz3MXSQ==
   dependencies:
     d3 "3.5.17"
     promise-polyfill "^8.1.3"
