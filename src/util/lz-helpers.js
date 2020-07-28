@@ -132,6 +132,17 @@ function createStudyLayout(
         fields_extra.push('{{namespace[catalog]}}rsid', '{{namespace[catalog]}}trait', '{{namespace[catalog]}}log_pvalue');
         assoc_tooltip.html += '{{#if {{namespace[catalog]}}rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
     }
+    // Add a filter widget for pvalues to every panel
+    dash_extra.push({
+        type: 'filter_field',
+        position: 'right',
+        layer_name: 'associationpvalues',
+        field: '{{namespace[assoc]}}log_pvalue',
+        field_display_html: '-log<sub>10</sub> p',
+        operator: '>=',
+        data_type: 'number',
+    });
+
     assoc_layer.fields.push(...fields_extra);
     assoc_panel.toolbar.widgets.push(...dash_extra);
 
