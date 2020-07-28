@@ -15,17 +15,17 @@ describe('REGEX_MARKER', () => {
         has_chr_pos.forEach((item) => {
             const match = item.match(REGEX_MARKER);
             assert.ok(match, `Match found for ${item}`);
-            assert.lengthOf(match.filter(e => !!e), 3, `Found chr:pos for ${item}`);
+            assert.lengthOf(match.filter((e) => !!e), 3, `Found chr:pos for ${item}`);
         });
         has_chr_pos_refalt.forEach((item) => {
             const match = item.match(REGEX_MARKER);
             assert.ok(match, `Match found for ${item}`);
-            assert.lengthOf(match.filter(e => !!e), 5, `Found chr:pos_ref/alt for ${item}`);
+            assert.lengthOf(match.filter((e) => !!e), 5, `Found chr:pos_ref/alt for ${item}`);
         });
         has_chr_pos_refalt_extra.forEach((item) => {
             const match = item.match(REGEX_MARKER);
             assert.ok(match, `Match found for ${item}`);
-            assert.lengthOf(match.filter(e => !!e), 6, `Found chr:pos_ref/alt_extra for ${item}`);
+            assert.lengthOf(match.filter((e) => !!e), 6, `Found chr:pos_ref/alt_extra for ${item}`);
         });
 
         // Pathological edge cases
@@ -48,7 +48,7 @@ describe('REGEX_POSITION', () => {
             '1:2',
             '1 : 2',
         ];
-        scenarios.forEach(item => assert.match(item, REGEX_POSITION, `Match found for ${item}`));
+        scenarios.forEach((item) => assert.match(item, REGEX_POSITION, `Match found for ${item}`));
     });
 });
 
@@ -60,6 +60,6 @@ describe('REGEX_REGION', () => {
             '1:2-3',
             '1 : 2-3',
         ];
-        scenarios.forEach(item => assert.match(item, REGEX_REGION, `Match found for ${item}`));
+        scenarios.forEach((item) => assert.match(item, REGEX_REGION, `Match found for ${item}`));
     });
 });

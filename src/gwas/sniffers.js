@@ -16,7 +16,7 @@ function isNumeric(val) {
 function isHeader(row, { comment_char = '#', delimiter = '\t' } = {}) {
     // This assumes two basic rules: the line is not a comment, and gwas data is more likely
     // to be numeric than headers
-    return row.startsWith(comment_char) || row.split(delimiter).every(item => !isNumeric(item));
+    return row.startsWith(comment_char) || row.split(delimiter).every((item) => !isNumeric(item));
 }
 
 /**
@@ -77,7 +77,7 @@ function findColumn(column_synonyms, header_names, threshold = 2) {
             // Nulling a header provides a way to exclude something from future searching
             continue; // eslint-disable-line no-continue
         }
-        const score = Math.min(...column_synonyms.map(s => levenshtein(header, s)));
+        const score = Math.min(...column_synonyms.map((s) => levenshtein(header, s)));
         if (score < best_score) {
             best_score = score;
             best_match = i;
@@ -102,13 +102,13 @@ function getPvalColumn(header_row, data_rows) {
 
     let ps;
     const validateP = (col, data, is_log) => { // Validate pvalues
-        const cleaned_vals = _missingToNull(data.map(row => row[col]));
+        const cleaned_vals = _missingToNull(data.map((row) => row[col]));
         try {
-            ps = cleaned_vals.map(p => parsePvalToLog(p, is_log));
+            ps = cleaned_vals.map((p) => parsePvalToLog(p, is_log));
         } catch (e) {
             return false;
         }
-        return ps.every(val => !Number.isNaN(val));
+        return ps.every((val) => !Number.isNaN(val));
     };
 
     const log_p_col = findColumn(LOGPVALUE_FIELDS, header_row);
@@ -184,14 +184,14 @@ function getEffectSizeColumns(header_names, data_rows) {
     const STDERR_BETA_FIELDS = ['stderr_beta', 'stderr', 'sebeta', 'effect_size_sd', 'se'];
 
     function validate_numeric(col, data) {
-        const cleaned_vals = _missingToNull(data.map(row => row[col]));
+        const cleaned_vals = _missingToNull(data.map((row) => row[col]));
         let nums;
         try {
-            nums = cleaned_vals.filter(val => val !== null).map(val => +val);
+            nums = cleaned_vals.filter((val) => val !== null).map((val) => +val);
         } catch (e) {
             return false;
         }
-        return nums.every(val => !Number.isNaN(val));
+        return nums.every((val) => !Number.isNaN(val));
     }
 
     const beta_col = findColumn(BETA_FIELDS, header_names, 0);
@@ -220,7 +220,7 @@ function guessGWAS(header_row, data_rows, offset = 1) {
     // 4. Return a parser config object if all tests pass, OR null.
 
     // Normalize case and remove leading comment marks from line for easier comparison
-    const headers = header_row.map(item => (item ? item.toLowerCase() : item));
+    const headers = header_row.map((item) => (item ? item.toLowerCase() : item));
     headers[0].replace('/^#+/', '');
     // Lists of fields are drawn from Encore (AssocResultReader) and Pheweb (conf_utils.py)
     const pval_config = getPvalColumn(headers, data_rows, offset);

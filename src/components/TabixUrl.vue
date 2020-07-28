@@ -30,11 +30,16 @@ export default {
 </script>
 
 <template>
-<div class="form-inline flex-nowrap">
-  <input type="url" v-model.trim="url"
-         class="form-control mr-1" placeholder="Specify a URL">
-  <button class="btn btn-success" @click="addSource">Add</button>
-</div>
+  <div class="form-inline flex-nowrap">
+    <input 
+      v-model.trim="url" 
+      type="url"
+      class="form-control mr-1" 
+      placeholder="Specify a URL">
+    <button 
+      class="btn btn-success" 
+      @click="addSource">Add</button>
+  </div>
 </template>
 
 <style>

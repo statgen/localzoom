@@ -17,10 +17,11 @@ function formatSciNotation(cell, params) {
 
 export default {
     name: 'ExportData',
-    props: ['study_names', 'has_credible_sets', 'table_data'],
-    beforeCreate() {
-        // Reference DOM-manipulating pieces as static properties
-        this.table = null;
+    components: { TabulatorTable },
+    props: {
+        study_names: { type: Array, default: () => [] },
+        has_credible_sets: { type: Boolean, default: true },
+        table_data: { type: Array, default: () => [] },
     },
     data() {
         return {
@@ -108,48 +109,60 @@ export default {
             this.$emit('requested-data', fields);
         },
     },
+    beforeCreate() {
+        // Reference DOM-manipulating pieces as static properties
+        this.table = null;
+    },
     methods: {
         exportCSV() {
             this.table.download('csv', `results_${this.source_name}.csv`);
         },
     },
-    components: { TabulatorTable },
 };
 </script>
 
 <template>
-<div>
-  <div class="row">
-    <div class="col-md-12">
-      <label>Select a study:
-        <select style="width: 20em;"
-            v-model="selected_study" :disabled="study_names.length === 0">
-          <option value="">(none selected)</option>
-          <option v-for="(item, index) in study_names" :value="item" :key="index">{{item}}</option>
-        </select>
-      </label>
-    </div>
-  </div>
-
-  <div v-if="selected_study">
+  <div>
     <div class="row">
       <div class="col-md-12">
-        <button class="btn btn-info float-right"
-                :disabled="!selected_study" @click="exportCSV">Download</button>
+        <label>Select a study:
+          <select
+            v-model="selected_study"
+            :disabled="study_names.length === 0"
+            style="width: 20em;">
+            <option value="">(none selected)</option>
+            <option
+              v-for="(item, index) in study_names"
+              :value="item"
+              :key="index">{{ item }}</option>
+          </select>
+        </label>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-12">
-        <tabulator-table
-            :columns="table_config" :initial-sort="[{column: 'log_pvalue', dir: 'desc'}]"
-            height="300px" :table_data="table_data"
+    <div v-if="selected_study">
+      <div class="row">
+        <div class="col-md-12">
+          <button
+            :disabled="!selected_study"
+            class="btn btn-info float-right"
+            @click="exportCSV">Download</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <tabulator-table
+            :columns="table_config"
+            :initial-sort="[{column: 'log_pvalue', dir: 'desc'}]"
+            :table_data="table_data"
+            height="300px"
             @connected="table = $event" />
+        </div>
       </div>
     </div>
+    <p v-else>Please select a study to use the "export" feature.</p>
   </div>
-  <p v-else>Please select a study to use the "export" feature.</p>
-</div>
 </template>
 
 <style scoped>

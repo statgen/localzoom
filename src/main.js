@@ -1,4 +1,3 @@
-// /* global $ */
 import Vue from 'vue';
 
 import * as Sentry from '@sentry/browser';
@@ -13,5 +12,5 @@ Sentry.init({
     integrations: [new Sentry.Integrations.Vue({ Vue })],
 });
 
-new Vue({ render: h => h(App) })
+new Vue({ render: (h) => h(App) })
     .$mount('#app');
