@@ -6,7 +6,6 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "build:library": "vue-cli-service build --target lib src/library.js --name LzTabix --dest lib",
     "deploy": "./deploy.sh",
     "lint": "vue-cli-service lint",
     "test:unit": "vue-cli-service test:unit"
@@ -16,21 +15,21 @@
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.0.0-rc.11",
     "gwas-credible-sets": "^0.1.0",
-    "locuszoom": "0.11.0-beta.1",
+    "locuszoom": "0.12.0-beta.1",
     "lodash": "^4.17.11",
-    "tabix-reader": "https://github.com/abought/tabix-reader",
+    "tabix-reader": "^1.0.0",
     "tabulator-tables": "^4.1.4",
     "vue": "^2.6.10",
     "vue-bootstrap-typeahead": "^0.2.6"
   },
   "devDependencies": {
-    "autoprefixer": "^9.8.4",
     "@vue/cli-plugin-babel": "^3.0.0",
     "@vue/cli-plugin-eslint": "^3.0.0",
     "@vue/cli-plugin-unit-mocha": "^3.0.0",
     "@vue/cli-service": "^3.0.0",
     "@vue/eslint-config-airbnb": "^4.0.0",
     "@vue/test-utils": "^1.0.0-beta.20",
+    "autoprefixer": "^9.8.4",
     "chai": "^4.1.2",
     "node-sass": "^4.9.0",
     "sass-loader": "^7.0.1",

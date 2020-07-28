@@ -200,7 +200,7 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
         LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
     ];
 
-    const toolbar = LocusZoom.Layouts.get('toolbar', 'standard_plot', { unnamespaced: true });
+    const toolbar = LocusZoom.Layouts.get('toolbar', 'region_nav_plot', { unnamespaced: true });
     const extra = Object.assign({
         state: initial_state,
         toolbar,

@@ -1,4 +1,3 @@
-// /* global $ */
 import Vue from 'vue';
 
 import * as Sentry from '@sentry/browser';
