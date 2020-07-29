@@ -1,4 +1,6 @@
 <script>
+
+import 'locuszoom/dist/locuszoom.css';
 import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/esm/';
 
 import {
@@ -13,6 +15,13 @@ import GwasToolbar from './components/GwasToolbar.vue';
 
 export default {
     name: 'LocalZoom',
+    components: {
+        GwasToolbar,
+        BCollapse,
+        BCard,
+        PlotPanes,
+    },
+    directives: { VBToggle },
     data() {
         return {
             // Used to trigger the initial drawing of the plot
@@ -71,13 +80,6 @@ export default {
             this.end = region.end;
         },
     },
-    components: {
-        GwasToolbar,
-        BCollapse,
-        BCard,
-        PlotPanes,
-    },
-    directives: { VBToggle },
 };
 </script>
 
@@ -87,48 +89,52 @@ export default {
       <div class="col-md-12">
         <h1><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>
         <hr>
-        <button class="btn-link" v-v-b-toggle.instructions>Instructions</button>
-        <b-collapse id="instructions" class="mt-2">
+        <button 
+          v-v-b-toggle.instructions 
+          class="btn-link">Instructions</button>
+        <b-collapse 
+          id="instructions" 
+          class="mt-2">
           <b-card>
             <div class="card-text">
-            This is a demonstration of loading GWAS results via the web browser, fetching only the
-            data
-            required for that region. It relies on four assumptions:
-            <ol>
-              <li>Your data has been stored in a compressed format, and indexed using Tabix. The
+              This is a demonstration of loading GWAS results via the web browser, fetching only the
+              data
+              required for that region. It relies on four assumptions:
+              <ol>
+                <li>Your data has been stored in a compressed format, and indexed using Tabix. The
                 index file must be in the same path, with the suffix <em>.tbi</em></li>
-              <li>The data is hosted in a place that is reachable by web browser (eg local files
+                <li>The data is hosted in a place that is reachable by web browser (eg local files
                 or a service such as S3)
-              </li>
-              <li>If using a remote URL, the host location must support byte range requests. (<a
+                </li>
+                <li>If using a remote URL, the host location must support byte range requests. (<a
                   href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
-                to check</a>)
-              </li>
-              <li>Your file contains information required to draw a plot. Chromosome, position,
+                  to check</a>)
+                </li>
+                <li>Your file contains information required to draw a plot. Chromosome, position,
                 ref, and alt alleles can be specified as either individual columns, or a SNP
                 marker (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
                 (or -log10 pvalue) for each SNP as a separate column. Beta, SE, and alt allele
                 frequency information are optional, but will be used on the plot if provided.
                 <em>Client-side plots cannot be generated from rsIDs.</em></li>
-            </ol>
+              </ol>
 
-            <p>This service is designed to efficiently fetch only the data needed for the plot
+              <p>This service is designed to efficiently fetch only the data needed for the plot
               region of interest. Therefore, it cannot generate summary views that would require
               processing the entire file (eg Manhattan plots).
-            </p>
+              </p>
 
-            <p>
-              LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
-              or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
-              plots based on a GWAS with positions from a different build.
-            </p>
+              <p>
+                LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
+                or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
+                plots based on a GWAS with positions from a different build.
+              </p>
 
-            <p>
-              Credible sets are
-              <a href="https://github.com/statgen/gwas-credible-sets/">calculated</a> based on the
-              p-values for the displayed region. At the moment this tool does not support
-              uploading your own custom credible set annotations.
-            </p>
+              <p>
+                Credible sets are
+                <a href="https://github.com/statgen/gwas-credible-sets/">calculated</a> based on the
+                p-values for the displayed region. At the moment this tool does not support
+                uploading your own custom credible set annotations.
+              </p>
             </div>
           </b-card>
         </b-collapse>
@@ -138,21 +144,26 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <gwas-toolbar
-            @config-ready="receiveAssocOptions"
-            @select-range="updateRegion"
-            :max_studies="4"
+          :max_studies="4"
+          @config-ready="receiveAssocOptions"
+          @select-range="updateRegion"
         />
       </div>
     </div>
 
     <div class="row">
       <div class="col-md-12">
-        <plot-panes ref="plotWidget"
-                    :dynamic_urls="true"
-                    :assoc_layout="base_assoc_layout" :assoc_sources="base_assoc_sources"
-                    :study_names="study_names" :has_credible_sets="has_credible_sets"
-                    :build="build"
-                    :chr="chr" :start="start" :end="end" />
+        <plot-panes 
+          ref="plotWidget"
+          :dynamic_urls="true"
+          :assoc_layout="base_assoc_layout" 
+          :assoc_sources="base_assoc_sources"
+          :study_names="study_names" 
+          :has_credible_sets="has_credible_sets"
+          :build="build"
+          :chr="chr" 
+          :start="start" 
+          :end="end" />
       </div>
     </div>
 

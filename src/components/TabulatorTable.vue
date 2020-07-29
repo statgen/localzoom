@@ -5,16 +5,12 @@ import 'tabulator-tables/dist/css/tabulator.min.css';
 export default {
     name: 'TabulatorTable',
     props: {
-        table_data: Array,
-        columns: Array,
-        initialSort: Array,
-        layout: { default: 'fitData' },
-        layoutColumnsOnNewData: { default: true, type: Boolean },
-        height: { default: '100%' },
-    },
-    beforeCreate() {
-        // DOM-manipulating widgets should store reference statically, not dynamically
-        this.tabulator = null;
+        table_data: { type: Array, default: () => [] },
+        columns: { type: Array, default: () => [] },
+        initialSort: { type: Array, default: () => [] },
+        layout: { type: String, default: 'fitData' },
+        layoutColumnsOnNewData: { type: Boolean, default: true },
+        height: { type: String, default: '100%' },
     },
     watch: {
         table_data: {
@@ -30,6 +26,10 @@ export default {
             },
             deep: true,
         },
+    },
+    beforeCreate() {
+        // DOM-manipulating widgets should store reference statically, not dynamically
+        this.tabulator = null;
     },
     mounted() {
         const {
@@ -48,6 +48,6 @@ export default {
 
 <template>
   <div>
-    <div ref="table"><slot></slot></div>
+    <div ref="table"><slot/></div>
   </div>
 </template>

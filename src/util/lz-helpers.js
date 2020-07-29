@@ -1,20 +1,25 @@
 import LocusZoom from 'locuszoom';
-import 'locuszoom/dist/ext/lz-credible-sets.min'; // Import for side effects (globally register helpers)
+import { AssociationLZ } from 'locuszoom/esm/data/adapters';
+import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
 import { makeParser } from '../gwas/parsers';
 
+LocusZoom.use(credibleSets);
+
 const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
 
-LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
+class TabixAssociationLZ extends AssociationLZ {
     parseInit(init) {
         this.params = init.params; // Used to create a parser
         this.parser = makeParser(this.params);
         this.reader = init.tabix_reader;
-    },
+    }
+
     getCacheKey(state, chain, fields) {
         return [state.chr, state.start, state.end].join('_');
-    },
+    }
+
     fetchRequest(state, chain, fields) {
         const self = this;
         return new Promise((resolve, reject) => {
@@ -25,14 +30,17 @@ LocusZoom.KnownDataSources.extend('AssociationLZ', 'TabixAssociationLZ', {
                 resolve(data);
             });
         });
-    },
+    }
+
     normalizeResponse(data) {
         // Some GWAS files will include variant rows, even if no pvalue can be calculated.
         // Eg, EPACTS fills in "NA" for pvalue in this case. These rows are not useful for a
         // scatter plot, and this data source should ignore them.
-        return data.map(this.parser).filter(item => !Number.isNaN(item.log_pvalue));
-    },
-});
+        return data.map(this.parser).filter((item) => !Number.isNaN(item.log_pvalue));
+    }
+}
+
+LocusZoom.Adapters.add('TabixAssociationLZ', TabixAssociationLZ);
 
 /**
  * A source name cannot contain special characters (this would break the layout)
@@ -90,8 +98,8 @@ function createStudyLayout(
     assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
     assoc_tooltip.html += '{{#if {{namespace[assoc]}}rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{{{namespace[assoc]}}rsid|htmlescape}}" target="_blank" rel="noopener">{{{{namespace[assoc]}}rsid|htmlescape}}</a>{{/if}}';
 
-    const dash_extra = []; // Build Display options widget & add to dashboard iff features selected
-    if (Object.values(annotations).some(item => !!item)) {
+    const dash_extra = []; // Build Display options widget & add to toolbar iff features selected
+    if (Object.values(annotations).some((item) => !!item)) {
         dash_extra.push({
             type: 'display_options',
             position: 'right',
@@ -113,19 +121,30 @@ function createStudyLayout(
     if (annotations.credible_sets) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
-        dash_extra[0].options.push(...basis.dashboard.components.pop().options);
+        dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         fields_extra.push('{{namespace[credset]}}posterior_prob', '{{namespace[credset]}}contrib_fraction', '{{namespace[credset]}}is_member');
         assoc_tooltip.html += '<br>Posterior probability: <strong>{{{{namespace[credset]}}posterior_prob|scinotation}}</strong><br>';
     }
     if (annotations.gwas_catalog) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
-        dash_extra[0].options.push(...basis.dashboard.components.pop().options);
+        dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         fields_extra.push('{{namespace[catalog]}}rsid', '{{namespace[catalog]}}trait', '{{namespace[catalog]}}log_pvalue');
         assoc_tooltip.html += '{{#if {{namespace[catalog]}}rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
     }
+    // Add a filter widget for pvalues to every panel
+    dash_extra.push({
+        type: 'filter_field',
+        position: 'right',
+        layer_name: 'associationpvalues',
+        field: '{{namespace[assoc]}}log_pvalue',
+        field_display_html: '-log<sub>10</sub> p',
+        operator: '>=',
+        data_type: 'number',
+    });
+
     assoc_layer.fields.push(...fields_extra);
-    assoc_panel.dashboard.components.push(...dash_extra);
+    assoc_panel.toolbar.widgets.push(...dash_extra);
 
     // After all custom options added, run mods through Layouts.get once more to apply namespacing
     new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
@@ -133,7 +152,7 @@ function createStudyLayout(
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
             id: `catalog_${source_name}`,
             namespace,
-            dashboard: { components: [] },
+            toolbar: { widgets: [] },
             title: {
                 text: 'Hits in GWAS Catalog',
                 style: { 'font-size': '14px' },
@@ -163,7 +182,7 @@ function createStudyTabixSources(label, tabix_reader, parser_options) {
 }
 
 function addPanels(plot, data_sources, panel_options, source_options) {
-    source_options.forEach(source => data_sources.add(...source));
+    source_options.forEach((source) => data_sources.add(...source));
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
         const panel = plot.addPanel(panel_layout);
@@ -192,11 +211,10 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
         LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
     ];
 
-    const dashboard = LocusZoom.Layouts.get('dashboard', 'standard_plot', { unnamespaced: true });
-    dashboard.components.push(LocusZoom.Layouts.get('dashboard_components', 'ldlz2_pop_selector'));
+    const toolbar = LocusZoom.Layouts.get('toolbar', 'region_nav_plot', { unnamespaced: true });
     const extra = Object.assign({
         state: initial_state,
-        dashboard,
+        toolbar,
         panels,
     }, mods);
     return LocusZoom.Layouts.get('plot', 'standard_association', extra);
