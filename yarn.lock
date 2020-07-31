@@ -5705,7 +5705,7 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-"jszlib@github:dasmoth/jszlib":
+jszlib@dasmoth/jszlib:
   version "0.2.1"
   resolved "https://codeload.github.com/dasmoth/jszlib/tar.gz/4e562c7b88749f3e1e402737ddef5f96bf0906c6"
 
@@ -5849,10 +5849,10 @@ locate-path@^5.0.0:
   dependencies:
     p-locate "^4.1.0"
 
-locuszoom@0.12.0-beta.2:
-  version "0.12.0-beta.2"
-  resolved "https://registry.yarnpkg.com/locuszoom/-/locuszoom-0.12.0-beta.2.tgz#27c28bee251abf3a54ff1d0176486fe7cd5c2b4c"
-  integrity sha512-bIikuYjCaHEDiG5Ni/cJq/DoyLfjU5VklH+dmCF9OpbVsUqa8pjyDRRFUK/N6u+QY02V9H9byrsTFO+6mZntiQ==
+locuszoom@0.12.0-beta.3:
+  version "0.12.0-beta.3"
+  resolved "https://registry.yarnpkg.com/locuszoom/-/locuszoom-0.12.0-beta.3.tgz#d1aedf3dbe9f125256b22f0e0220953ac79f2a29"
+  integrity sha512-U+NQaRZUHSOPlh4st4dfhkP9Q9wtZzjaECTD5OAGCQ+ceiwILn922iALKHib9hkmGhHqg/21vWtJESnSlVHrag==
   dependencies:
     d3 "^5.16.0"
 
