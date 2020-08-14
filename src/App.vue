@@ -89,11 +89,11 @@ export default {
       <div class="col-md-12">
         <h1><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>
         <hr>
-        <button 
-          v-v-b-toggle.instructions 
+        <button
+          v-v-b-toggle.instructions
           class="btn-link">Instructions</button>
-        <b-collapse 
-          id="instructions" 
+        <b-collapse
+          id="instructions"
           class="mt-2">
           <b-card>
             <div class="card-text">
@@ -153,16 +153,16 @@ export default {
 
     <div class="row">
       <div class="col-md-12">
-        <plot-panes 
+        <plot-panes
           ref="plotWidget"
           :dynamic_urls="true"
-          :assoc_layout="base_assoc_layout" 
+          :assoc_layout="base_assoc_layout"
           :assoc_sources="base_assoc_sources"
-          :study_names="study_names" 
+          :study_names="study_names"
           :has_credible_sets="has_credible_sets"
           :build="build"
-          :chr="chr" 
-          :start="start" 
+          :chr="chr"
+          :start="start"
           :end="end" />
       </div>
     </div>
