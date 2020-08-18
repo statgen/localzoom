@@ -201,7 +201,7 @@ function getBasicSources(study_sources = []) {
         ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, params: { source: '1000G', population: 'ALL' } }]],
         ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
         ['recomb', ['RecombLZ', { url: `${PORTAL_API_BASE_URL}annotation/recomb/results/` }]],
-        ['constraint', ['GeneConstraintLZ', { url: 'https://gnomad.broadinstitute.org/api' }]],
+        ['constraint', ['GeneConstraintLZ', { url: 'https://gnomad.broadinstitute.org/api/' }]],
     ];
 }
 
