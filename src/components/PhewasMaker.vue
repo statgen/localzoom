@@ -71,31 +71,29 @@ export default {
                 //   this will trigger something in the template that initiates rendering
                 this.rendered = true;
             }
-            if (this.plot && variant) {
+            if (this.has_plot && variant) {
                 // Update an existing PheWAS plot when the user opens this tab
-                this.plot.curtain.hide();
-                this.plot.applyState({ variant });
+                this.$refs.phewas_plot.getPlotAttr('curtain').hide();
+                this.$refs.phewas_plot.callPlot('applyState', { variant });
             }
         },
     },
     beforeCreate() {
         // LZ plots must be stored as static references, not observables
-        this.plot = null;
-        this.datasources = null;
+        this.has_plot = false;
     },
     methods: {
-        receivePlot(plot, datasources) {
-            this.plot = plot;
-            this.datasources = datasources;
+        receivePlot() {
+            this.has_plot = true;
 
             // Use listeners to warn when no variant data is available
-            plot.subscribeToData(['phewas:id'], (data) => {
+            this.$refs.phewas_plot.callPlot('subscribeToData', ['phewas:id'], (data, plot) => {
                 if (!data || !data.length) {
                     plot.curtain.show('There is no PheWAS data available for the requested variant. Please try another variant.');
                 }
             });
             // Since the plot already has data, ensure the event fires immediately.
-            plot.emit('data_rendered');
+            this.$refs.phewas_plot.callPlot('emit', 'data_rendered');
         },
     },
 };
@@ -120,10 +118,10 @@ export default {
       </p>
 
       <lz-plot
+        ref="phewas_plot"
         :base_layout="base_phewas_layout"
         :base_sources="base_phewas_sources"
         :show_loading="true"
-
         @connected="receivePlot" />
     </div>
     <p>

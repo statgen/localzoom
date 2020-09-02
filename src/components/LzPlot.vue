@@ -1,15 +1,20 @@
 <script>
 /**
- * A generic Vue component to wrap a LocusZoom instance
+ * A generic Vue component that wraps imperative LocusZoom code with a declarative Vue API.
  *
  * This can handle any type of plot that LocusZoom supports, including multiple panels and
- *  custom datasources
+ *  custom datasources.
+ *
+ * A key design goal is to avoid situations that could lead to memory leaks- when the component
+ *  is removed from the DOM, no outside code should preserve a reference. To achieve this, all
+ *  plot manipulation is handled by methods that proxy to the plot. A reference to the plot is not
+ *  propagated elsewhere.
  */
 
 import LocusZoom from 'locuszoom';
 import { plotUpdatesUrl, plotWatchesUrl } from 'locuszoom/esm/ext/lz-dynamic-urls';
 
-import { stateUrlMapping } from '../util/lz-helpers';
+import { addPanels, stateUrlMapping } from '../util/lz-helpers';
 
 let uid = 0; // Ensure that every component instance has a unique DOM id, for use by d3
 export default {
@@ -28,7 +33,8 @@ export default {
         dynamic_urls: { type: Boolean, default: false },
     },
     computed: {
-        region() { // Hack: make sure that all 3 region properties get updated atomically
+        region() {
+            // make sure that all 3 region properties get updated atomically
             const { chr, start, end } = this;
             return { chr, start, end };
         },
@@ -36,9 +42,9 @@ export default {
     watch: {
         region: {
             handler() {
-                // FIXME: this component receives notifications of a value it changes, a design
-                //   quirk that risks infinite update loops
-                // Only apply new region information if it has changed
+                // WARNING: this component receives notifications of a value it changes, a design
+                //   quirk that risks infinite update loops.
+                //   Only apply new region information if it has changed
                 const region = Object.assign({}, this.region);
                 const diffs = Object.keys(region).reduce((acc, key) => {
                     const new_val = region[key];
@@ -61,7 +67,7 @@ export default {
         this.plot_id = this.dom_id.replace(/-/g, '_'); // How to expose the plot instance globally
 
         // This is important: plot must be assigned as a static property. If it were a field in
-        //  `data` , vue would recursively wrap it as an observable, and Really Bad Things Happen.
+        //  `data`, vue would recursively wrap it as an observable, and Really Bad Things Happen.
         this.plot = null;
         this.data_sources = null;
     },
@@ -69,6 +75,9 @@ export default {
         this.createLZ(this.base_layout, this.base_sources);
     },
     beforeDestroy() {
+        // Clean up plot and event listeners to prevent memory leaks
+        this.plot.destroy();
+        delete this.plot;
         delete window[this.plot_id];
     },
     methods: {
@@ -101,8 +110,9 @@ export default {
             // IMPORTANT: never consume this value in a way that would wrap it as an observable
             //   (eg by assigning it to a field in `data`).
             this.connectListeners(plot);
-            this.$emit('connected', plot, data_sources);
+            this.$emit('connected');
         },
+
         /**
          * The component should re-emit (most) plot-level event hooks built in to LocusZoom
          * @private
@@ -112,27 +122,46 @@ export default {
             Object.keys(plot.event_hooks)
                 .forEach((name) => plot.on(name, (event) => this.$emit(name, event)));
 
-            // Also create a synthetic event not part of LZ, that makes it a little nicer to work
-            //  with region data. (by returning what was actually displayed, not what was requested)
-            plot.on('state_changed', (event) => {
-                // An interesting quirk of region changing in LZ: event data provides
-                //  the state requested (input), not final start/end (output)
-                // The event we echo should use final plot.state as source of truth
-                const { chr, start, end } = plot.state;
-                const position_changed = Object.keys(event.data)
-                    .some((key) => ['chr', 'start', 'end'].includes(key));
-
-                if (position_changed) {
-                    this.$emit('region_changed', { chr, start, end });
-                }
-            });
-
             // Changes in the plot can be reflected in the URL, and vice versa (eg browser back
             //  button can go back to a previously viewed region).
             if (this.dynamic_urls) {
                 plotUpdatesUrl(plot, stateUrlMapping);
                 plotWatchesUrl(plot, stateUrlMapping);
             }
+        },
+
+        /**
+         * Proxy a method from the component to the LZ instance
+         * This allows parent components to manipulate the LZ instance, via $refs, without
+         *  leaking a reference to component internal dom elements
+         *  @param {String} method_name The name of the method to proxy (eg `subscribeToData`)
+         *  @param {Arguments} args An arbitrary number of method arguments
+         */
+        callPlot(method_name, ...args) {
+            this.plot[method_name](...args);
+        },
+
+        /**
+         * Allow access to commonly manipulated plot attributes, like `plot.curtain`
+         * @param {string} attr_name The name of the attribute to access
+         */
+        getPlotAttr(attr_name) {
+            return this.plot[attr_name];
+        },
+
+        /**
+         * Proxy a method from the component to the LZ datasources
+         * This allows parent components to manipulate the LZ instance, via $refs, without leaking
+         *  a reference to component internals
+         *  @param {String} method_name The name of the method to proxy (eg `add`)
+         *  @param {Arguments} args An arbitrary number of method arguments
+         */
+        callSources(method_name, ...args) {
+            this.data_sources[method_name](...args);
+        },
+
+        addPanels(panel_options, source_options) {
+            addPanels(this.plot, this.data_sources, panel_options, source_options);
         },
     },
 };
