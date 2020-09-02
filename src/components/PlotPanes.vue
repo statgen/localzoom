@@ -8,7 +8,7 @@ import ExportData from './ExportData.vue';
 import LzPlot from './LzPlot.vue';
 import PhewasMaker from './PhewasMaker.vue';
 
-import { addPanels, deNamespace } from '../util/lz-helpers';
+import { deNamespace } from '../util/lz-helpers';
 
 export default {
     name: 'PlotPanes',
@@ -64,20 +64,15 @@ export default {
         //  bypass these problems by assigning them as static properties instead of nested
         //  observables.
         this.PHEWAS_TAB = 1;
-
-        this.assoc_plot = null;
-        this.assoc_datasources = null;
+        this.has_plot = false;
     },
     methods: {
-        receivePlot(plot, data_sources) {
-            // Make LZ plot and source objects (created in a child component) available for direct
-            //  manipulation among sibling components
-            this.assoc_plot = plot;
-            this.assoc_datasources = data_sources;
+        receivePlot() {
+            this.has_plot = true;
         },
         addStudy(panel_configs, source_configs) {
             // Add a study to the plot
-            addPanels(this.assoc_plot, this.assoc_datasources, panel_configs, source_configs);
+            this.$refs.assoc_plot.addPanels(panel_configs, source_configs);
         },
         onVariantClick(lzEvent) {
             // Respond to clicking on an association plot datapoint
@@ -93,21 +88,22 @@ export default {
             this.tmp_phewas_variant = variant_data.variant;
             this.tmp_phewas_logpvalue = variant_data.log_pvalue;
         },
+
         subscribeFields(fields) {
             // This method controls one table widget that draws data from one set of plot fields
             if (this.tmp_export_callback) {
-                this.assoc_plot.off('data_rendered', this.tmp_export_callback);
+                this.$refs.assoc_plot.callPlot('off', 'data_rendered', this.tmp_export_callback);
                 this.tmp_export_callback = null;
             }
-            if (!fields.length || !this.assoc_plot) {
+            if (!fields.length || !this.has_plot) {
                 return;
             }
-            this.tmp_export_callback = this.assoc_plot.subscribeToData(fields, (data) => {
+            this.tmp_export_callback = this.$refs.assoc_plot.callPlot('subscribeToData', fields, (data) => {
                 this.table_data = data.map((item) => deNamespace(item, 'assoc'));
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
-            this.assoc_plot.emit('data_rendered');
+            this.$refs.assoc_plot.callPlot('emit', 'data_rendered');
         },
     },
 };
@@ -128,6 +124,7 @@ export default {
         <b-tab title="GWAS">
           <lz-plot
             v-if="has_studies"
+            ref="assoc_plot"
             :show_loading="true"
             :base_layout="assoc_layout"
             :base_sources="assoc_sources"
