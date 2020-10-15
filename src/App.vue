@@ -144,6 +144,7 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <gwas-toolbar
+          :study_names="study_names"
           :max_studies="4"
           @config-ready="receiveAssocOptions"
           @select-range="updateRegion"
