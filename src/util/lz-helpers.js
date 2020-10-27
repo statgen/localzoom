@@ -123,7 +123,7 @@ function createStudyLayout(
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         fields_extra.push('{{namespace[credset]}}posterior_prob', '{{namespace[credset]}}contrib_fraction', '{{namespace[credset]}}is_member');
-        assoc_tooltip.html += '<br>Posterior probability: <strong>{{{{namespace[credset]}}posterior_prob|scinotation}}</strong><br>';
+        assoc_tooltip.html += '{{#if {{namespace[credset]}}posterior_prob}}<br>Posterior probability: <strong>{{{{namespace[credset]}}posterior_prob|scinotation}}{{/if}}</strong><br>';
     }
     if (annotations.gwas_catalog) {
         // Grab the options object from a pre-existing layout
