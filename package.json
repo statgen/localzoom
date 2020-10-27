@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "license": "MIT",
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -14,7 +14,7 @@
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.0.0-rc.11",
     "gwas-credible-sets": "^0.1.0",
-    "locuszoom": "0.13.0-beta.1",
+    "locuszoom": "0.13.0-beta.2",
     "lodash": "^4.17.11",
     "tabix-reader": "^1.0.0",
     "tabulator-tables": "^4.1.4",
