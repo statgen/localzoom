@@ -97,11 +97,16 @@ export default {
           class="mt-2">
           <b-card>
             <div class="card-text">
-              This is a demonstration of loading GWAS results via the web browser, fetching only the
-              data
-              required for that region. It relies on four assumptions:
+              LocalZoom is a tool for generating region association plots via the web browser.
+              It can be used on any Tabix-indexed file (including those stored on your hard drive), which
+              makes it useful for sensitive or confidential data. If you are comfortable uploading
+              your data to a server, consider the <a href="https://my.locuszoom.org">my.locuszoom.org</a> upload service instead,
+              which provides additional annotation features and does not require you to compress or index your data.
+              (note that the upload service is limited to files &lt;= 1GB)
+              LocalZoom relies on four assumptions:
               <ol>
-                <li>Your data has been stored in a compressed format, and indexed using Tabix. The
+                <li>Your data is a text-based, tab-delimited file that has been stored in a compressed format,
+                and <a href="http://www.htslib.org/doc/tabix.html">indexed using Tabix</a>. The
                 index file must be in the same path, with the suffix <em>.tbi</em></li>
                 <li>The data is hosted in a place that is reachable by web browser (eg local files
                 or a service such as S3)
@@ -110,7 +115,7 @@ export default {
                   href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
                   to check</a>)
                 </li>
-                <li>Your file contains information required to draw a plot. Chromosome, position,
+                <li>Your file contains all of the information required to draw a plot. Chromosome, position,
                 ref, and alt alleles can be specified as either individual columns, or a SNP
                 marker (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
                 (or -log10 pvalue) for each SNP as a separate column. Beta, SE, and alt allele
