@@ -6,7 +6,7 @@
 set -e
 
 # build
-npx yarn run build
+npm run build
 
 # navigate into the build output directory
 cd dist
