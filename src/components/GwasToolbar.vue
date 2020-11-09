@@ -51,8 +51,8 @@ export default {
             display_name: null, // TODO: replace 2 way binding with bubbling name up separately
 
             // Allow the user to customize the plot and select featured annotations
-            has_catalog: false,
-            has_credible_sets: false,
+            has_catalog: true,
+            has_credible_sets: true,
             build: 'GRCh37',
 
             // Controls for "batch view" mode

@@ -86,7 +86,12 @@ function makeParser(
             chr = fields[chrom_col - 1].replace(/^chr/g, '');
             pos = fields[pos_col - 1];
         } else {
-            throw new Error('Must specify how to parse file');
+            throw new Error('Must specify all fields required to identify the variant');
+        }
+
+        chr = chr.toUpperCase();
+        if (chr.startsWith('RS')) {
+            throw new Error(`Invalid chromosome specified: value "${chr}" is an rsID`);
         }
 
         if (has(ref_col)) {

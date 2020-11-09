@@ -5,8 +5,15 @@
 # abort on errors
 set -e
 
+# Verify that the script is running on the master branch (only)
+BRANCH=$(git branch --show-current)
+if [ -z "$BRANCH" ] || [ "$BRANCH" != "master" ]; then
+  echo 'Aborting script';
+  exit 1;
+fi
+
 # build
-npx yarn run build
+npm run build
 
 # navigate into the build output directory
 cd dist

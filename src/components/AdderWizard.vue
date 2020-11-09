@@ -141,7 +141,7 @@ export default {
                 return this.parser(this.sample_data[0]);
             } catch (e) {
                 console.error(e);
-                return { error: 'Could not parse column contents' };
+                return { error: e.toString() || 'Could not parse column contents' };
             }
         },
     },

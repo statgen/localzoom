@@ -12,16 +12,15 @@ Please specify that you are asking about "*LocalZoom*".
 
 ## Developer instructions
 ### Project setup
-This project uses [Yarn](https://yarnpkg.com/lang/en/docs/install/) for dependency 
-management.
- 
+This project uses npm for dependency management. Typically, the build commands work with all actively supported NodeJS LTS releases.
+
 ```
-yarn install
+npm install
 ```
 
 ### Compiles and hot-reloads for development
 ```
-yarn run serve
+npm run serve
 ```
 
 ### Building for production
@@ -37,13 +36,13 @@ VUE_APP_GOOGLE_ANALYTICS_KEY=UA-YOURKEY-1
 
 Then build the assets to the `dist/` folder.
 ```bash
-yarn run build
+npm run build
 ```
 
 If you are distributing this to our official GitHub pages location, there is a helper command that 
-will update (but not push) the `gh-pages` branch:
+will update (and push) the `gh-pages` branch:
 ```bash
-yarn run deploy
+npm run deploy
 ```
 
 When ready, verify the built app and push to production.
@@ -52,10 +51,10 @@ When ready, verify the built app and push to production.
 This project uses a style and syntax checker for code quality. The following command can help to 
 identify (and automatically fix) common issues.
 ```
-yarn run lint
+npm run lint
 ```
 
 ### Run unit tests
 ```
-yarn run test:unit
+npm run test:unit
 ```
