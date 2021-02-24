@@ -12,9 +12,6 @@ describe('parseRegion', function () {
 
         result = parseRegion('1:10', {region_size: 100});
         assert.deepEqual(result, {chr: '1', start: 1, end: 110}, 'Single position is center of a defined region size, and respects minima');
-
-
-
     });
 
     it('fails on totally unrecognized formats', function () {
@@ -40,12 +37,10 @@ describe('parseRegion', function () {
             'Warns if the requested region makes no sense',
             /smaller than/
         );
-
         assert.throws(
             () => parseRegion('chr1:1000-2000ab', {region_size: 250}),
             'Fails because trailing characters are present',
             /Could not parse/
         );
-
     });
 });
