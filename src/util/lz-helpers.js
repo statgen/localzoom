@@ -93,9 +93,9 @@ function createStudyLayout(
     assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label', { namespace });
     const assoc_tooltip = assoc_layer.tooltip;
 
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|scinotation|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta|is_numeric}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta|is_numeric}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|scinotation|htmlescape}}</strong>{{/if}}';
+    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq|is_numeric}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
     assoc_tooltip.html += '{{#if {{namespace[assoc]}}rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{{{namespace[assoc]}}rsid|htmlescape}}" target="_blank" rel="noopener">{{{{namespace[assoc]}}rsid|htmlescape}}</a>{{/if}}';
 
     const dash_extra = []; // Build Display options widget & add to toolbar iff features selected
