@@ -102,6 +102,7 @@ function createStudyLayout(
     if (Object.values(annotations).some((item) => !!item)) {
         dash_extra.push({
             type: 'display_options',
+            custom_event_name: 'widget_association_display_options_choice',
             position: 'right',
             color: 'blue',
             // Below: special config specific to this widget

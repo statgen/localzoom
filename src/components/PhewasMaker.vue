@@ -73,8 +73,8 @@ export default {
             }
             if (this.has_plot && variant) {
                 // Update an existing PheWAS plot when the user opens this tab
-                this.$refs.phewas_plot.getPlotAttr('curtain').hide();
-                this.$refs.phewas_plot.callPlot('applyState', { variant });
+                this.$refs.phewas_plot.callPlot((plot) => plot.curtain.hide());
+                this.$refs.phewas_plot.callPlot((plot) => plot.applyState({ variant }));
             }
         },
     },
@@ -87,13 +87,15 @@ export default {
             this.has_plot = true;
 
             // Use listeners to warn when no variant data is available
-            this.$refs.phewas_plot.callPlot('subscribeToData', ['phewas:id'], (data, plot) => {
-                if (!data || !data.length) {
-                    plot.curtain.show('There is no PheWAS data available for the requested variant. Please try another variant.');
-                }
+            this.$refs.phewas_plot.callPlot((plot) => {
+                plot.subscribeToData(['phewas:id'], (data, plot) => {
+                    if (!data || !data.length) {
+                        plot.curtain.show('There is no PheWAS data available for the requested variant. Please try another variant.');
+                    }
+                });
             });
             // Since the plot already has data, ensure the event fires immediately.
-            this.$refs.phewas_plot.callPlot('emit', 'data_rendered');
+            this.$refs.phewas_plot.callPlot((plot) => plot.emit('data_rendered'));
         },
     },
 };

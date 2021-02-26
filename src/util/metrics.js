@@ -9,6 +9,53 @@
  *  urls modifies the URL, which is an externally visible action.
  */
 
+/**
+ * Set up metrics to track certain features of interest within the LZ plot. This will help us
+ *  derive information about which options are commonly used.
+ * @param plot
+ */
+function setup_feature_metrics(plot) {
+    if (!window.gtag) {
+        // If google analytics isn't present, then there is nothing to do here.
+        return;
+    }
+    plot.on('widget_save_png', () => {
+        window.gtag('event', 'save_image', {
+            event_category: 'features',
+            event_label: 'png',
+        });
+    });
+    plot.on('widget_save_svg', () => {
+        window.gtag('event', 'save_image', {
+            event_category: 'features',
+            event_label: 'svg',
+        });
+    });
+    plot.on('widget_gene_filter_choice', (event) => {
+        window.gtag('event', 'filter_genes', {
+            event_category: 'features',
+            event_label: event.data.choice,
+        });
+    });
+    plot.on('widget_association_display_options_choice', (event) => {
+        window.gtag('event', 'association_display_options', {
+            event_category: 'features',
+            event_label: event.data.choice,
+        });
+    });
+    plot.on('widget_set_ldpop', (event) => {
+        window.gtag('event', 'ld_pop', {
+            event_category: 'features',
+            event_label: event.data.choice_value,
+        });
+    });
+    plot.on('set_ldrefvar', (event) => {
+        window.gtag('event', 'ld_refvar', {
+            event_category: 'features',
+        });
+    });
+}
+
 // Hack: create an event we can listen to for `history.pushState` (no native one available)
 // Ref: https://stackoverflow.com/a/25673911/1422268
 const _wr = function _wr(type) {
@@ -29,7 +76,10 @@ const count_region_view = () => {
     }
 };
 
-if (window.gtag) { // Metrics are only activated when google analytics script is installed
+// Activate some metrics instantly whenever this module is loaded. These rely on events fired by
+//   dynamic URLs and can be measured indirectly without a reference to the plot object.
+// Metrics are only activated when google analytics script is installed
+if (window.gtag) {
     // Monkey-patching wraps API calls to create a synthetic DOM event: icky, but necessary.
     window.history.pushState = _wr('pushState');
 
@@ -42,3 +92,4 @@ if (window.gtag) { // Metrics are only activated when google analytics script is
 }
 
 export default count_region_view;
+export { setup_feature_metrics };

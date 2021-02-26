@@ -69,6 +69,7 @@ export default {
     methods: {
         receivePlot() {
             this.has_plot = true;
+            this.$emit('plot-created');
         },
         addStudy(panel_configs, source_configs) {
             // Add a study to the plot
@@ -88,22 +89,23 @@ export default {
             this.tmp_phewas_variant = variant_data.variant;
             this.tmp_phewas_logpvalue = variant_data.log_pvalue;
         },
-
         subscribeFields(fields) {
             // This method controls one table widget that draws data from one set of plot fields
             if (this.tmp_export_callback) {
-                this.$refs.assoc_plot.callPlot('off', 'data_rendered', this.tmp_export_callback);
+                this.$refs.assoc_plot.callPlot((plot) => plot.off('data_rendered', this.tmp_export_callback));
                 this.tmp_export_callback = null;
             }
             if (!fields.length || !this.has_plot) {
                 return;
             }
-            this.tmp_export_callback = this.$refs.assoc_plot.callPlot('subscribeToData', fields, (data) => {
-                this.table_data = data.map((item) => deNamespace(item, 'assoc'));
+            this.tmp_export_callback = this.$refs.assoc_plot.callPlot((plot) => {
+                plot.subscribeToData(fields, (data) => {
+                    this.table_data = data.map((item) => deNamespace(item, 'assoc'));
+                });
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
-            this.$refs.assoc_plot.callPlot('emit', 'data_rendered');
+            this.$refs.assoc_plot.callPlot((plot) => plot.emit('data_rendered'));
         },
     },
 };
