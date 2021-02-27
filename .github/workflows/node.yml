@@ -39,6 +39,6 @@ jobs:
         npm install -g npm@7
         npm ci
         npm run build
-        npm run test
+        npm run test:unit
       env:
         CI: true
