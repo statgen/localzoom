@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "engines": {
     "node": ">=10.13.0"
@@ -23,7 +23,7 @@
     "gwas-credible-sets": "^0.1.0",
     "locuszoom": "~0.13.0",
     "lodash": "^4.17.11",
-    "tabix-reader": "^1.0.0",
+    "tabix-reader": "^1.0.1",
     "tabulator-tables": "^4.1.4",
     "vue": "^2.6.10",
     "vue-bootstrap-typeahead": "^0.2.6"
