@@ -119,8 +119,7 @@ export default {
          * @param plot
          */
         connectListeners(plot) {
-            Object.keys(plot.event_hooks)
-                .forEach((name) => plot.on(name, (event) => this.$emit(name, event)));
+            plot.on('any_lz_event', (eventData) => this.$emit(eventData.event_name, eventData));
 
             // Changes in the plot can be reflected in the URL, and vice versa (eg browser back
             //  button can go back to a previously viewed region).
@@ -134,30 +133,22 @@ export default {
          * Proxy a method from the component to the LZ instance
          * This allows parent components to manipulate the LZ instance, via $refs, without
          *  leaking a reference to component internal dom elements
-         *  @param {String} method_name The name of the method to proxy (eg `subscribeToData`)
-         *  @param {Arguments} args An arbitrary number of method arguments
+         * @param {function} callback A callback that receives the plot object and acts upon it.
          */
-        callPlot(method_name, ...args) {
-            this.plot[method_name](...args);
-        },
-
-        /**
-         * Allow access to commonly manipulated plot attributes, like `plot.curtain`
-         * @param {string} attr_name The name of the attribute to access
-         */
-        getPlotAttr(attr_name) {
-            return this.plot[attr_name];
+        callPlot(callback) {
+            // Consume return values with caution to avoid leaking internals
+            return callback(this.plot);
         },
 
         /**
          * Proxy a method from the component to the LZ datasources
          * This allows parent components to manipulate the LZ instance, via $refs, without leaking
          *  a reference to component internals
-         *  @param {String} method_name The name of the method to proxy (eg `add`)
-         *  @param {Arguments} args An arbitrary number of method arguments
+         * @param {function} callback A callback that receives the datasources object and acts upon it.
          */
-        callSources(method_name, ...args) {
-            this.data_sources[method_name](...args);
+        callSources(callback) {
+            // Consume return values with caution to avoid leaking internals
+            return callback(this.data_sources);
         },
 
         addPanels(panel_options, source_options) {

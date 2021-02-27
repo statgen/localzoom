@@ -67,11 +67,7 @@ export default {
                 try {
                     ({ chr, start, end } = parseRegion(this.region, { region_size: max_range }));
                 } catch (e) {
-                    this.$emit('fail', 'Could not parse specified range');
-                    return;
-                }
-                if ((end - start) > this.max_range) {
-                    this.$emit('fail', `Maximum allowable range is ${max_range.toLocaleString()}`);
+                    this.$emit('fail', e);
                     return;
                 }
             }

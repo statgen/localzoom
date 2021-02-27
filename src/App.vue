@@ -7,7 +7,7 @@ import {
     getBasicSources, getBasicLayout,
     createStudyTabixSources, createStudyLayout,
 } from './util/lz-helpers';
-import count_region_view from './util/metrics';
+import count_region_view, {setup_feature_metrics} from './util/metrics';
 
 import PlotPanes from './components/PlotPanes.vue';
 import GwasToolbar from './components/GwasToolbar.vue';
@@ -72,7 +72,11 @@ export default {
             this.study_names.push(label);
             this.build = build;
         },
-
+        activateMetrics() {
+            // After plot is created, initiate metrics capture
+            // TODO: This is a mite finicky; consider further refactoring in the future?
+            this.$refs.plotWidget.$refs.assoc_plot.callPlot(setup_feature_metrics);
+        },
         updateRegion(region) {
             // Receive new region config from toolbar
             this.chr = region.chr;
@@ -169,14 +173,16 @@ export default {
           :build="build"
           :chr="chr"
           :start="start"
-          :end="end" />
+          :end="end"
+          @plot-created="activateMetrics"
+        />
       </div>
     </div>
 
     <div class="row">
       <div class="col-md-12">
         <footer style="text-align: center;">
-          &copy; Copyright <script>document.write(new Date().getFullYear())</script> <a href="https://github.com/statgen">The University of Michigan
+          &copy; Copyright {{ new Date().getFullYear() }}<a href="https://github.com/statgen">The University of Michigan
           Center for Statistical Genetics</a><br>
         </footer>
       </div>

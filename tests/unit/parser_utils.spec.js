@@ -29,7 +29,6 @@ describe('parsePvalToLog', () => {
     });
 });
 
-
 describe('parseAlleleFrequency', () => {
     it('returns freq given frequency', () => {
         const res = parseAlleleFrequency({ freq: '0.25', is_alt_effect: true });
