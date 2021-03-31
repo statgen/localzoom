@@ -61,7 +61,7 @@ export default {
                 this.base_assoc_layout = getBasicLayout(
                     state,
                     panels,
-                    { responsive_resize: false },
+                    { responsive_resize: true },
                 );
                 // Collect metrics for first plot loaded
                 count_region_view();
@@ -182,7 +182,7 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <footer style="text-align: center;">
-          &copy; Copyright {{ new Date().getFullYear() }}<a href="https://github.com/statgen">The University of Michigan
+          &copy; Copyright {{ new Date().getFullYear() }} <a href="https://github.com/statgen">The University of Michigan
           Center for Statistical Genetics</a><br>
         </footer>
       </div>
