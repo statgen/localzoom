@@ -38,16 +38,16 @@ export default {
             });
             const panel = LocusZoom.Layouts.get('panel', 'phewas', {
                 unnamespaced: true,
+                height: 300,
+                min_height: 300,
                 data_layers: [layer],
             });
 
             return LocusZoom.Layouts.get(
                 'plot', 'standard_phewas',
                 {
-                    height: 250,
-                    min_height: 200,
                     panels: [panel],
-                    responsive_resize: false,
+                    responsive_resize: true,
                     state: { variant: this.variant_name, genome_build: this.build },
                 },
             );
@@ -83,6 +83,13 @@ export default {
         this.has_plot = false;
     },
     methods: {
+        callPlot(callback) {
+            // Allow external widgets to manipulate the plot directly
+            if (this.has_plot) {
+                this.$refs.phewas_plot.callPlot(callback);
+            }
+        },
+
         receivePlot() {
             this.has_plot = true;
 

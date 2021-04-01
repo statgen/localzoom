@@ -88,7 +88,7 @@ export default {
 </script>
 
 <template>
-  <div class="container">
+  <div>
     <div class="row">
       <div class="col-md-12">
         <h1><strong>LocalZoom: Plot your own data with LocusZoom.js</strong></h1>

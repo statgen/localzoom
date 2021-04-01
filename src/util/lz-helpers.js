@@ -78,6 +78,7 @@ function createStudyLayout(
     const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
         id: `association_${source_name}`,
         title: { text: source_label },
+        height: 275,
         namespace,
     });
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
@@ -129,6 +130,7 @@ function createStudyLayout(
     if (annotations.gwas_catalog) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
+        // TODO Clarify this; make small registry pieces more reusable
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         fields_extra.push('{{namespace[catalog]}}rsid', '{{namespace[catalog]}}trait', '{{namespace[catalog]}}log_pvalue');
         assoc_tooltip.html += '{{#if {{namespace[catalog]}}rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
@@ -138,6 +140,7 @@ function createStudyLayout(
     assoc_panel.toolbar.widgets.push(...dash_extra);
 
     // After all custom options added, run mods through Layouts.get once more to apply namespacing
+    // TODO: rewrite this
     new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
     if (annotations.gwas_catalog) {
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
@@ -199,7 +202,7 @@ function getBasicSources(study_sources = []) {
 function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     const panels = [
         ...study_panels,
-        LocusZoom.Layouts.get('panel', 'genes', { proportional_height: 0.5 }),
+        LocusZoom.Layouts.get('panel', 'genes'),
     ];
 
     const extra = Object.assign({
