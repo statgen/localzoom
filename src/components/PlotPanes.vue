@@ -59,10 +59,7 @@ export default {
         },
     },
     beforeCreate() {
-        // Preserve a reference to component widgets so that their methods can be accessed directly
-        //  Some- esp LZ plots- behave very oddly when wrapped as a nested observable; we can
-        //  bypass these problems by assigning them as static properties instead of nested
-        //  observables.
+        this.PLOT_TAB = 0;
         this.PHEWAS_TAB = 1;
         this.has_plot = false;
     },
@@ -107,6 +104,19 @@ export default {
             // immediately
             this.$refs.assoc_plot.callPlot((plot) => plot.emit('data_rendered'));
         },
+
+        /**
+         * LocusZoom automatically resizes when the window is resized. If this happens when a plot
+         *  is hidden, it causes weird display glitches.
+         */
+        fixDimensions(selected_tab) {
+            const { PHEWAS_TAB, PLOT_TAB } = this;
+            if (selected_tab === PHEWAS_TAB) {
+                this.$nextTick(() => this.$refs.phewas.callPlot((plot) => plot.rescaleSVG()));
+            } else if (selected_tab === PLOT_TAB) {
+                this.$nextTick(() => this.$refs.assoc_plot.callPlot((plot) => plot.rescaleSVG()));
+            }
+        },
     },
 };
 </script>
@@ -122,6 +132,7 @@ export default {
         style="min-height:1000px;"
         class="flex-nowrap"
         content-class="scroll-extra"
+        @input="fixDimensions"
       >
         <b-tab title="GWAS">
           <lz-plot
@@ -152,6 +163,7 @@ export default {
             <span title="Only available for build GRCh37 datasets">PheWAS</span>
           </template>
           <phewas-maker
+            ref="phewas"
             :variant_name="tmp_phewas_variant"
             :build="build"
             :your_study="tmp_phewas_study"

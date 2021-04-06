@@ -12,6 +12,9 @@ import TabulatorTable from './TabulatorTable.vue';
 function formatSciNotation(cell, params) {
     // Tabulator cell formatter using sci notation
     const value = cell.getValue();
+    if (typeof value !== 'number') {
+        return null;
+    }
     return LocusZoom.TransformationFunctions.get('scinotation')(value);
 }
 
