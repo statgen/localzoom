@@ -83,7 +83,7 @@ function createStudyLayout(
     });
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     assoc_layer.label = {
-        text: '{{{{namespace[assoc]}}variant}}',
+        text: '{{#if {{namespace[assoc]}}rsid}}{{{{namespace[assoc]}}rsid}}{{#else}}{{{{namespace[assoc]}}variant}}{{/if}}',
         spacing: 12,
         lines: { style: { 'stroke-width': '2px', stroke: '#333333', 'stroke-dasharray': '2px 2px' } },
         filters: [
