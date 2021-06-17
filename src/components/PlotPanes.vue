@@ -10,6 +10,9 @@ import PhewasMaker from './PhewasMaker.vue';
 
 import { deNamespace } from '../util/lz-helpers';
 
+// Named constants that map to the order (index) of tabs as declared in the template for this component
+const TABS = Object.freeze({PLOT: 0, PHEWAS: 1, EXPORT: 2});
+
 export default {
     name: 'PlotPanes',
     components: {
@@ -59,8 +62,7 @@ export default {
         },
     },
     beforeCreate() {
-        this.PLOT_TAB = 0;
-        this.PHEWAS_TAB = 1;
+        this.TABS = TABS;
         this.has_plot = false;
     },
     methods: {
@@ -110,10 +112,10 @@ export default {
          *  is hidden, it causes weird display glitches.
          */
         fixDimensions(selected_tab) {
-            const { PHEWAS_TAB, PLOT_TAB } = this;
-            if (selected_tab === PHEWAS_TAB) {
+            const { TABS } = this;
+            if (selected_tab === TABS.PHEWAS) {
                 this.$nextTick(() => this.$refs.phewas.callPlot((plot) => plot.rescaleSVG()));
-            } else if (selected_tab === PLOT_TAB) {
+            } else if (selected_tab === TABS.PLOT) {
                 this.$nextTick(() => this.$refs.assoc_plot.callPlot((plot) => plot.rescaleSVG()));
             }
         },
@@ -134,7 +136,10 @@ export default {
         content-class="scroll-extra"
         @input="fixDimensions"
       >
-        <b-tab title="GWAS">
+        <b-tab
+          :active="selected_tab === TABS.PLOT"
+          title="GWAS"
+        >
           <lz-plot
             v-if="has_studies"
             ref="assoc_plot"
@@ -158,7 +163,10 @@ export default {
             </span>
           </div>
         </b-tab>
-        <b-tab :disabled="!has_studies || !allow_phewas">
+        <b-tab
+          :active="selected_tab === TABS.PHEWAS"
+          :disabled="!has_studies || !allow_phewas"
+        >
           <template slot="title">
             <span title="Only available for build GRCh37 datasets">PheWAS</span>
           </template>
@@ -168,9 +176,10 @@ export default {
             :build="build"
             :your_study="tmp_phewas_study"
             :your_logpvalue="tmp_phewas_logpvalue"
-            :allow_render="selected_tab === PHEWAS_TAB"/>
+            :allow_render="selected_tab === TABS.PHEWAS"/>
         </b-tab>
         <b-tab
+          :active="selected_tab === TABS.EXPORT"
           :disabled="!has_studies"
           title="Export">
           <export-data
