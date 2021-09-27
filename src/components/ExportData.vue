@@ -39,34 +39,34 @@ export default {
         table_config() {
             // How should the table display this set of fields? Determined once at component load.
             const base = [
-                { title: 'Chrom', field: 'chromosome' },
-                { title: 'Pos', field: 'position', sorter: 'number' },
-                { title: 'Ref', field: 'ref_allele' },
-                { title: 'Alt', field: 'alt_allele' },
-                { title: 'rsID', field: 'rsid' },
+                { title: 'Chrom', field: 'assoc:chromosome' },
+                { title: 'Pos', field: 'assoc:position', sorter: 'number' },
+                { title: 'Ref', field: 'assoc:ref_allele' },
+                { title: 'Alt', field: 'assoc:alt_allele' },
+                { title: 'rsID', field: 'assoc:rsid' },
                 {
                     title: '-log<sub>10</sub>(p)',
-                    field: 'log_pvalue',
+                    field: 'assoc:log_pvalue',
                     formatter: formatSciNotation,
                     sorter: 'number',
                 },
                 {
                     title: '&beta;',
-                    field: 'beta',
+                    field: 'assoc:beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
                 },
                 {
                     title: 'SE(&beta;)',
-                    field: 'stderr_beta',
+                    field: 'assoc:stderr_beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
                 },
                 {
                     title: 'Alt freq.',
-                    field: 'alt_allele_freq',
+                    field: 'assoc:alt_allele_freq',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
@@ -74,8 +74,8 @@ export default {
             ];
             if (this.has_credible_sets) {
                 base.push(
-                    { title: 'Cred. set', field: 'is_member', formatter: 'tickCross' },
-                    { title: 'Posterior probability', field: 'posterior_prob', formatter: formatSciNotation },
+                    { title: 'Cred. set', field: 'credset:is_member', formatter: 'tickCross' },
+                    { title: 'Posterior probability', field: 'credset:posterior_prob', formatter: formatSciNotation },
                 );
             }
             return base;
@@ -87,29 +87,13 @@ export default {
             const { source_name } = this;
             if (!this.study_names.includes(this.selected_study)) {
                 // Reset logic: notify external widgets to remove any subscribers
-                this.$emit('requested-data', []);
+                this.$emit('requested-data');
                 return;
             }
-            const fields = [
-                `assoc_${source_name}:chromosome`,
-                `assoc_${source_name}:position`,
-                `assoc_${source_name}:ref_allele`,
-                `assoc_${source_name}:alt_allele`,
-                `assoc_${source_name}:rsid`,
-                `assoc_${source_name}:log_pvalue`,
-                `assoc_${source_name}:alt_allele_freq`,
-                `assoc_${source_name}:beta`,
-                `assoc_${source_name}:stderr_beta`,
-            ];
 
-            if (this.has_credible_sets) {
-                fields.push(
-                    `credset_${source_name}:is_member`,
-                    `credset_${source_name}:posterior_prob`,
-                );
-            }
-            // Side effect in computed: sketchy but convenient.
-            this.$emit('requested-data', fields);
+            // Side effect in computed: sketchy but convenient. Since panels are consistently named, emit the name oif a panel with the desired data
+            // Request to follow the data from a layer, which automatically takes into account "get extra data" options like credsets
+            this.$emit('requested-data', `association_${source_name}.associationpvalues`);
         },
     },
     beforeCreate() {
@@ -157,7 +141,7 @@ export default {
         <div class="col-md-12">
           <tabulator-table
             :columns="table_config"
-            :initial-sort="[{column: 'log_pvalue', dir: 'desc'}]"
+            :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
             :table_data="table_data"
             height="300px"
             @connected="table = $event" />

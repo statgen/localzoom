@@ -8,8 +8,6 @@ import ExportData from './ExportData.vue';
 import LzPlot from './LzPlot.vue';
 import PhewasMaker from './PhewasMaker.vue';
 
-import { deNamespace } from '../util/lz-helpers';
-
 // Named constants that map to the order (index) of tabs as declared in the template for this component
 const TABS = Object.freeze({PLOT: 0, PHEWAS: 1, EXPORT: 2});
 
@@ -82,29 +80,28 @@ export default {
             }
 
             // TODO: Clean this up a bit to better match original display name
-            const variant_data = deNamespace(lzEvent.data, 'assoc');
+            const variant_data = lzEvent.data;
             // Internally, LZ broadcasts `plotname.assoc_study`. Convert to `study` for display
             this.tmp_phewas_study = panel_name.split('.')[1].replace(/^association_/, '');
-            this.tmp_phewas_variant = variant_data.variant;
-            this.tmp_phewas_logpvalue = variant_data.log_pvalue;
+            this.tmp_phewas_variant = variant_data['assoc:variant'];
+            this.tmp_phewas_logpvalue = variant_data['assoc:log_pvalue'];
         },
-        subscribeFields(fields) {
+
+        subscribeToData(layer_name) {
             // This method controls one table widget that draws data from one set of plot fields
             if (this.tmp_export_callback) {
-                this.$refs.assoc_plot.callPlot((plot) => plot.off('data_rendered', this.tmp_export_callback));
+                this.$refs.assoc_plot.callPlot((plot) => plot.off('data_from_layer', this.tmp_export_callback));
                 this.tmp_export_callback = null;
             }
-            if (!fields.length || !this.has_plot) {
+            if (!layer_name || !this.has_plot) {
                 return;
             }
             this.tmp_export_callback = this.$refs.assoc_plot.callPlot((plot) => {
-                plot.subscribeToData(fields, (data) => {
-                    this.table_data = data.map((item) => deNamespace(item, 'assoc'));
-                });
+                plot.subscribeToData({ from_layer: layer_name }, (data) => this.table_data = data);
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
-            this.$refs.assoc_plot.callPlot((plot) => plot.emit('data_rendered'));
+            this.$refs.assoc_plot.callPlot((plot) => plot.applyState());
         },
 
         /**
@@ -186,7 +183,7 @@ export default {
             :has_credible_sets="has_credible_sets"
             :study_names="study_names"
             :table_data="table_data"
-            @requested-data="subscribeFields"/>
+            @requested-data="subscribeToData"/>
         </b-tab>
 
       </b-tabs>

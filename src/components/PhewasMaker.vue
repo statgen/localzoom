@@ -33,11 +33,9 @@ export default {
         },
         base_phewas_layout() {
             const layer = LocusZoom.Layouts.get('data_layer', 'phewas_pvalues', {
-                unnamespaced: true,
                 y_axis: { min_extent: [0, 10] },
             });
             const panel = LocusZoom.Layouts.get('panel', 'phewas', {
-                unnamespaced: true,
                 height: 300,
                 min_height: 300,
                 data_layers: [layer],
