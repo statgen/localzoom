@@ -1,38 +1,22 @@
 import LocusZoom from 'locuszoom';
-import { BaseLZAdapter } from 'locuszoom/esm/data/adapters';
 import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
+import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
 import { makeParser } from '../gwas/parsers';
 
 LocusZoom.use(credibleSets);
+LocusZoom.use(tabixSource);
 
 const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
 
-class TabixAssociationLZ extends BaseLZAdapter {
-    constructor(config) {
-        super(config);
-        this.parser = makeParser(config);
-        this.reader = config.tabix_reader;
-    }
-
-    _performRequest(options) {
-        const { chr, start, end } = options;
-        return new Promise((resolve, reject) => {
-            this.reader.fetch(chr, start, end, (data, err) => {
-                if (err) {
-                    reject(new Error('Could not read requested region. This may indicate an error with the .tbi index.'));
-                }
-                resolve(data);
-            });
-        });
-    }
-
-    _normalizeResponse(records) {
+const TabixUrlSource = LocusZoom.Adapters.get('TabixUrlSource');
+class TabixAssociationLZ extends TabixUrlSource {
+    _annotateRecords(records) {
         // Some GWAS files will include variant rows, even if no pvalue can be calculated.
         // Eg, EPACTS fills in "NA" for pvalue in this case. These rows are not useful for a
         // scatter plot, and this data source should ignore them.
-        return records.map(this.parser).filter((item) => !Number.isNaN(item.log_pvalue));
+        return records.filter((item) => !Number.isNaN(item['log_pvalue']));
     }
 }
 
@@ -149,9 +133,9 @@ function createStudyLayout(
  */
 function createStudyTabixSources(label, tabix_reader, parser_options) {
     const assoc_name = `assoc_${sourceName(label)}`;
-    const source_params = { ...parser_options };
+    const parser_func = makeParser(parser_options);
     return [
-        [assoc_name, ['TabixAssociationLZ', { tabix_reader, ...source_params }]],
+        [assoc_name, ['TabixAssociationLZ', { reader: tabix_reader, parser_func }]],
         [ // Always add a credible set source; it won't be called unless used in a layout
             `credset_${sourceName(label)}`, ['CredibleSetLZ', { threshold: 0.95 }],
         ],
