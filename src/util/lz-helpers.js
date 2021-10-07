@@ -8,7 +8,7 @@ import { makeParser } from '../gwas/parsers';
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
 
-const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
+const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end', ldrefvar: 'ld_variant' });
 
 const TabixUrlSource = LocusZoom.Adapters.get('TabixUrlSource');
 class TabixAssociationLZ extends TabixUrlSource {
