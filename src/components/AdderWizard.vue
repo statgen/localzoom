@@ -5,9 +5,9 @@
  */
 import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/esm/';
 
-import { isHeader, guessGWAS } from '../gwas/sniffers';
-import { makeParser } from '../gwas/parsers';
-import { has } from '../gwas/parser_utils';
+import { _isHeader, guessGWAS } from 'locuszoom/esm/ext/lz-parsers/gwas/sniffers';
+import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
+import { has } from 'locuszoom/esm/ext/lz-parsers/utils';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
@@ -127,7 +127,7 @@ export default {
         parser() {
             if (this.isValid) {
                 try {
-                    return makeParser(this.parserOptions);
+                    return makeGWASParser(this.parserOptions);
                 } catch (e) {
                     return () => {
                         throw new Error('Invalid parser configuration');
@@ -166,7 +166,7 @@ export default {
                         first_data_index = this.file_reader.skip;
                     } else {
                         // Some files use headers that are not comment lines.
-                        first_data_index = rows.findIndex((text) => !isHeader(text));
+                        first_data_index = rows.findIndex((text) => !_isHeader(text));
                     }
                     this.sample_data = rows.slice(first_data_index);
                     const data_rows = this.sample_data.map((line) => line.split('\t'));

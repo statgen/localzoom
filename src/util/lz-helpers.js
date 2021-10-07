@@ -3,7 +3,7 @@ import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
 import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
-import { makeParser } from '../gwas/parsers';
+import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
@@ -133,7 +133,7 @@ function createStudyLayout(
  */
 function createStudyTabixSources(label, tabix_reader, parser_options) {
     const assoc_name = `assoc_${sourceName(label)}`;
-    const parser_func = makeParser(parser_options);
+    const parser_func = makeGWASParser(parser_options);
     return [
         [assoc_name, ['TabixAssociationLZ', { reader: tabix_reader, parser_func }]],
         [ // Always add a credible set source; it won't be called unless used in a layout
