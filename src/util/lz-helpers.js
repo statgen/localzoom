@@ -1,12 +1,16 @@
 import LocusZoom from 'locuszoom';
 import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
 import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
+import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
+import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
 import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
+LocusZoom.use(intervalTracks);
+LocusZoom.use(lzParsers);
 
 const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end', ldrefvar: 'ld_variant' });
 

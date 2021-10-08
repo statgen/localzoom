@@ -5,8 +5,7 @@ import AdderWizard from './AdderWizard.vue';
 import BatchSpec from './BatchSpec.vue';
 import BatchScroller from './BatchScroller.vue';
 import RegionPicker from './RegionPicker.vue';
-import TabixFile from './TabixFile.vue';
-import TabixUrl from './TabixUrl.vue';
+import TabixAdder from './TabixAdder.vue';
 
 const MAX_REGION_SIZE = 1000000;
 
@@ -18,8 +17,7 @@ export default {
         BatchScroller,
         BatchSpec,
         RegionPicker,
-        TabixFile,
-        TabixUrl,
+        TabixAdder,
     },
     props: {
         // Limit how many studies can be added (due to browser performance)
@@ -133,19 +131,12 @@ export default {
         v-if="!batch_mode_active"
         class="col-sm-6">
         <div v-if="study_count < max_studies">
-          <tabix-file
-            class="mr-1"
+          <tabix-adder
+            :allow_ld="false"
             @ready="connectReader"
-            @fail="showMessage"/>
-          <b-dropdown
-            text="Add from URL"
-            variant="success">
-            <div class="px-3">
-              <tabix-url
-                @ready="connectReader"
-                @fail="showMessage"/>
-            </div>
-          </b-dropdown>
+            @fail="showMessage"
+          />
+
           <adder-wizard
             v-if="show_modal"
             :file_reader="file_reader"
