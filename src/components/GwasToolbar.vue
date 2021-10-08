@@ -80,7 +80,7 @@ export default {
             this.showMessage('', '');
             this.$emit('select-range', config);
         },
-        connectReader(reader, name) {
+        connectReader(reader, name, data_type) {
             if (this.study_names.includes(name)) {
                 this.showMessage('A study with this name has already been added to the plot');
                 return;

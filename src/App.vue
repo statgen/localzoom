@@ -95,7 +95,7 @@ export default {
         <hr>
         <button
           v-v-b-toggle.instructions
-          class="btn-link">Instructions</button>
+          class="btn btn-link">Instructions</button>
         <b-collapse
           id="instructions"
           class="mt-2">
