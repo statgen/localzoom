@@ -20,10 +20,10 @@
     "@sentry/browser": "^4.5.2",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.21.2",
-    "locuszoom": "https://github.com/statgen/locuszoom#1f396dc",
+    "locuszoom": "git+https://github.com/statgen/locuszoom.git#1f396dc",
     "lodash": "^4.17.11",
     "tabulator-tables": "^4.1.4",
-    "vue": "^2.6.10",
+    "vue": "^2.6.14",
     "vue-bootstrap-typeahead": "^0.2.6"
   },
   "devDependencies": {
@@ -32,12 +32,12 @@
     "@vue/cli-plugin-unit-mocha": "^3.0.0",
     "@vue/cli-service": "^3.0.0",
     "@vue/eslint-config-airbnb": "^4.0.0",
-    "@vue/test-utils": "^1.0.0-beta.20",
-    "autoprefixer": "^9.8.4",
-    "chai": "^4.3.0",
+    "@vue/test-utils": "^1.2.2",
+    "autoprefixer": "^9.8.8",
+    "chai": "^4.3.4",
     "node-sass": "^4.9.0",
     "sass-loader": "^7.0.1",
     "source-map-loader": "^0.2.4",
-    "vue-template-compiler": "^2.5.17"
+    "vue-template-compiler": "^2.6.14"
   }
 }
