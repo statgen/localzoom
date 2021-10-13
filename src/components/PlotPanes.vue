@@ -142,7 +142,7 @@ export default {
             <span
               class="text-center"
               style="display: table-cell; vertical-align:middle">
-              Please add a GWAS track to continue
+              Please add data from a tabix file to continue
             </span>
           </div>
         </b-tab>
@@ -182,7 +182,7 @@ export default {
   .placeholder-plot {
     width: 100%;
     height: 500px;
-    border-style: dashed;
+    border-style: dotted;
   }
   .scroll-extra {
     overflow-x: scroll;

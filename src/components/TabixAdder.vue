@@ -79,7 +79,7 @@ export default {
   <b-dropdown
     ref="options_dropdown"
     :lazy="true"
-    text="Add from tabix..."
+    text="Add tabix-indexed datafile"
     variant="success">
     <div
       class="px-3"

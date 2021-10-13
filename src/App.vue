@@ -120,9 +120,9 @@ export default {
                   to check</a>)
                 </li>
                 <li>Your file contains all of the information required to draw a plot. Chromosome, position,
-                ref, and alt alleles can be specified as either individual columns, or a SNP
-                marker (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
-                (or -log10 pvalue) for each SNP as a separate column. Beta, SE, and alt allele
+                ref, and alt alleles can be specified as either individual columns, or a variant
+                marker string (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
+                (or -log10 pvalue) for each variant as a separate column. Beta, SE, and alt allele
                 frequency information are optional, but will be used on the plot if provided.
                 <em>Client-side plots cannot be generated from rsIDs.</em></li>
               </ol>
