@@ -2,7 +2,7 @@
 /**
  * Show a group of interconnected plots and export tables, for the provided data
  */
-import { BCard, BTab, BTabs } from 'bootstrap-vue/esm/';
+import { BCard, BTab, BTabs } from 'bootstrap-vue/src/';
 
 import ExportData from './ExportData.vue';
 import LzPlot from './LzPlot.vue';
@@ -22,9 +22,9 @@ export default {
         BTabs,
     },
     props: {
-        assoc_layout: { type: Object, default: () => ({}) },
-        assoc_sources: { type: Array, default: () => [] },
-        study_names: { type: Array, default: () => [] }, // TODO: array --> label/id pairs?
+        base_layout: { type: Object, default: () => ({}) },
+        base_sources: { type: Array, default: () => [] },
+        study_names: { type: Array, default: () => [] }, // TODO: array --> label/id pairs? Should it consider datatype too?
 
         // Basic plot/ region
         chr: { type: String, default: null },
@@ -127,8 +127,8 @@ export default {
             v-if="has_studies"
             ref="assoc_plot"
             :show_loading="true"
-            :base_layout="assoc_layout"
-            :base_sources="assoc_sources"
+            :base_layout="base_layout"
+            :base_sources="base_sources"
             :chr="chr"
             :start="start"
             :end="end"

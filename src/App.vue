@@ -1,11 +1,11 @@
 <script>
 
 import 'locuszoom/dist/locuszoom.css';
-import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/esm/';
+import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/src/';
 
 import {
     getBasicSources, getBasicLayout,
-    createStudyTabixSources, createStudyLayout,
+    createGwasTabixSources, createGwasStudyLayout,
 } from './util/lz-helpers';
 import count_region_view, {setup_feature_metrics} from './util/metrics';
 
@@ -25,8 +25,8 @@ export default {
     data() {
         return {
             // Used to trigger the initial drawing of the plot
-            base_assoc_layout: null,
-            base_assoc_sources: null,
+            base_layout: null,
+            base_sources: null,
 
             // Current position/ shared state
             chr: null,
@@ -41,14 +41,16 @@ export default {
         };
     },
     methods: {
-        receiveAssocOptions(source_options, plot_options) {
+        receiveTrackOptions(source_options, plot_options) {
             const { label, reader, parser_config } = source_options;
-            const sources = createStudyTabixSources(label, reader, parser_config);
+            // FIXME: We are no longer guaranteed that this will always be an assoc study; other track types like BED are possible. This could also be something like a BED file!
+            const sources = createGwasTabixSources(label, reader, parser_config);
             const { annotations, build, state } = plot_options;
-            const panels = createStudyLayout(label, annotations, build);
+            const panels = createGwasStudyLayout(label, annotations, build);
 
             if (annotations.credible_sets) {
                 // Tell the "export" feature that relevant plot options were used.
+                // TODO: we only really allow this on first render, so firing this on every new track is odd
                 this.has_credible_sets = true;
             }
 
@@ -56,9 +58,9 @@ export default {
 
             if (!this.study_names.length) {
                 // Creating the initial plot can be done by simply passing props directly
-                this.base_assoc_sources = getBasicSources(sources);
+                this.base_sources = getBasicSources(sources);
                 // Prevent weird resize behavior when switching tabs
-                this.base_assoc_layout = getBasicLayout(
+                this.base_layout = getBasicLayout(
                     state,
                     panels,
                     { responsive_resize: true },
@@ -77,11 +79,11 @@ export default {
             // TODO: This is a mite finicky; consider further refactoring in the future?
             this.$refs.plotWidget.$refs.assoc_plot.callPlot(setup_feature_metrics);
         },
-        updateRegion(region) {
+        updateRegion({ chr, start, end }) {
             // Receive new region config from toolbar
-            this.chr = region.chr;
-            this.start = region.start;
-            this.end = region.end;
+            this.chr = chr;
+            this.start = start;
+            this.end = end;
         },
     },
 };
@@ -154,8 +156,8 @@ export default {
       <div class="col-md-12">
         <gwas-toolbar
           :study_names="study_names"
-          :max_studies="4"
-          @config-ready="receiveAssocOptions"
+          :max_studies="6"
+          @config-ready="receiveTrackOptions"
           @select-range="updateRegion"
         />
       </div>
@@ -166,8 +168,8 @@ export default {
         <plot-panes
           ref="plotWidget"
           :dynamic_urls="true"
-          :assoc_layout="base_assoc_layout"
-          :assoc_sources="base_assoc_sources"
+          :base_layout="base_layout"
+          :base_sources="base_sources"
           :study_names="study_names"
           :has_credible_sets="has_credible_sets"
           :build="build"

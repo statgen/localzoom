@@ -2,7 +2,7 @@
 /**
  * Add tabixed data (from file or URL), along with a tag identifying the type of data to be added
  */
-import { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup } from 'bootstrap-vue/esm/';
+import { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup } from 'bootstrap-vue/src/';
 import { blobReader, urlReader } from 'tabix-reader';
 
 

@@ -44,7 +44,7 @@ function sourceName(display_name) {
  * @param build
  * @return {*[]}
  */
-function createStudyLayout(
+function createGwasStudyLayout(
     source_label,
     annotations = { credible_sets: false, gwas_catalog: true },
     build,
@@ -135,7 +135,7 @@ function createStudyLayout(
  * Create all the datasources needed to plot a specific study, from Tabixed data
  * @return Array Return an array of [name, source_config] entries
  */
-function createStudyTabixSources(label, tabix_reader, parser_options) {
+function createGwasTabixSources(label, tabix_reader, parser_options) {
     const assoc_name = `assoc_${sourceName(label)}`;
     const parser_func = makeGWASParser(parser_options);
     return [
@@ -146,12 +146,24 @@ function createStudyTabixSources(label, tabix_reader, parser_options) {
     ];
 }
 
+// function createStudySources(data_type, label, tabix_reader, parser_options) {
+//     if (data_type === 'gwas') {
+//         return createGwasTabixSources(label, tabix_reader, parser_options);
+//     } else if (data_type === 'bed') {
+//
+//     } else if (data_type === 'plink_ld') {
+//
+//     } else {
+//         throw new Error('Unrecognized datatype');
+//     }
+// }
+
+
 function addPanels(plot, data_sources, panel_options, source_options) {
     source_options.forEach((source) => data_sources.add(...source));
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
-        const panel = plot.addPanel(panel_layout);
-        panel.addBasicLoader();
+        plot.addPanel(panel_layout);
     });
 }
 
@@ -162,10 +174,12 @@ function addPanels(plot, data_sources, panel_options, source_options) {
 function getBasicSources(study_sources = []) {
     return [
         ...study_sources,
+        // Used by GWAS scatter plots
+        ['recomb', ['RecombLZ', { url: `${PORTAL_API_BASE_URL}annotation/recomb/results/` }]],
         ['catalog', ['GwasCatalogLZ', { url: `${PORTAL_API_BASE_URL}annotation/gwascatalog/results/` }]],
         ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, source: '1000G', population: 'ALL' }]],
+        // Genes track
         ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
-        ['recomb', ['RecombLZ', { url: `${PORTAL_API_BASE_URL}annotation/recomb/results/` }]],
         ['constraint', ['GeneConstraintLZ', { url: 'https://gnomad.broadinstitute.org/api/' }]],
     ];
 }
@@ -186,7 +200,7 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
 export {
     // Basic definitions
     getBasicSources, getBasicLayout,
-    createStudyTabixSources, createStudyLayout,
+    createGwasTabixSources, createGwasStudyLayout,
     // Plot manipulation
     sourceName, addPanels,
     // Constants

@@ -1,7 +1,7 @@
 <script>
-import { BDropdown } from 'bootstrap-vue/esm/';
+import { BDropdown } from 'bootstrap-vue/src/';
 
-import AdderWizard from './AdderWizard.vue';
+import GwasParserOptions from './GwasParserOptions.vue';
 import BatchSpec from './BatchSpec.vue';
 import BatchScroller from './BatchScroller.vue';
 import RegionPicker from './RegionPicker.vue';
@@ -13,7 +13,7 @@ export default {
     name: 'GwasToolbar',
     components: {
         BDropdown,
-        AdderWizard,
+        GwasParserOptions,
         BatchScroller,
         BatchSpec,
         RegionPicker,
@@ -23,11 +23,11 @@ export default {
         // Limit how many studies can be added (due to browser performance)
         max_studies: {
             type: Number,
-            default: 3,
+            default: 6,
         },
         // Toolbar can optionally consider a list of studies already on plot
         study_names: {
-            type: [Array, null],
+            type: Array,
             default: () => [],
         },
     },
@@ -87,8 +87,13 @@ export default {
             }
             this.file_reader = reader;
             this.display_name = name;
-            this.show_modal = true;
             this.showMessage('');
+            if (data_type === 'gwas') {
+                // Only a GWAS needs a parser
+                this.show_modal = true;
+            } else {
+                // FIXME : Implement adding a track of other types
+            }
         },
         activateBatchMode(regions) {
             this.batch_mode_active = true;
@@ -137,7 +142,7 @@ export default {
             @fail="showMessage"
           />
 
-          <adder-wizard
+          <gwas-parser-options
             v-if="show_modal"
             :file_reader="file_reader"
             :file_name.sync="display_name"

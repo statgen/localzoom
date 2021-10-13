@@ -3,7 +3,7 @@
  * A modal dialog window used to specify file parsing configuration options
  * See: https://vuejs.org/v2/examples/modal.html -->
  */
-import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/esm/';
+import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/src/';
 
 import { _isHeader, guessGWAS } from 'locuszoom/esm/ext/lz-parsers/gwas/sniffers';
 import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
@@ -21,7 +21,7 @@ const PAGES = {
 };
 
 export default {
-    name: 'AdderWizard',
+    name: 'GwasParserOptions',
     components: {
         BFormGroup,
         BFormRadio,

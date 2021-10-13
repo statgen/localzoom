@@ -4,7 +4,7 @@
  *  which will then be consumed by another widget that handles cycling between those choices.
  */
 
-import { BDropdown } from 'bootstrap-vue/esm/';
+import { BDropdown } from 'bootstrap-vue/src/';
 import { parseRegion } from '../util/entity-helpers';
 
 export default {
