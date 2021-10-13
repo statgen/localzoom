@@ -103,19 +103,6 @@ export default {
             // immediately
             this.$refs.assoc_plot.callPlot((plot) => plot.applyState());
         },
-
-        /**
-         * LocusZoom automatically resizes when the window is resized. If this happens when a plot
-         *  is hidden, it causes weird display glitches.
-         */
-        fixDimensions(selected_tab) {
-            const { TABS } = this;
-            if (selected_tab === TABS.PHEWAS) {
-                this.$nextTick(() => this.$refs.phewas.callPlot((plot) => plot.rescaleSVG()));
-            } else if (selected_tab === TABS.PLOT) {
-                this.$nextTick(() => this.$refs.assoc_plot.callPlot((plot) => plot.rescaleSVG()));
-            }
-        },
     },
 };
 </script>
@@ -131,7 +118,6 @@ export default {
         style="min-height:1000px;"
         class="flex-nowrap"
         content-class="scroll-extra"
-        @input="fixDimensions"
       >
         <b-tab
           :active="selected_tab === TABS.PLOT"
