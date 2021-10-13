@@ -1,9 +1,8 @@
 # LocalZoom
 
-This is a demonstration of loading GWAS results via the web browser, fetching only the data 
-required for that region. It works with Tabixed GWAS data files in a variety of formats.
+This is a tool for creating interactive [LocusZoom.js](https://github.com/statgen/locuszoom/) GWAS plots via the web browser, without uploading sensitive data to a remote web server. It works with Tabix-indexed data files in a variety of formats, and supports adding companion tracks (such as BED files).
 
-A live [demonstration](https://statgen.github.io/localzoom/) is available. 
+Try it for yourself at [https://statgen.github.io/localzoom/](https://statgen.github.io/localzoom/) 
 
 
 ## Getting help
@@ -47,7 +46,7 @@ npm run deploy
 
 When ready, verify the built app and push to production.
 
-### Lints and fixes files
+### Lint and fixes files
 This project uses a style and syntax checker for code quality. The following command can help to 
 identify (and automatically fix) common issues.
 ```
