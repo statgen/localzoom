@@ -16,11 +16,47 @@ export default {
     data() {
         return {
             tabix_mode: 'file',
+            display_name: '',
             data_type: 'gwas',
             tabix_gz_url: '',
         };
     },
     methods: {
+        reset() {
+            this.display_name = '';
+            this.tabix_gz_url = '';
+        },
+
+        updateDisplayName() {
+            const  {display_name, tabix_mode, tabix_gz_url} = this;
+            if (display_name) {
+                // Only auto-suggest a display name if one was not already entered
+                return;
+            }
+
+            let short_name;
+            if (tabix_mode === 'file') {
+                const { files } = this.$refs.file_picker;
+                if (!files.length) {
+                    return;
+                }
+                let base_name = files[0].name;
+                short_name = (base_name.substring(0, base_name.lastIndexOf('.')) || base_name);
+            } else if (tabix_mode === 'url') {
+                if (!tabix_gz_url) {
+                    return;
+                }
+                try {
+                    short_name = new URL(tabix_gz_url).pathname;
+                } catch (e) {
+                    // Form validation should handle malformed URLs
+                    return;
+                }
+                short_name = short_name !== '/' ? short_name : tabix_gz_url;
+            }
+            this.display_name = short_name;
+        },
+
         _fromURL() {
             const { tabix_gz_url } = this;
             const index_url = `${tabix_gz_url}.tbi`;
@@ -51,12 +87,14 @@ export default {
                 .then((reader) => [reader, name]);
         },
 
-        createReader() {
-            // Create a reader. Emit EITHER:
-            //  - Success: (reader, filename, filetype)
+        createReader(event) {
+            // Create a reader when the form is submitted. Emit EITHER:
+            //  - Success: (datatype, reader, filename, label)
             //  - Failure: Text error message to display
             // Send a reader instance based on local/remote and filetype config options
-            const { tabix_mode, data_type } = this;
+            event.target.checkValidity();
+
+            const { tabix_mode, data_type, display_name } = this;
             let reader_promise;
             if (tabix_mode === 'file') {
                 reader_promise = this._fromFile();
@@ -66,10 +104,13 @@ export default {
                 throw new Error('Cannot create reader from unknown mode');
             }
 
-            reader_promise.then(([reader, name]) => {
-                this.$emit('ready', reader, name, data_type);
+            reader_promise.then(([reader, filename]) => {
+                this.$emit('ready', data_type, reader, filename, display_name);
             }).catch((err) => this.$emit('fail', err)
-            ).finally(() => this.$refs.options_dropdown.hide());
+            ).finally(() => {
+                this.reset();
+                this.$refs.options_dropdown.hide();
+            });
         },
     },
 };
@@ -97,18 +138,23 @@ export default {
         <template v-if="tabix_mode === 'file'">
           <input
             ref="file_picker"
+            :required="tabix_mode === 'file'"
             type="file"
             multiple
             accept="application/gzip,.tbi"
             class="form-control"
+            @change="updateDisplayName"
           >
         </template>
         <template v-else>
           <input
             v-model.trim="tabix_gz_url"
+            :required="tabix_mode === 'url'"
             type="url"
             class="form-control"
-            placeholder="Specify URL...">
+            placeholder="Specify URL..."
+            @blur="updateDisplayName"
+          >
         </template><br>
 
         <b-form-group label="Type">
@@ -134,6 +180,16 @@ export default {
           >
             PLINK 1.9 LD
           </b-form-radio>
+        </b-form-group>
+
+        <b-form-group label="Track Label">
+          <input
+            v-model.trim="display_name"
+            type="text"
+            required
+            class="form-control"
+            @blur="updateDisplayName"
+          >
         </b-form-group>
 
         <input
