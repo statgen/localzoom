@@ -3,12 +3,15 @@
  * Add tabixed data (from file or URL), along with a tag identifying the type of data to be added
  */
 import { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup } from 'bootstrap-vue/src/';
+import { makeBed12Parser, makeGWASParser, makePlinkLdParser } from 'locuszoom/esm/ext/lz-parsers';
 import { blobReader, urlReader } from 'tabix-reader';
+
+import GwasParserOptions from './GwasParserOptions.vue';
 
 
 export default {
     name: 'TabixAdder',
-    components: { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup },
+    components: { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup, GwasParserOptions },
     props: {
         // Allow the user to add custom LD
         allow_ld: { type: Boolean, default: false },
@@ -19,12 +22,18 @@ export default {
             display_name: '',
             data_type: 'gwas',
             tabix_gz_url: '',
+            // Options required to pass props to the GWAS modal
+            filename: '',
+            show_gwas_modal: false,
+            tabix_reader: null,
         };
     },
     methods: {
         reset() {
             this.display_name = '';
             this.tabix_gz_url = '';
+            this.tabix_reader = null;
+            this.show_gwas_modal = false;
         },
 
         updateDisplayName() {
@@ -105,98 +114,134 @@ export default {
             }
 
             reader_promise.then(([reader, filename]) => {
-                this.$emit('ready', data_type, reader, filename, display_name);
+                if (data_type === 'gwas') {
+                    // GWAS files are very messy, and so knowing where to find the file is not enough.
+                    // After receiving the reader, we need to ask the user how to parse the file
+                    this.filename = filename;
+                    this.tabix_reader = reader;
+                    this.show_gwas_modal = true;
+                } else {
+                    // All other data types are quasi-standardized, and hence we can declare this
+                    //  new track immediately after verifying that a valid reader exists
+                    let parser;
+                    if (data_type === 'bed') {
+                        parser = makeBed12Parser();
+                    } else if (data_type === 'plink_ld') {
+                        parser = makePlinkLdParser();
+                    } else {
+                        throw new Error('Unrecognized datatype');
+                    }
+                    this.sendTrackOptions(data_type, reader, parser, filename, display_name);
+                }
             }).catch((err) => this.$emit('fail', err)
             ).finally(() => {
-                this.reset();
                 this.$refs.options_dropdown.hide();
             });
+        },
+
+        receiveGwasOptions(parser_config, region_config) {
+            const { tabix_reader, filename, display_name } = this;
+            // Receive GWAS options and declare a new track for this datatype
+            const parser = makeGWASParser(parser_config);
+            this.sendTrackOptions('gwas', tabix_reader, parser, filename, display_name, region_config);
+        },
+
+        sendTrackOptions(data_type, reader, parser, filename, display_name, metadata = {}) {
+            this.$emit('new-track', ...arguments);
+            this.reset();
         },
     },
 };
 </script>
 
 <template>
-  <b-dropdown
-    ref="options_dropdown"
-    :lazy="true"
-    text="Add tabix-indexed datafile"
-    variant="success">
-    <div
-      class="px-3"
-      style="width: 300px;">
-      <form @submit.prevent="createReader">
-        <b-form-group label="Data source">
-          <b-form-radio-group
-            id="tabix-location"
-            v-model="tabix_mode"
-            :options="[{text: 'File', value: 'file'}, {text: 'URL', value: 'url'}]"
-            name="tabix-location"
-          />
-        </b-form-group>
+  <div>
+    <b-dropdown
+      ref="options_dropdown"
+      :lazy="true"
+      text="Add tabix-indexed datafile"
+      variant="success">
+      <div
+        class="px-3"
+        style="width: 300px;">
+        <form @submit.prevent="createReader">
+          <b-form-group label="Data source">
+            <b-form-radio-group
+              id="tabix-location"
+              v-model="tabix_mode"
+              :options="[{text: 'File', value: 'file'}, {text: 'URL', value: 'url'}]"
+              name="tabix-location"
+            />
+          </b-form-group>
 
-        <template v-if="tabix_mode === 'file'">
+          <template v-if="tabix_mode === 'file'">
+            <input
+              ref="file_picker"
+              :required="tabix_mode === 'file'"
+              type="file"
+              multiple
+              accept="application/gzip,.tbi"
+              class="form-control"
+              @change="updateDisplayName"
+            >
+          </template>
+          <template v-else>
+            <input
+              v-model.trim="tabix_gz_url"
+              :required="tabix_mode === 'url'"
+              type="url"
+              class="form-control"
+              placeholder="Specify URL..."
+              @blur="updateDisplayName"
+            >
+          </template><br>
+
+          <b-form-group label="Type">
+            <b-form-radio
+              v-model="data_type"
+              name="data-type"
+              value="gwas"
+            >
+              GWAS
+            </b-form-radio>
+            <b-form-radio
+              v-model="data_type"
+              name="data-type"
+              value="bed"
+            >
+              BED 4+
+            </b-form-radio>
+            <b-form-radio
+              v-if="allow_ld"
+              v-model="data_type"
+              name="data-type"
+              value="plink_ld"
+            >
+              PLINK 1.9 LD
+            </b-form-radio>
+          </b-form-group>
+
+          <b-form-group label="Track Label">
+            <input
+              v-model.trim="display_name"
+              type="text"
+              required
+              class="form-control"
+              @blur="updateDisplayName"
+            >
+          </b-form-group>
+
           <input
-            ref="file_picker"
-            :required="tabix_mode === 'file'"
-            type="file"
-            multiple
-            accept="application/gzip,.tbi"
-            class="form-control"
-            @change="updateDisplayName"
-          >
-        </template>
-        <template v-else>
-          <input
-            v-model.trim="tabix_gz_url"
-            :required="tabix_mode === 'url'"
-            type="url"
-            class="form-control"
-            placeholder="Specify URL..."
-            @blur="updateDisplayName"
-          >
-        </template><br>
-
-        <b-form-group label="Type">
-          <b-form-radio
-            v-model="data_type"
-            name="data-type"
-            value="gwas"
-          >
-            GWAS
-          </b-form-radio>
-          <b-form-radio
-            v-model="data_type"
-            name="data-type"
-            value="bed"
-          >
-            BED 4+
-          </b-form-radio>
-          <b-form-radio
-            v-if="allow_ld"
-            v-model="data_type"
-            name="data-type"
-            value="plink_ld"
-          >
-            PLINK 1.9 LD
-          </b-form-radio>
-        </b-form-group>
-
-        <b-form-group label="Track Label">
-          <input
-            v-model.trim="display_name"
-            type="text"
-            required
-            class="form-control"
-            @blur="updateDisplayName"
-          >
-        </b-form-group>
-
-        <input
-          type="submit"
-          class="btn btn-success"
-          value="Add dataset">
-      </form>
-    </div>
-  </b-dropdown>
+            type="submit"
+            class="btn btn-success"
+            value="Add dataset">
+        </form>
+      </div>
+    </b-dropdown>
+    <gwas-parser-options
+      v-if="show_gwas_modal"
+      :file_reader="tabix_reader"
+      @ready="receiveGwasOptions"
+      @close="show_gwas_modal = false"/>
+  </div>
 </template>
