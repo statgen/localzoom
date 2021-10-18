@@ -125,9 +125,9 @@ export default {
                     //  new track immediately after verifying that a valid reader exists
                     let parser;
                     if (data_type === 'bed') {
-                        parser = makeBed12Parser();
+                        parser = makeBed12Parser({normalize: true});
                     } else if (data_type === 'plink_ld') {
-                        parser = makePlinkLdParser();
+                        parser = makePlinkLdParser({normalize: true});
                     } else {
                         throw new Error('Unrecognized datatype');
                     }
@@ -147,7 +147,7 @@ export default {
         },
 
         sendTrackOptions(data_type, reader, parser, filename, display_name, metadata = {}) {
-            this.$emit('new-track', ...arguments);
+            this.$emit('ready', ...arguments);
             this.reset();
         },
     },

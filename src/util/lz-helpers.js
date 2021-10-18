@@ -5,7 +5,6 @@ import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
 import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
-import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
@@ -33,35 +32,35 @@ LocusZoom.Adapters.add('TabixAssociationLZ', TabixAssociationLZ);
  * @return {string}
  */
 function sourceName(display_name) {
+    // FIXME: incorporate datatype when generating source name; fix various caller locations
     return display_name.replace(/[^A-Za-z0-9_]/g, '_');
 }
 
 /**
  * Create customized panel layout(s) for a single association study, with functionality from all
  *   of the features selected.
- * @param {string} source_label
+ * @param {string} track_id Internal track ID, expected to be unique across the entire plot.
+ * @param {string} display_name
  * @param annotations
- * @param build
  * @return {*[]}
  */
 function createGwasStudyLayout(
-    source_label,
-    annotations = { credible_sets: false, gwas_catalog: true },
-    build,
+    track_id,
+    display_name,
+    annotations = { has_credible_sets: false, has_gwas_catalog: true },
 ) {
     const new_panels = [];
-    const source_name = sourceName(source_label);
 
     // Other namespaces won't be overridden; they will be reused as is.
     const namespace = {
-        assoc: `assoc_${source_name}`,
-        credset: `credset_${source_name}`,
+        assoc: `assoc_${track_id}`,
+        credset: `credset_${track_id}`,
         catalog: 'catalog',
     };
 
     const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
-        id: `association_${source_name}`,
-        title: { text: source_label },
+        id: `association_${track_id}`,
+        title: { text: display_name },
         height: 275,
         namespace,
     });
@@ -98,13 +97,13 @@ function createGwasStudyLayout(
             options: [],
         });
     }
-    if (annotations.credible_sets) {
+    if (annotations.has_credible_sets) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         assoc_tooltip.html += '{{#if credset:posterior_prob}}<br>Posterior probability: <strong>{{credset:posterior_prob|scinotation}}{{/if}}</strong><br>';
     }
-    if (annotations.gwas_catalog) {
+    if (annotations.has_gwas_catalog) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
         // TODO Clarify this; make small registry pieces more reusable
@@ -116,13 +115,13 @@ function createGwasStudyLayout(
     // After all custom options added, run mods through Layouts.get once more to apply namespacing
     // TODO: rewrite this
     new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
-    if (annotations.gwas_catalog) {
+    if (annotations.has_gwas_catalog) {
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
-            id: `catalog_${source_name}`,
+            id: `catalog_${track_id}`,
             namespace,
             toolbar: { widgets: [] },
             title: {
-                text: 'Hits in GWAS Catalog',
+                text: `GWAS Catalog hits for ${display_name}`,
                 style: { 'font-size': '14px' },
                 x: 50,
             },
@@ -132,35 +131,72 @@ function createGwasStudyLayout(
 }
 
 /**
- * Create all the datasources needed to plot a specific study, from Tabixed data
+ * Create an appropriate layout based on datatype
+ */
+function createStudyLayouts (data_type, filename, display_name, annotations) {
+    const track_id = `${data_type}_${sourceName(filename)}`;
+
+    if (data_type === 'gwas') {
+        return createGwasStudyLayout(track_id, display_name, annotations);
+    } else if (data_type === 'bed') {
+        return [
+            LocusZoom.Layouts.get('panel', 'bed_intervals', {
+                namespace: { intervals: track_id },
+                title: { text: display_name },
+            }),
+        ];
+    } else if (data_type === 'plink_ld') {
+        throw new Error('Not yet implemented');
+    } else {
+        throw new Error('Unrecognized datatype');
+    }
+}
+
+/**
+ * Create all the datasources needed to plot a specific assoc study, including study-specific annotations
  * @return Array Return an array of [name, source_config] entries
  */
-function createGwasTabixSources(label, tabix_reader, parser_options) {
-    const assoc_name = `assoc_${sourceName(label)}`;
-    const parser_func = makeGWASParser(parser_options);
+function createGwasTabixSources(track_id, tabix_reader, parser_func) {
+    const assoc_name = `assoc_${track_id}`;
     return [
         [assoc_name, ['TabixAssociationLZ', { reader: tabix_reader, parser_func }]],
         [ // Always add a credible set source; it won't be called unless used in a layout
-            `credset_${sourceName(label)}`, ['CredibleSetLZ', { threshold: 0.95 }],
+            `credset_${track_id}`, ['CredibleSetLZ', { threshold: 0.95 }],
         ],
     ];
 }
 
-// function createStudySources(data_type, label, tabix_reader, parser_options) {
-//     if (data_type === 'gwas') {
-//         return createGwasTabixSources(label, tabix_reader, parser_options);
-//     } else if (data_type === 'bed') {
-//
-//     } else if (data_type === 'plink_ld') {
-//
-//     } else {
-//         throw new Error('Unrecognized datatype');
-//     }
-// }
+/**
+ * Create appropriate LocusZoom sources for the study of interest
+ * @param data_type
+ * @param filename  A unique track identifier (typically the filename). Used to construct the internal datasource ID name.
+ * @param tabix_reader
+ * @param parser_func
+ * @returns {[[string, [string, {reader: *, parser_func: function(string)}]], [string, [string, {threshold: number}]]]|(string|[string, {reader, parser_func: ((function(*): {blockCount: *, score: *, chromStart: *, thickStart: *, chromEnd: *, strand: *, blockSizes: *, name: *, itemRgb: *, blockStarts: *, thickEnd: *, chrom: *})|*)}])[]}
+ */
+function createStudySources(data_type, tabix_reader, filename, parser_func) {
+    // todo rename to GET from CREATE, for consistency
+    const track_id = `${data_type}_${sourceName(filename)}`;
+    if (data_type === 'gwas') {
+        return createGwasTabixSources(track_id, tabix_reader, parser_func);
+    } else if (data_type === 'bed') {
+        return [
+            [track_id, ['TabixUrlSource', {reader: tabix_reader, parser_func }]],
+        ];
+    } else if (data_type === 'plink_ld') {
+        throw new Error('Not yet implemented');
+    } else {
+        throw new Error('Unrecognized datatype');
+    }
+}
 
 
 function addPanels(plot, data_sources, panel_options, source_options) {
-    source_options.forEach((source) => data_sources.add(...source));
+    source_options.forEach(([name, options]) => {
+        if (!data_sources.has(name)) {
+            data_sources.add(name, options);
+        }
+    });
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
         plot.addPanel(panel_layout);
@@ -200,7 +236,7 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
 export {
     // Basic definitions
     getBasicSources, getBasicLayout,
-    createGwasTabixSources, createGwasStudyLayout,
+    createStudySources, createStudyLayouts,
     // Plot manipulation
     sourceName, addPanels,
     // Constants

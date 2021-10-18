@@ -24,13 +24,13 @@ export default {
     props: {
         base_layout: { type: Object, default: () => ({}) },
         base_sources: { type: Array, default: () => [] },
-        study_names: { type: Array, default: () => [] }, // TODO: array --> label/id pairs? Should it consider datatype too?
+        known_tracks: { type: Array, default: () => [] },
 
         // Basic plot/ region
         chr: { type: String, default: null },
         start: { type: Number, default: null },
         end: { type: Number, default: null },
-        build: { type: String, default: 'GRCh37' },
+        genome_build: { type: String, default: 'GRCh37' },
 
         // Control optional features (this could be done more nicely)
         dynamic_urls: { type: Boolean, default: false }, // Change URL when plot updates
@@ -53,10 +53,10 @@ export default {
     computed: {
         allow_phewas() {
             // Our current phewas api only has build 37 datasets; disable option for build 38
-            return this.build === 'GRCh37';
+            return this.genome_build === 'GRCh37';
         },
         has_studies() {
-            return !!this.study_names.length;
+            return !!this.known_tracks.length;
         },
     },
     beforeCreate() {
@@ -156,7 +156,7 @@ export default {
           <phewas-maker
             ref="phewas"
             :variant_name="tmp_phewas_variant"
-            :build="build"
+            :genome_build="genome_build"
             :your_study="tmp_phewas_study"
             :your_logpvalue="tmp_phewas_logpvalue"
             :allow_render="selected_tab === TABS.PHEWAS"/>
@@ -167,7 +167,7 @@ export default {
           title="Export">
           <export-data
             :has_credible_sets="has_credible_sets"
-            :study_names="study_names"
+            :known_tracks="known_tracks"
             :table_data="table_data"
             @requested-data="subscribeToData"/>
         </b-tab>

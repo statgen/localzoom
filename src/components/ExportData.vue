@@ -22,7 +22,7 @@ export default {
     name: 'ExportData',
     components: { TabulatorTable },
     props: {
-        study_names: { type: Array, default: () => [] },
+        known_tracks: { type: Array, default: () => [] },
         has_credible_sets: { type: Boolean, default: true },
         table_data: { type: Array, default: () => [] },
     },
@@ -34,7 +34,8 @@ export default {
     },
     computed: {
         source_name() {
-            return sourceName(this.selected_study || '');
+            // FIXME: make source name function consider datatype directly
+            return `gwas_${sourceName(this.selected_study || '')}`;
         },
         table_config() {
             // How should the table display this set of fields? Determined once at component load.
@@ -85,7 +86,8 @@ export default {
         source_name() {
             // What data should this widget request from the plot?
             const { source_name } = this;
-            if (!this.study_names.includes(this.selected_study)) {
+
+            if (!this.known_tracks.find(({data_type: kt, filename: kf}) => kf === this.selected_study && kt === 'gwas')) {
                 // Reset logic: notify external widgets to remove any subscribers
                 this.$emit('requested-data');
                 return;
@@ -93,6 +95,7 @@ export default {
 
             // Side effect in computed: sketchy but convenient. Since panels are consistently named, emit the name oif a panel with the desired data
             // Request to follow the data from a layer, which automatically takes into account "get extra data" options like credsets
+            // FIXME: incorporate datatype into sourcename caller; make sure listeners map to plot correctly
             this.$emit('requested-data', `association_${source_name}.associationpvalues`);
         },
     },
@@ -115,13 +118,15 @@ export default {
         <label>Select a study:
           <select
             v-model="selected_study"
-            :disabled="study_names.length === 0"
+            :disabled="known_tracks.length === 0"
             style="width: 20em;">
             <option value="">(none selected)</option>
             <option
-              v-for="(item, index) in study_names"
-              :value="item"
-              :key="index">{{ item }}</option>
+              v-for="{filename, display_name} in known_tracks"
+              :value="filename"
+              :key="filename">
+              {{ display_name === filename ? display_name : `${display_name} ({${filename})` }}
+            </option>
           </select>
         </label>
       </div>

@@ -5,7 +5,6 @@ import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/src/';
 
 import {
     getBasicSources, getBasicLayout,
-    createGwasTabixSources, createGwasStudyLayout,
 } from './util/lz-helpers';
 import count_region_view, {setup_feature_metrics} from './util/metrics';
 
@@ -34,45 +33,31 @@ export default {
             end: null,
 
             // State to be tracked across all components
-            build: null,
-            study_names: [],
-            // Control specific display options TODO improve
-            has_credible_sets: false,
+            genome_build: 'GRCh37',
+            known_tracks: [],
+            // Control specific display options
+            has_credible_sets: true,
         };
     },
     methods: {
-        receiveTrackOptions(source_options, plot_options) {
-            const { label, reader, parser_config } = source_options;
-            // FIXME: We are no longer guaranteed that this will always be an assoc study; other track types like BED are possible. This could also be something like a BED file!
-            const sources = createGwasTabixSources(label, reader, parser_config);
-            const { annotations, build, state } = plot_options;
-            const panels = createGwasStudyLayout(label, annotations, build);
+        receiveTrackOptions(data_type, filename, display_name, source_configs, panel_configs, extra_plot_state) {
+            if (!this.known_tracks.length) {
+                // If this is the first track added, allow the new track to suggest a region of interest and navigate there if relevant (mostly just GWAS)
+                this.updateRegion(extra_plot_state);
 
-            if (annotations.credible_sets) {
-                // Tell the "export" feature that relevant plot options were used.
-                // TODO: we only really allow this on first render, so firing this on every new track is odd
-                this.has_credible_sets = true;
-            }
+                // FIXME: don't pass existing sources to GBS or panels to GBL; limited use and too much cleverness
+                // FIXME: adding BED first causes problems because there is no default region; can we add one?
+                this.base_sources = getBasicSources(source_configs);
+                this.base_layout = getBasicLayout(extra_plot_state, panel_configs);
 
-            this.updateRegion(state);
-
-            if (!this.study_names.length) {
-                // Creating the initial plot can be done by simply passing props directly
-                this.base_sources = getBasicSources(sources);
-                // Prevent weird resize behavior when switching tabs
-                this.base_layout = getBasicLayout(
-                    state,
-                    panels,
-                    { responsive_resize: true },
-                );
                 // Collect metrics for first plot loaded
                 count_region_view();
             } else {
-                // Adding subsequent panels is a more advanced usage; manipulate the child widget
-                this.$refs.plotWidget.addStudy(panels, sources);
+                // TODO: We presently ignore extra plot state (like region) when adding new tracks. Revisit for future data types.
+                this.$refs.plotWidget.addStudy(panel_configs, source_configs);
             }
-            this.study_names.push(label);
-            this.build = build;
+
+            this.known_tracks.push({data_type, filename, display_name});
         },
         activateMetrics() {
             // After plot is created, initiate metrics capture
@@ -81,6 +66,9 @@ export default {
         },
         updateRegion({ chr, start, end }) {
             // Receive new region config from toolbar
+            if (!chr || !start || !end) {
+                return;
+            }
             this.chr = chr;
             this.start = start;
             this.end = end;
@@ -135,7 +123,7 @@ export default {
               </p>
 
               <p>
-                LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
+                LD and overlay information is based on a specific human genome build (<strong>build GRCh37</strong>
                 or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
                 plots based on a GWAS with positions from a different build.
               </p>
@@ -155,9 +143,11 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <gwas-toolbar
-          :study_names="study_names"
+          :has_credible_sets.sync="has_credible_sets"
+          :genome_build.sync="genome_build"
           :max_studies="6"
-          @config-ready="receiveTrackOptions"
+          :known_tracks="known_tracks"
+          @add-tabix-track="receiveTrackOptions"
           @select-range="updateRegion"
         />
       </div>
@@ -167,12 +157,12 @@ export default {
       <div class="col-md-12">
         <plot-panes
           ref="plotWidget"
-          :dynamic_urls="true"
           :base_layout="base_layout"
           :base_sources="base_sources"
-          :study_names="study_names"
+          :dynamic_urls="true"
+          :genome_build="genome_build"
           :has_credible_sets="has_credible_sets"
-          :build="build"
+          :known_tracks="known_tracks"
           :chr="chr"
           :start="start"
           :end="end"

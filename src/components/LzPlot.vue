@@ -151,8 +151,8 @@ export default {
             return callback(this.data_sources);
         },
 
-        addPanels(panel_options, source_options) {
-            addPanels(this.plot, this.data_sources, panel_options, source_options);
+        addPanels(panel_configs, source_configs) {
+            addPanels(this.plot, this.data_sources, panel_configs, source_configs);
         },
     },
 };

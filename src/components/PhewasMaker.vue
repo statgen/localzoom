@@ -7,7 +7,7 @@ export default {
     components: { LzPlot },
     props: {
         variant_name: { type: String, default: '' },
-        build: { type: String, default: 'GRCh37' },
+        genome_build: { type: String, default: 'GRCh37' },
         your_study: { type: String, default: '' },
         your_logpvalue: { type: Number, default: null },
         allow_render: { type: Boolean, default: true },
@@ -46,7 +46,7 @@ export default {
                 {
                     panels: [panel],
                     responsive_resize: true,
-                    state: { variant: this.variant_name, genome_build: this.build },
+                    state: { variant: this.variant_name, genome_build: this.genome_build },
                 },
             );
         },

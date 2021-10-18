@@ -30,7 +30,7 @@ export default {
             type: String,
             default: 'https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/',
         },
-        build: {
+        genome_build: {
             type: String,
             required: true,
         },
@@ -75,7 +75,7 @@ export default {
         },
         doSearch() {
             this.search_results = [];
-            const url = `${this.search_url}?q=${encodeURIComponent(this.region)}&build=${encodeURIComponent(this.build)}`;
+            const url = `${this.search_url}?q=${encodeURIComponent(this.region)}&build=${encodeURIComponent(this.genome_build)}`;
             fetch(url)
                 .then((resp) => {
                     if (resp.ok) {

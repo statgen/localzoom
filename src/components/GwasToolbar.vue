@@ -1,11 +1,13 @@
 <script>
 import { BDropdown } from 'bootstrap-vue/src/';
 
-import GwasParserOptions from './GwasParserOptions.vue';
 import BatchSpec from './BatchSpec.vue';
 import BatchScroller from './BatchScroller.vue';
+import GwasParserOptions from './GwasParserOptions.vue';
 import RegionPicker from './RegionPicker.vue';
 import TabixAdder from './TabixAdder.vue';
+
+import { createStudySources, createStudyLayouts } from '../util/lz-helpers';
 
 const MAX_REGION_SIZE = 1000000;
 
@@ -20,15 +22,24 @@ export default {
         TabixAdder,
     },
     props: {
+        genome_build: { // now now, use live binding in parent
+            type: String,
+            default: 'GRCh37',
+        },
+        has_credible_sets: {   // for now, use sync binding to parent (to avoid single-property update events)
+            type: Boolean,
+            default: true,
+        },
         // Limit how many studies can be added (due to browser performance)
         max_studies: {
             type: Number,
             default: 6,
         },
-        // Toolbar can optionally consider a list of studies already on plot
-        study_names: {
+        // Track a list of studies that were added to the plot. Useful to prevent duplicates.
+        // TODO: move to live-binding provide/inject to support export widget / my.locuszoom.org ?
+        known_tracks: {
             type: Array,
-            default: () => [],
+            default: () => [], // Each item is object of form { type, filename, display_name }
         },
     },
     data() {
@@ -36,22 +47,12 @@ export default {
             // make constant available
             max_region_size: MAX_REGION_SIZE,
 
-            // Whether to show the "add a gwas" UI
-            show_modal: false,
-            num_studies_added: 0,
-
             // Control display of success/failure messages from this or child components
             message: '',
             message_class: '',
 
-            // Temporary internal state
-            file_reader: null,
-            display_name: null, // TODO: replace 2 way binding with bubbling name up separately
-
-            // Allow the user to customize the plot and select featured annotations
-            has_catalog: true,
-            has_credible_sets: true,
-            build: 'GRCh37',
+            // Allow the user to customize the plot and select featured annotations. (credsets is a live binding to parent for now)
+            has_gwas_catalog: true,
 
             // Controls for "batch view" mode
             batch_mode_active: false,
@@ -60,70 +61,55 @@ export default {
     },
     computed: {
         study_count() {
-            return this.study_names ? this.study_names.length : this.num_studies_added;
+            return this.known_tracks.length;
         },
     },
     methods: {
         reset() {
-            // Reset state in the component
-            this.file_reader = null;
-            this.display_name = null;
+            // Reset state in the component TODO: Why are we setting batch mode when a track is added? Also how?
             this.batch_mode_active = false;
             this.batch_mode_regions = [];
             this.showMessage('', '');
         },
+
         showMessage(message, style = 'text-danger') {
             this.message = message;
             this.message_class = style;
         },
+
         selectRange(config) {
             this.showMessage('', '');
             this.$emit('select-range', config);
         },
-        connectReader(reader, name, data_type) {
-            if (this.study_names.includes(name)) {
+
+        /**
+         * Adding a new tabix reader track can go through one of two workflows:
+         *   - How to parse the file can be inferred from type; render immediately
+         *   -
+         */
+        receiveTabixReader(data_type, reader, parser_func, filename, display_name, metadata) {
+            this.showMessage('');
+
+            const already_exists = this.known_tracks.find(({data_type: kt, filename: kf}) => kf === filename && kt === data_type);
+            if (already_exists) {
                 this.showMessage('A study with this name has already been added to the plot');
                 return;
             }
-            this.file_reader = reader;
-            this.display_name = name;
-            this.showMessage('');
-            if (data_type === 'gwas') {
-                // Only a GWAS needs a parser
-                this.show_modal = true;
-            } else {
-                // FIXME : Implement adding a track of other types
-            }
+
+            const { genome_build, has_gwas_catalog, has_credible_sets } = this;
+
+
+            const track_sources = createStudySources(data_type, reader, filename, parser_func);
+            const panel_layouts = createStudyLayouts(data_type, filename, display_name, {has_gwas_catalog, has_credible_sets});
+            const new_plot_state = { genome_build, ...metadata };
+
+            this.$emit('add-tabix-track', data_type, filename, display_name, track_sources, panel_layouts, new_plot_state);
+            this.reset();
         },
+
         activateBatchMode(regions) {
             this.batch_mode_active = true;
             this.batch_mode_regions = regions;
-        },
-        sendConfig(parser_options, state) {
-            // This particular app captures reader options for display, then relays them to the plot
-            this.num_studies_added += 1;
-            const annotations = {
-                gwas_catalog: this.has_catalog,
-                credible_sets: this.has_credible_sets,
-            };
-            const { build } = this;
-            // Event signature:
-            //  source_options={label, reader, parser_config},
-            //  plot_options={annotations, state}
-            this.$emit(
-                'config-ready', // TODO: Structure this into a defined type
-                {
-                    label: this.display_name,
-                    reader: this.file_reader,
-                    parser_config: parser_options,
-                },
-                {
-                    annotations,
-                    build,
-                    state: Object.assign({ genome_build: this.build }, state),
-                },
-            );
-            this.reset();
         },
     },
 };
@@ -138,16 +124,11 @@ export default {
         <div v-if="study_count < max_studies">
           <tabix-adder
             :allow_ld="false"
-            @ready="connectReader"
+            @ready="receiveTabixReader"
             @fail="showMessage"
           />
 
-          <gwas-parser-options
-            v-if="show_modal"
-            :file_reader="file_reader"
-            :file_name.sync="display_name"
-            @ready="sendConfig"
-            @close="show_modal = false"/>
+
         </div>
       </div>
       <div
@@ -157,7 +138,7 @@ export default {
           v-if="study_count"
           class="d-flex justify-content-end">
           <region-picker
-            :build="build"
+            :genome_build="genome_build"
             :max_range="max_region_size"
             search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/"
             @ready="selectRange"
@@ -177,7 +158,7 @@ export default {
             <div class="form-check form-check-inline">
               <input
                 id="show-catalog"
-                v-model="has_catalog"
+                v-model="has_gwas_catalog"
                 class="form-check-input"
                 type="checkbox">
               <label
@@ -198,10 +179,10 @@ export default {
             <div class="form-check">
               <input
                 id="build-37"
-                v-model="build"
+                v-model="genome_build"
                 class="form-check-input"
                 type="radio"
-                name="build"
+                name="genome_build"
                 value="GRCh37">
               <label
                 class="form-check-label"
@@ -210,7 +191,7 @@ export default {
             <div class="form-check">
               <input
                 id="build-38"
-                v-model="build"
+                v-model="genome_build"
                 class="form-check-input"
                 type="radio"
                 name="build"
