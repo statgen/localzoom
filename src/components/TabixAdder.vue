@@ -202,14 +202,20 @@ export default {
               name="data-type"
               value="gwas"
             >
-              GWAS
+              GWAS (<small><a
+                href="https://my.locuszoom.org/about/#prepare-data"
+                target="_blank"
+              >suggested fields</a></small>)
             </b-form-radio>
             <b-form-radio
               v-model="data_type"
               name="data-type"
               value="bed"
             >
-              BED 4+
+              BED 4+ <small>(<a
+                href="https://genome.ucsc.edu/FAQ/FAQformat.html#format1"
+                target="_blank"
+              >file format</a>)</small>
             </b-form-radio>
             <b-form-radio
               v-if="allow_ld"
