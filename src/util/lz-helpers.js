@@ -141,6 +141,7 @@ function createStudyLayouts (data_type, filename, display_name, annotations) {
     } else if (data_type === 'bed') {
         return [
             LocusZoom.Layouts.get('panel', 'bed_intervals', {
+                id: track_id,
                 namespace: { intervals: track_id },
                 title: { text: display_name },
             }),
