@@ -32,8 +32,12 @@ export default {
     methods: {
         reset() {
             // Note: Deliberately don't reset datatype, for workflows of "add more of the same"
+            // User input fields
             this.display_name = '';
             this.tabix_gz_url = '';
+
+            // Things used internally
+            this.filename = '';
             this.tabix_reader = null;
             this.show_gwas_modal = false;
         },
@@ -164,6 +168,11 @@ export default {
                 if (data_type === 'gwas') {
                     // GWAS files are very messy, and so knowing where to find the file is not enough.
                     // After receiving the reader, we need to ask the user how to parse the file. (via UI)
+                    if (filename.includes('.bed')) {
+                        // Check in case the user does something unwise. (2500 unique BED lines would be bad!)
+                        throw new Error('Selected datatype GWAS does not match file extension .bed');
+                    }
+
                     this.filename = filename;
                     this.tabix_reader = reader;
                     this.show_gwas_modal = true;
@@ -184,8 +193,10 @@ export default {
                             this.reset();
                         });
                 }
-            }).catch((err) => this.$emit('fail', err)
-            ).finally(() => {
+            }).catch((err) => {
+                this.$emit('fail', err);
+                this.reset();
+            }).finally(() => {
                 this.$refs.options_dropdown.hide();
             });
         },
