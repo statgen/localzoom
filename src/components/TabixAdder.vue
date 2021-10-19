@@ -30,6 +30,7 @@ export default {
     },
     methods: {
         reset() {
+            // Note: Deliberately don't reset datatype, for workflows of "add more of the same"
             this.display_name = '';
             this.tabix_gz_url = '';
             this.tabix_reader = null;
@@ -96,6 +97,48 @@ export default {
                 .then((reader) => [reader, name]);
         },
 
+        suggestRegion(data_type, reader, parser) {
+            // Note; the GWAS modal does this for GWAS data internally.
+            return new Promise((resolve, reject) => {
+                if (data_type === 'bed') {
+                    // 1. Find headers (has tabs, does not begin with "browser", "track", or comment mark)
+                    // 2. Get first data row and return the coordinates for that row. This method assumes the LZ parser with field names according to UCSC BED spec
+                    const header_prefixes = /^(browser | track |#)/;
+                    const _isBedHeader = (text) => !text.include('\t') || header_prefixes.test(text);
+                    const data_callback = (rows, err) => {
+                        let valid_file = true;
+                        if (!rows.length || err) {
+                            valid_file = false;
+                        }
+                        // Some tabix files manually specify rows to skip (-S); otherwise tabix auto-ignores `#` lines and we need to figure out what the headers are manually
+                        let first_data_index = reader.skip ? reader.skip : rows.findIndex((text) => !_isBedHeader(text));
+                        if (!valid_file || first_data_index === -1) {
+                            reject('Could not find data rows. Check that file is non-empty and tbi is valid');
+                        }
+                        let first_row = rows[first_data_index];
+                        try {
+                            first_row = parser(first_row);
+                        } catch (e) {
+                            console.error('Could not parse BED file. Error message below:');
+                            console.error(e);
+                            reject('Parse error. See JS console for details.');
+                        }
+                        const {chrom: chr, chromStart: start, chromEnd: end} = first_row;
+                        resolve({chr, start, end});
+                    };
+
+                    reader.fetchHeader(data_callback, {
+                        nLines: 30,
+                        metaOnly: false,
+                    });
+                } else {
+                    // Not implemented for other datatypes
+                    return {};
+                }
+            });
+
+        },
+
         createReader(event) {
             // Create a reader when the form is submitted. Emit EITHER:
             //  - Success: (datatype, reader, filename, label)
@@ -116,7 +159,7 @@ export default {
             reader_promise.then(([reader, filename]) => {
                 if (data_type === 'gwas') {
                     // GWAS files are very messy, and so knowing where to find the file is not enough.
-                    // After receiving the reader, we need to ask the user how to parse the file
+                    // After receiving the reader, we need to ask the user how to parse the file. (via UI)
                     this.filename = filename;
                     this.tabix_reader = reader;
                     this.show_gwas_modal = true;
@@ -131,7 +174,8 @@ export default {
                     } else {
                         throw new Error('Unrecognized datatype');
                     }
-                    this.sendTrackOptions(data_type, reader, parser, filename, display_name);
+                    return this.suggestRegion(data_type, reader, parser)
+                        .then((region_config) => this.sendTrackOptions(data_type, reader, parser, filename, display_name, region_config));
                 }
             }).catch((err) => this.$emit('fail', err)
             ).finally(() => {
@@ -160,7 +204,9 @@ export default {
       ref="options_dropdown"
       :lazy="true"
       text="Add tabix-indexed datafile"
-      variant="success">
+      variant="success"
+      @hide="reset"
+    >
       <div
         class="px-3"
         style="width: 300px;">
