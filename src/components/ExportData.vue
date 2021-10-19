@@ -37,6 +37,11 @@ export default {
             // FIXME: make source name function consider datatype directly
             return `gwas_${sourceName(this.selected_study || '')}`;
         },
+
+        gwas_tracks() {
+            return this.known_tracks.filter(({data_type}) => data_type === 'gwas');
+        },
+
         table_config() {
             // How should the table display this set of fields? Determined once at component load.
             const base = [
@@ -87,7 +92,7 @@ export default {
             // What data should this widget request from the plot?
             const { source_name } = this;
 
-            if (!this.known_tracks.find(({data_type: kt, filename: kf}) => kf === this.selected_study && kt === 'gwas')) {
+            if (!this.gwas_tracks.find(({filename: kf}) => kf === this.selected_study)) {
                 // Reset logic: notify external widgets to remove any subscribers
                 this.$emit('requested-data');
                 return;
@@ -118,11 +123,11 @@ export default {
         <label>Select a study:
           <select
             v-model="selected_study"
-            :disabled="known_tracks.length === 0"
+            :disabled="gwas_tracks.length === 0"
             style="width: 20em;">
             <option value="">(none selected)</option>
             <option
-              v-for="{filename, display_name} in known_tracks"
+              v-for="{filename, display_name} in gwas_tracks"
               :value="filename"
               :key="filename">
               {{ display_name === filename ? display_name : `${display_name} ({${filename})` }}
@@ -153,7 +158,7 @@ export default {
         </div>
       </div>
     </div>
-    <p v-else>Please select a study to use the "export" feature.</p>
+    <p v-else>Please select a GWAS dataset to use the "export" feature.</p>
   </div>
 </template>
 
