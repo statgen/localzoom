@@ -7,6 +7,7 @@ import { makeBed12Parser, makeGWASParser, makePlinkLdParser } from 'locuszoom/es
 import { blobReader, urlReader } from 'tabix-reader';
 
 import GwasParserOptions from './GwasParserOptions.vue';
+import { positionToStartRange } from '../util/entity-helpers';
 
 
 export default {
@@ -104,7 +105,7 @@ export default {
                     // 1. Find headers (has tabs, does not begin with "browser", "track", or comment mark)
                     // 2. Get first data row and return the coordinates for that row. This method assumes the LZ parser with field names according to UCSC BED spec
                     const header_prefixes = /^(browser | track |#)/;
-                    const _isBedHeader = (text) => !text.include('\t') || header_prefixes.test(text);
+                    const _isBedHeader = (text) => !text.includes('\t') || header_prefixes.test(text);
                     const data_callback = (rows, err) => {
                         let valid_file = true;
                         if (!rows.length || err) {
@@ -123,7 +124,9 @@ export default {
                             console.error(e);
                             reject('Parse error. See JS console for details.');
                         }
-                        const {chrom: chr, chromStart: start, chromEnd: end} = first_row;
+                        let { chrom: chr, chromStart: start, chromEnd: end } = first_row;
+                        [start, end] = positionToStartRange((start + end) / 2);
+
                         resolve({chr, start, end});
                     };
 
@@ -175,7 +178,10 @@ export default {
                         throw new Error('Unrecognized datatype');
                     }
                     return this.suggestRegion(data_type, reader, parser)
-                        .then((region_config) => this.sendTrackOptions(data_type, reader, parser, filename, display_name, region_config));
+                        .then((region_config) => {
+                            this.sendTrackOptions(data_type, reader, parser, filename, display_name, region_config);
+                            this.reset();
+                        });
                 }
             }).catch((err) => this.$emit('fail', err)
             ).finally(() => {
@@ -188,6 +194,7 @@ export default {
             // Receive GWAS options and declare a new track for this datatype
             const parser = makeGWASParser(parser_config);
             this.sendTrackOptions('gwas', tabix_reader, parser, filename, display_name, region_config);
+            this.reset();
         },
 
         sendTrackOptions(data_type, reader, parser, filename, display_name, metadata = {}) {
@@ -205,7 +212,6 @@ export default {
       :lazy="true"
       text="Add tabix-indexed datafile"
       variant="success"
-      @hide="reset"
     >
       <div
         class="px-3"

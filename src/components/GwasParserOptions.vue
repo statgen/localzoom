@@ -8,6 +8,7 @@ import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/src/';
 import { _isHeader, guessGWAS } from 'locuszoom/esm/ext/lz-parsers/gwas/sniffers';
 import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
 import { has } from 'locuszoom/esm/ext/lz-parsers/utils';
+import { positionToStartRange } from '../util/entity-helpers';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
@@ -220,13 +221,11 @@ export default {
         sendOptions() {
             // The preview (first line of file) will set the default locus (view) for this data
             const init_position = this.preview.position;
-            const window_size = 500000;
-            // Pad the range a little so that the first point is easy to spot
-            const start = Math.max(0, init_position - window_size * 0.1);
+            const [start, end] = positionToStartRange(init_position);
             const init_state = {
                 chr: this.preview.chromosome,
-                start: start,
-                end: start + window_size * 0.9,
+                start,
+                end,
             };
             this.$emit('ready', Object.assign({}, this.parserOptions), init_state);
             this.$emit('close');
