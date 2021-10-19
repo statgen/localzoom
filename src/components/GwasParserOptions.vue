@@ -141,6 +141,7 @@ export default {
             try {
                 return this.parser(this.sample_data[0]);
             } catch (e) {
+                // eslint-disable-next-line no-console
                 console.error(e);
                 return { error: e.toString() || 'Could not parse column contents' };
             }

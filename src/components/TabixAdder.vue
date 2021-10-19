@@ -120,7 +120,8 @@ export default {
                         try {
                             first_row = parser(first_row);
                         } catch (e) {
-                            console.error('Could not parse BED file. Error message below:');
+                            // eslint-disable-next-line no-console
+                            console.error(`Could not parse BED file. Error message below: \n${e}`);
                             console.error(e);
                             reject('Parse error. See JS console for details.');
                         }
