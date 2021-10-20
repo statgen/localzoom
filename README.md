@@ -25,7 +25,7 @@ npm run serve
 ### Building for production
 The production build is a minified, concatenated bundle suitable for distribution on a server.
 
-In order to use the Sentry error logging and Google Analytics feature, you will need to create a 
+In order to use the Sentry error logging and Google Analytics features, you will need to create a 
 file named *.env.production.local* (ignored by git) with the following contents 
 (both values are optional if you don't want to use these features): 
 ```dotenv

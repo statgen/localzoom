@@ -6,7 +6,7 @@ import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/src/';
 import {
     getBasicSources, getBasicLayout,
 } from './util/lz-helpers';
-import count_region_view, {setup_feature_metrics} from './util/metrics';
+import { count_add_track, count_region_view, setup_feature_metrics } from './util/metrics';
 
 import PlotPanes from './components/PlotPanes.vue';
 import GwasToolbar from './components/GwasToolbar.vue';
@@ -57,6 +57,7 @@ export default {
                 this.$refs.plotWidget.addStudy(panel_configs, source_configs);
             }
 
+            count_add_track(data_type);
             this.known_tracks.push({data_type, filename, display_name});
         },
         activateMetrics() {
