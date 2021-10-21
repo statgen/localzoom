@@ -17,7 +17,12 @@
     }
   </style>
 
-  <!--  Build enhancement: configure google analytics key if environment provides one -->
+  <!--
+  Build enhancement: configure google analytics key if environment provides one
+
+  Because of how this is implemented, gtag will be only be defined if an analytics key is present,
+  AND if this is being built for production.
+  -->
   <% if (process.env.NODE_ENV === 'production' && process.env.VUE_APP_GOOGLE_ANALYTICS_KEY) { %>
       <script async src="https://www.googletagmanager.com/gtag/js?id=<%= VUE_APP_GOOGLE_ANALYTICS_KEY %>"></script>
       <script>

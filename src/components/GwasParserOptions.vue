@@ -3,11 +3,12 @@
  * A modal dialog window used to specify file parsing configuration options
  * See: https://vuejs.org/v2/examples/modal.html -->
  */
-import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/esm/';
+import { BFormGroup, BFormRadio, BTabs, BTab } from 'bootstrap-vue/src/';
 
-import { isHeader, guessGWAS } from '../gwas/sniffers';
-import { makeParser } from '../gwas/parsers';
-import { has } from '../gwas/parser_utils';
+import { _isHeader, guessGWAS } from 'locuszoom/esm/ext/lz-parsers/gwas/sniffers';
+import { makeGWASParser } from 'locuszoom/esm/ext/lz-parsers/gwas/parsers';
+import { has } from 'locuszoom/esm/ext/lz-parsers/utils';
+import { positionToStartRange } from '../util/entity-helpers';
 
 const TAB_FROM_SEPARATE_COLUMNS = 0;
 const TAB_FROM_MARKER = 1;
@@ -15,13 +16,14 @@ const TAB_FROM_MARKER = 1;
 const AF_SPEC = { freq: 1, count: 2 };
 
 const PAGES = {
-    filename: 0,
     variant: 1,
     optional: 2,
 };
 
+let uid = 0;
+
 export default {
-    name: 'AdderWizard',
+    name: 'GwasParserOptions',
     components: {
         BFormGroup,
         BFormRadio,
@@ -30,7 +32,6 @@ export default {
     },
     props: {
         file_reader: { type: Object, default: null },
-        file_name: { type: String, default: null },
     },
     data() {
         return {
@@ -38,7 +39,7 @@ export default {
             sample_data: [],
 
             // Which part of the UI should we show?
-            current_page: this.filename ? PAGES.filename : PAGES.variant,
+            current_page: PAGES.variant,
             variant_spec_tab: TAB_FROM_SEPARATE_COLUMNS,
             freq_spec_option: null,
 
@@ -127,7 +128,7 @@ export default {
         parser() {
             if (this.isValid) {
                 try {
-                    return makeParser(this.parserOptions);
+                    return makeGWASParser(this.parserOptions);
                 } catch (e) {
                     return () => {
                         throw new Error('Invalid parser configuration');
@@ -140,6 +141,7 @@ export default {
             try {
                 return this.parser(this.sample_data[0]);
             } catch (e) {
+                // eslint-disable-next-line no-console
                 console.error(e);
                 return { error: e.toString() || 'Could not parse column contents' };
             }
@@ -166,7 +168,7 @@ export default {
                         first_data_index = this.file_reader.skip;
                     } else {
                         // Some files use headers that are not comment lines.
-                        first_data_index = rows.findIndex((text) => !isHeader(text));
+                        first_data_index = rows.findIndex((text) => !_isHeader(text));
                     }
                     this.sample_data = rows.slice(first_data_index);
                     const data_rows = this.sample_data.map((line) => line.split('\t'));
@@ -203,6 +205,8 @@ export default {
         },
     },
     beforeCreate() {
+        uid += 1;
+        this._uid = uid;
         // Makes enums available within vue template
         this.PAGES = PAGES;
         this.AF_SPEC = AF_SPEC;
@@ -218,10 +222,11 @@ export default {
         sendOptions() {
             // The preview (first line of file) will set the default locus (view) for this data
             const init_position = this.preview.position;
+            const [start, end] = positionToStartRange(init_position);
             const init_state = {
                 chr: this.preview.chromosome,
-                start: Math.max(0, init_position - 250000),
-                end: init_position + 250000,
+                start,
+                end,
             };
             this.$emit('ready', Object.assign({}, this.parserOptions), init_state);
             this.$emit('close');
@@ -245,33 +250,18 @@ export default {
           </div>
           <div class="modal-body">
             <div>
-              <div
-                v-if="current_page === PAGES.filename"
-                class="form-group row">
-                <label
-                  for="display_name"
-                  class="col-sm-3">Dataset Label</label>
-                <div class="col-sm-9">
-                  <input
-                    id="display_name"
-                    v-model="file_name"
-                    class="form-control"
-                    type="text">
-                </div>
-              </div>
-
-              <div v-else-if="current_page === PAGES.variant">
+              <div v-if="current_page === PAGES.variant">
                 <b-tabs v-model="variant_spec_tab">
                   <b-tab
                     title="Variant from columns"
                     class="pt-3">
                     <div class="form-group row">
                       <label
-                        for="vs-chr"
+                        :for="`vs-chr-${_uid}`"
                         class="col-sm-2">Chromosome</label>
                       <div class="col-sm-4">
                         <select
-                          id="vs-chr"
+                          :id="`vs-chr-${_uid}`"
                           v-model="chrom_col"
                           class="form-control">
                           <option
@@ -283,11 +273,11 @@ export default {
                         </select>
                       </div>
                       <label
-                        for="vs-pos"
+                        :for="`vs-pos-${_uid}`"
                         class="col-sm-2">Position</label>
                       <div class="col-sm-4">
                         <select
-                          id="vs-pos"
+                          :id="`vs-pos-${_uid}`"
                           v-model="pos_col"
                           class="form-control">
                           <option
@@ -301,11 +291,11 @@ export default {
                     </div>
                     <div class="form-group row">
                       <label
-                        for="vs-ref"
+                        :for="`vs-ref-${_uid}`"
                         class="col-sm-2">Ref allele</label>
                       <div class="col-sm-4">
                         <select
-                          id="vs-ref"
+                          :id="`vs-ref-${_uid}`"
                           v-model="ref_col"
                           class="form-control">
                           <option
@@ -317,11 +307,11 @@ export default {
                         </select>
                       </div>
                       <label
-                        for="vs-alt"
+                        :for="`vs-alt-${_uid}`"
                         class="col-sm-2">Alt allele</label>
                       <div class="col-sm-4">
                         <select
-                          id="vs-alt"
+                          :id="`vs-alt-${_uid}`"
                           v-model="alt_col"
                           class="form-control">
                           <option
@@ -339,11 +329,11 @@ export default {
                     class="pt-3">
                     <div class="form-group row">
                       <label
-                        for="vs-marker"
+                        :for="`vs-marker-${_uid}`"
                         class="col-sm-2">Marker</label>
                       <div class="col-sm-4">
                         <select
-                          id="vs-marker"
+                          :id="`vs-marker-${_uid}`"
                           v-model="marker_col"
                           class="form-control">
                           <option
@@ -359,11 +349,11 @@ export default {
                 </b-tabs>
                 <div class="form-group row">
                   <label
-                    for="vs-pval"
+                    :for="`vs-pval-${_uid}`"
                     class="col-sm-2">P-value column</label>
                   <div class="col-sm-4">
                     <select
-                      id="vs-pval"
+                      :id="`vs-pval-${_uid}`"
                       v-model="pvalue_col"
                       class="form-control">
                       <option
@@ -398,11 +388,11 @@ export default {
                 <h3>Optional fields</h3>
                 <div class="form-group row">
                   <label
-                    for="vs-beta"
+                    :for="`vs-beta-${_uid}`"
                     class="col-sm-2">Effect size</label>
                   <div class="col-sm-4">
                     <select
-                      id="vs-beta"
+                      :id="`vs-beta-${_uid}`"
                       v-model="beta_col"
                       class="form-control">
                       <option
@@ -417,11 +407,11 @@ export default {
                 </div>
                 <div class="form-group row">
                   <label
-                    for="vs-stderr"
+                    :for="`vs-stderr-${_uid}`"
                     class="col-sm-2">Std. Err.</label>
                   <div class="col-sm-4">
                     <select
-                      id="vs-stderr"
+                      :id="`vs-stderr-${_uid}`"
                       v-model="stderr_beta_col"
                       class="form-control">
                       <option
@@ -465,11 +455,11 @@ export default {
                 <div v-if="freq_spec_option === AF_SPEC.freq">
                   <div class="form-group row">
                     <label
-                      for="vs-af-freq"
+                      :for="`vs-af-freq-${_uid}`"
                       class="col-sm-2">Frequency</label>
                     <div class="col-sm-4">
                       <select
-                        id="vs-af-freq"
+                        :id="`vs-af-freq-${_uid}`"
                         v-model="allele_freq_col"
                         class="form-control">
                         <option
@@ -486,11 +476,11 @@ export default {
                 <div v-else-if="freq_spec_option === AF_SPEC.count">
                   <div class="form-group row">
                     <label
-                      for="vs-af-count"
+                      :for="`vs-af-count-${_uid}`"
                       class="col-sm-2">Count</label>
                     <div class="col-sm-4">
                       <select
-                        id="vs-af-count"
+                        :id="`vs-af-count-${_uid}`"
                         v-model="allele_count_col"
                         class="form-control">
                         <option
@@ -502,11 +492,11 @@ export default {
                       </select>
                     </div>
                     <label
-                      for="vs-af-ns"
+                      :for="`vs-af-ns-${_uid}`"
                       class="col-sm-2"># Samples</label>
                     <div class="col-sm-4">
                       <select
-                        id="vs-af-ns"
+                        :id="`vs-af-ns-${_uid}`"
                         v-model="n_samples_col"
                         class="form-control">
                         <option

@@ -1,42 +1,25 @@
 import LocusZoom from 'locuszoom';
-import { AssociationLZ } from 'locuszoom/esm/data/adapters';
 import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
+import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
+import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
+import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
 import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
-import { makeParser } from '../gwas/parsers';
 
 LocusZoom.use(credibleSets);
+LocusZoom.use(tabixSource);
+LocusZoom.use(intervalTracks);
+LocusZoom.use(lzParsers);
 
-const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end' });
+const stateUrlMapping = Object.freeze({ chr: 'chrom', start: 'start', end: 'end', ldrefvar: 'ld_variant' });
 
-class TabixAssociationLZ extends AssociationLZ {
-    parseInit(init) {
-        this.params = init.params; // Used to create a parser
-        this.parser = makeParser(this.params);
-        this.reader = init.tabix_reader;
-    }
-
-    getCacheKey(state, chain, fields) {
-        return [state.chr, state.start, state.end].join('_');
-    }
-
-    fetchRequest(state, chain, fields) {
-        const self = this;
-        return new Promise((resolve, reject) => {
-            self.reader.fetch(state.chr, state.start, state.end, (data, err) => {
-                if (err) {
-                    reject(new Error('Could not read requested region. This may indicate an error with the .tbi index.'));
-                }
-                resolve(data);
-            });
-        });
-    }
-
-    normalizeResponse(data) {
+const TabixUrlSource = LocusZoom.Adapters.get('TabixUrlSource');
+class TabixAssociationLZ extends TabixUrlSource {
+    _annotateRecords(records) {
         // Some GWAS files will include variant rows, even if no pvalue can be calculated.
         // Eg, EPACTS fills in "NA" for pvalue in this case. These rows are not useful for a
         // scatter plot, and this data source should ignore them.
-        return data.map(this.parser).filter((item) => !Number.isNaN(item.log_pvalue));
+        return records.filter((item) => !Number.isNaN(item['log_pvalue']));
     }
 }
 
@@ -49,41 +32,41 @@ LocusZoom.Adapters.add('TabixAssociationLZ', TabixAssociationLZ);
  * @return {string}
  */
 function sourceName(display_name) {
+    // FIXME: incorporate datatype when generating source name; fix various caller locations
     return display_name.replace(/[^A-Za-z0-9_]/g, '_');
 }
 
 /**
  * Create customized panel layout(s) for a single association study, with functionality from all
  *   of the features selected.
- * @param {string} source_label
+ * @param {string} track_id Internal track ID, expected to be unique across the entire plot.
+ * @param {string} display_name
  * @param annotations
- * @param build
  * @return {*[]}
  */
-function createStudyLayout(
-    source_label,
-    annotations = { credible_sets: false, gwas_catalog: true },
-    build,
+function createGwasStudyLayout(
+    track_id,
+    display_name,
+    annotations = { has_credible_sets: false, has_gwas_catalog: true },
 ) {
     const new_panels = [];
-    const source_name = sourceName(source_label);
 
     // Other namespaces won't be overridden; they will be reused as is.
     const namespace = {
-        assoc: `assoc_${source_name}`,
-        credset: `credset_${source_name}`,
+        assoc: `assoc_${track_id}`,
+        credset: `credset_${track_id}`,
         catalog: 'catalog',
     };
 
     const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
-        id: `association_${source_name}`,
-        title: { text: source_label },
+        id: `association_${track_id}`,
+        title: { text: display_name },
         height: 275,
         namespace,
     });
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     assoc_layer.label = {
-        text: '{{#if {{namespace[assoc]}}rsid}}{{{{namespace[assoc]}}rsid}}{{#else}}{{{{namespace[assoc]}}variant}}{{/if}}',
+        text: '{{#if assoc:rsid}}{{assoc:rsid}}{{#else}}{{assoc:variant}}{{/if}}',
         spacing: 12,
         lines: { style: { 'stroke-width': '2px', stroke: '#333333', 'stroke-dasharray': '2px 2px' } },
         filters: [
@@ -94,10 +77,10 @@ function createStudyLayout(
     assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label', { namespace });
     const assoc_tooltip = assoc_layer.tooltip;
 
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}beta|is_numeric}}<br>&beta;: <strong>{{{{namespace[assoc]}}beta|scinotation|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}stderr_beta|is_numeric}}<br>SE (&beta;): <strong>{{{{namespace[assoc]}}stderr_beta|scinotation|htmlescape}}</strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}alt_allele_freq|is_numeric}}<br>Alt. freq: <strong>{{{{namespace[assoc]}}alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}';
-    assoc_tooltip.html += '{{#if {{namespace[assoc]}}rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{{{namespace[assoc]}}rsid|htmlescape}}" target="_blank" rel="noopener">{{{{namespace[assoc]}}rsid|htmlescape}}</a>{{/if}}';
+    assoc_tooltip.html += `{{#if assoc:beta|is_numeric}}<br>&beta;: <strong>{{assoc:beta|scinotation|htmlescape}}</strong>{{/if}}
+{{#if assoc:stderr_beta|is_numeric}}<br>SE (&beta;): <strong>{{assoc:stderr_beta|scinotation|htmlescape}}</strong>{{/if}}
+{{#if assoc:alt_allele_freq|is_numeric}}<br>Alt. freq: <strong>{{assoc:alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}
+{{#if assoc:rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{assoc:rsid|htmlescape}}" target="_blank" rel="noopener">{{assoc:rsid|htmlescape}}</a>{{/if}}`;
 
     const dash_extra = []; // Build Display options widget & add to toolbar iff features selected
     if (Object.values(annotations).some((item) => !!item)) {
@@ -114,41 +97,30 @@ function createStudyLayout(
             options: [],
         });
     }
-    const fields_extra = [
-        '{{namespace[assoc]}}rsid',
-        '{{namespace[assoc]}}beta',
-        '{{namespace[assoc]}}stderr_beta',
-        '{{namespace[assoc]}}alt_allele_freq',
-    ];
-    if (annotations.credible_sets) {
+    if (annotations.has_credible_sets) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
-        fields_extra.push('{{namespace[credset]}}posterior_prob', '{{namespace[credset]}}contrib_fraction', '{{namespace[credset]}}is_member');
-        assoc_tooltip.html += '{{#if {{namespace[credset]}}posterior_prob}}<br>Posterior probability: <strong>{{{{namespace[credset]}}posterior_prob|scinotation}}{{/if}}</strong><br>';
+        assoc_tooltip.html += '{{#if credset:posterior_prob}}<br>Posterior probability: <strong>{{credset:posterior_prob|scinotation}}{{/if}}</strong><br>';
     }
-    if (annotations.gwas_catalog) {
+    if (annotations.has_gwas_catalog) {
         // Grab the options object from a pre-existing layout
         const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
         // TODO Clarify this; make small registry pieces more reusable
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
-        fields_extra.push('{{namespace[catalog]}}rsid', '{{namespace[catalog]}}trait', '{{namespace[catalog]}}log_pvalue');
-        assoc_tooltip.html += '{{#if {{namespace[catalog]}}rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{{{namespace[catalog]}}rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
+        assoc_tooltip.html += '{{#if catalog:rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{catalog:rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
     }
-
-    assoc_layer.fields.push(...fields_extra);
     assoc_panel.toolbar.widgets.push(...dash_extra);
 
     // After all custom options added, run mods through Layouts.get once more to apply namespacing
     // TODO: rewrite this
     new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
-    if (annotations.gwas_catalog) {
+    if (annotations.has_gwas_catalog) {
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
-            id: `catalog_${source_name}`,
+            id: `catalog_${track_id}`,
             namespace,
-            toolbar: { widgets: [] },
             title: {
-                text: 'Hits in GWAS Catalog',
+                text: `GWAS Catalog hits for ${display_name}`,
                 style: { 'font-size': '14px' },
                 x: 50,
             },
@@ -158,29 +130,76 @@ function createStudyLayout(
 }
 
 /**
- * Create all the datasources needed to plot a specific study, from Tabixed data
+ * Create an appropriate layout based on datatype
+ */
+function createStudyLayouts (data_type, filename, display_name, annotations) {
+    const track_id = `${data_type}_${sourceName(filename)}`;
+
+    if (data_type === 'gwas') {
+        return createGwasStudyLayout(track_id, display_name, annotations);
+    } else if (data_type === 'bed') {
+        return [
+            LocusZoom.Layouts.get('panel', 'bed_intervals', {
+                id: track_id,
+                namespace: { intervals: track_id },
+                title: { text: display_name },
+            }),
+        ];
+    } else if (data_type === 'plink_ld') {
+        throw new Error('Not yet implemented');
+    } else {
+        throw new Error('Unrecognized datatype');
+    }
+}
+
+/**
+ * Create all the datasources needed to plot a specific assoc study, including study-specific annotations
  * @return Array Return an array of [name, source_config] entries
  */
-function createStudyTabixSources(label, tabix_reader, parser_options) {
-    const assoc_name = `assoc_${sourceName(label)}`;
-    const source_params = { ...parser_options, id_field: 'variant' };
+function createGwasTabixSources(track_id, tabix_reader, parser_func) {
+    const assoc_name = `assoc_${track_id}`;
     return [
-        [assoc_name, ['TabixAssociationLZ', { tabix_reader, params: source_params }]],
+        [assoc_name, ['TabixAssociationLZ', { reader: tabix_reader, parser_func }]],
         [ // Always add a credible set source; it won't be called unless used in a layout
-            `credset_${sourceName(label)}`, [
-                'CredibleSetLZ',
-                { params: { fields: { log_pvalue: `${assoc_name}:log_pvalue` }, threshold: 0.95 } },
-            ],
+            `credset_${track_id}`, ['CredibleSetLZ', { threshold: 0.95 }],
         ],
     ];
 }
 
+/**
+ * Create appropriate LocusZoom sources for the study of interest
+ * @param data_type
+ * @param filename  A unique track identifier (typically the filename). Used to construct the internal datasource ID name.
+ * @param tabix_reader
+ * @param parser_func
+ * @returns {[[string, [string, {reader: *, parser_func: function(string)}]], [string, [string, {threshold: number}]]]|(string|[string, {reader, parser_func: ((function(*): {blockCount: *, score: *, chromStart: *, thickStart: *, chromEnd: *, strand: *, blockSizes: *, name: *, itemRgb: *, blockStarts: *, thickEnd: *, chrom: *})|*)}])[]}
+ */
+function createStudySources(data_type, tabix_reader, filename, parser_func) {
+    // todo rename to GET from CREATE, for consistency
+    const track_id = `${data_type}_${sourceName(filename)}`;
+    if (data_type === 'gwas') {
+        return createGwasTabixSources(track_id, tabix_reader, parser_func);
+    } else if (data_type === 'bed') {
+        return [
+            [track_id, ['TabixUrlSource', {reader: tabix_reader, parser_func }]],
+        ];
+    } else if (data_type === 'plink_ld') {
+        throw new Error('Not yet implemented');
+    } else {
+        throw new Error('Unrecognized datatype');
+    }
+}
+
+
 function addPanels(plot, data_sources, panel_options, source_options) {
-    source_options.forEach((source) => data_sources.add(...source));
+    source_options.forEach(([name, options]) => {
+        if (!data_sources.has(name)) {
+            data_sources.add(name, options);
+        }
+    });
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
-        const panel = plot.addPanel(panel_layout);
-        panel.addBasicLoader();
+        plot.addPanel(panel_layout);
     });
 }
 
@@ -191,10 +210,12 @@ function addPanels(plot, data_sources, panel_options, source_options) {
 function getBasicSources(study_sources = []) {
     return [
         ...study_sources,
-        ['catalog', ['GwasCatalogLZ', { url: `${PORTAL_API_BASE_URL}annotation/gwascatalog/results/` }]],
-        ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, params: { source: '1000G', population: 'ALL' } }]],
-        ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
+        // Used by GWAS scatter plots
         ['recomb', ['RecombLZ', { url: `${PORTAL_API_BASE_URL}annotation/recomb/results/` }]],
+        ['catalog', ['GwasCatalogLZ', { url: `${PORTAL_API_BASE_URL}annotation/gwascatalog/results/` }]],
+        ['ld', ['LDLZ2', { url: LD_SERVER_BASE_URL, source: '1000G', population: 'ALL' }]],
+        // Genes track
+        ['gene', ['GeneLZ', { url: `${PORTAL_API_BASE_URL}annotation/genes/` }]],
         ['constraint', ['GeneConstraintLZ', { url: 'https://gnomad.broadinstitute.org/api/' }]],
     ];
 }
@@ -212,37 +233,12 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     return LocusZoom.Layouts.get('plot', 'standard_association', extra);
 }
 
-/**
- * Remove the `sourcename:` prefix from field names in the data returned by an LZ datasource
- *
- * This is a convenience method for writing external widgets (like tables) that subscribe to the
- *   plot; typically we don't want to have to redefine the table layout every time someone selects
- *   a different association study.
- * As with all convenience methods, it has limits: don't use it if the same field name is requested
- *   from two different sources!
- * @param {Object} data An object representing the fields for one row of data
- * @param {String} [prefer] Sometimes, two sources provide a field with same name. Specify which
- *  source will take precedence in the event of a conflict.
- */
-function deNamespace(data, prefer) {
-    return Object.keys(data).reduce((acc, key) => {
-        const new_key = key.replace(/.*?:/, '');
-        if (!Object.prototype.hasOwnProperty.call(acc, new_key)
-            || (!prefer || key.startsWith(prefer))) {
-            acc[new_key] = data[key];
-        }
-        return acc;
-    }, {});
-}
-
 export {
     // Basic definitions
     getBasicSources, getBasicLayout,
-    createStudyTabixSources, createStudyLayout,
+    createStudySources, createStudyLayouts,
     // Plot manipulation
     sourceName, addPanels,
-    // General helpers
-    deNamespace,
     // Constants
     stateUrlMapping,
 };

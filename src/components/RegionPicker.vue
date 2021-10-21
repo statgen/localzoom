@@ -13,10 +13,10 @@
 </template>
 
 <script>
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import VueBootstrapTypeahead from 'vue-bootstrap-typeahead/src/components/VueBootstrapTypeahead.vue';
 
-import { parseRegion, positionToRange } from '../util/entity-helpers';
+import { parseRegion, positionToMidRange } from '../util/entity-helpers';
 
 export default {
     name: 'RegionPicker',
@@ -30,7 +30,7 @@ export default {
             type: String,
             default: 'https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/',
         },
-        build: {
+        genome_build: {
             type: String,
             required: true,
         },
@@ -62,7 +62,7 @@ export default {
                 // For genes and rsids, the suggested range is often too narrow.
                 //   Pick a region centered on the midpoint of the range.
                 ({ chrom: chr, start, end } = search_result);
-                [start, end] = positionToRange((start + end) / 2, { region_size: max_range });
+                [start, end] = positionToMidRange((start + end) / 2, { region_size: max_range });
             } else {
                 try {
                     ({ chr, start, end } = parseRegion(this.region, { region_size: max_range }));
@@ -75,7 +75,7 @@ export default {
         },
         doSearch() {
             this.search_results = [];
-            const url = `${this.search_url}?q=${encodeURIComponent(this.region)}&build=${encodeURIComponent(this.build)}`;
+            const url = `${this.search_url}?q=${encodeURIComponent(this.region)}&build=${encodeURIComponent(this.genome_build)}`;
             fetch(url)
                 .then((resp) => {
                     if (resp.ok) {

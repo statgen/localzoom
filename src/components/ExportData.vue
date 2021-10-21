@@ -22,7 +22,7 @@ export default {
     name: 'ExportData',
     components: { TabulatorTable },
     props: {
-        study_names: { type: Array, default: () => [] },
+        known_tracks: { type: Array, default: () => [] },
         has_credible_sets: { type: Boolean, default: true },
         table_data: { type: Array, default: () => [] },
     },
@@ -34,39 +34,45 @@ export default {
     },
     computed: {
         source_name() {
-            return sourceName(this.selected_study || '');
+            // FIXME: make source name function consider datatype directly
+            return `gwas_${sourceName(this.selected_study || '')}`;
         },
+
+        gwas_tracks() {
+            return this.known_tracks.filter(({data_type}) => data_type === 'gwas');
+        },
+
         table_config() {
             // How should the table display this set of fields? Determined once at component load.
             const base = [
-                { title: 'Chrom', field: 'chromosome' },
-                { title: 'Pos', field: 'position', sorter: 'number' },
-                { title: 'Ref', field: 'ref_allele' },
-                { title: 'Alt', field: 'alt_allele' },
-                { title: 'rsID', field: 'rsid' },
+                { title: 'Chrom', field: 'assoc:chromosome' },
+                { title: 'Pos', field: 'assoc:position', sorter: 'number' },
+                { title: 'Ref', field: 'assoc:ref_allele' },
+                { title: 'Alt', field: 'assoc:alt_allele' },
+                { title: 'rsID', field: 'assoc:rsid' },
                 {
                     title: '-log<sub>10</sub>(p)',
-                    field: 'log_pvalue',
+                    field: 'assoc:log_pvalue',
                     formatter: formatSciNotation,
                     sorter: 'number',
                 },
                 {
                     title: '&beta;',
-                    field: 'beta',
+                    field: 'assoc:beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
                 },
                 {
                     title: 'SE(&beta;)',
-                    field: 'stderr_beta',
+                    field: 'assoc:stderr_beta',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
                 },
                 {
                     title: 'Alt freq.',
-                    field: 'alt_allele_freq',
+                    field: 'assoc:alt_allele_freq',
                     formatter: 'money',
                     formatterParams: { precision: 3 },
                     sorter: 'number',
@@ -74,8 +80,8 @@ export default {
             ];
             if (this.has_credible_sets) {
                 base.push(
-                    { title: 'Cred. set', field: 'is_member', formatter: 'tickCross' },
-                    { title: 'Posterior probability', field: 'posterior_prob', formatter: formatSciNotation },
+                    { title: 'Cred. set', field: 'credset:is_member', formatter: 'tickCross' },
+                    { title: 'Posterior probability', field: 'credset:posterior_prob', formatter: formatSciNotation },
                 );
             }
             return base;
@@ -85,31 +91,17 @@ export default {
         source_name() {
             // What data should this widget request from the plot?
             const { source_name } = this;
-            if (!this.study_names.includes(this.selected_study)) {
+
+            if (!this.gwas_tracks.find(({filename: kf}) => kf === this.selected_study)) {
                 // Reset logic: notify external widgets to remove any subscribers
-                this.$emit('requested-data', []);
+                this.$emit('requested-data');
                 return;
             }
-            const fields = [
-                `assoc_${source_name}:chromosome`,
-                `assoc_${source_name}:position`,
-                `assoc_${source_name}:ref_allele`,
-                `assoc_${source_name}:alt_allele`,
-                `assoc_${source_name}:rsid`,
-                `assoc_${source_name}:log_pvalue`,
-                `assoc_${source_name}:alt_allele_freq`,
-                `assoc_${source_name}:beta`,
-                `assoc_${source_name}:stderr_beta`,
-            ];
 
-            if (this.has_credible_sets) {
-                fields.push(
-                    `credset_${source_name}:is_member`,
-                    `credset_${source_name}:posterior_prob`,
-                );
-            }
-            // Side effect in computed: sketchy but convenient.
-            this.$emit('requested-data', fields);
+            // Side effect in computed: sketchy but convenient. Since panels are consistently named, emit the name oif a panel with the desired data
+            // Request to follow the data from a layer, which automatically takes into account "get extra data" options like credsets
+            // FIXME: incorporate datatype into sourcename caller
+            this.$emit('requested-data', `association_${source_name}.associationpvalues`);
         },
     },
     beforeCreate() {
@@ -131,13 +123,15 @@ export default {
         <label>Select a study:
           <select
             v-model="selected_study"
-            :disabled="study_names.length === 0"
+            :disabled="gwas_tracks.length === 0"
             style="width: 20em;">
             <option value="">(none selected)</option>
             <option
-              v-for="(item, index) in study_names"
-              :value="item"
-              :key="index">{{ item }}</option>
+              v-for="{filename, display_name} in gwas_tracks"
+              :value="filename"
+              :key="filename">
+              {{ display_name === filename ? display_name : `${display_name} ({${filename})` }}
+            </option>
           </select>
         </label>
       </div>
@@ -157,14 +151,14 @@ export default {
         <div class="col-md-12">
           <tabulator-table
             :columns="table_config"
-            :initial-sort="[{column: 'log_pvalue', dir: 'desc'}]"
+            :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
             :table_data="table_data"
             height="300px"
             @connected="table = $event" />
         </div>
       </div>
     </div>
-    <p v-else>Please select a study to use the "export" feature.</p>
+    <p v-else>Please select a GWAS dataset to use the "export" feature.</p>
   </div>
 </template>
 
