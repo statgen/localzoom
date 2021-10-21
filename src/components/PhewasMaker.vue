@@ -7,7 +7,7 @@ export default {
     components: { LzPlot },
     props: {
         variant_name: { type: String, default: '' },
-        build: { type: String, default: 'GRCh37' },
+        genome_build: { type: String, default: 'GRCh37' },
         your_study: { type: String, default: '' },
         your_logpvalue: { type: Number, default: null },
         allow_render: { type: Boolean, default: true },
@@ -33,11 +33,9 @@ export default {
         },
         base_phewas_layout() {
             const layer = LocusZoom.Layouts.get('data_layer', 'phewas_pvalues', {
-                unnamespaced: true,
                 y_axis: { min_extent: [0, 10] },
             });
             const panel = LocusZoom.Layouts.get('panel', 'phewas', {
-                unnamespaced: true,
                 height: 300,
                 min_height: 300,
                 data_layers: [layer],
@@ -48,7 +46,7 @@ export default {
                 {
                     panels: [panel],
                     responsive_resize: true,
-                    state: { variant: this.variant_name, genome_build: this.build },
+                    state: { variant: this.variant_name, genome_build: this.genome_build },
                 },
             );
         },

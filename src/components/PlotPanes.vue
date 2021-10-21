@@ -2,13 +2,11 @@
 /**
  * Show a group of interconnected plots and export tables, for the provided data
  */
-import { BCard, BTab, BTabs } from 'bootstrap-vue/esm/';
+import { BCard, BTab, BTabs } from 'bootstrap-vue/src/';
 
 import ExportData from './ExportData.vue';
 import LzPlot from './LzPlot.vue';
 import PhewasMaker from './PhewasMaker.vue';
-
-import { deNamespace } from '../util/lz-helpers';
 
 // Named constants that map to the order (index) of tabs as declared in the template for this component
 const TABS = Object.freeze({PLOT: 0, PHEWAS: 1, EXPORT: 2});
@@ -24,15 +22,15 @@ export default {
         BTabs,
     },
     props: {
-        assoc_layout: { type: Object, default: () => ({}) },
-        assoc_sources: { type: Array, default: () => [] },
-        study_names: { type: Array, default: () => [] }, // TODO: array --> label/id pairs?
+        base_layout: { type: Object, default: () => ({}) },
+        base_sources: { type: Array, default: () => [] },
+        known_tracks: { type: Array, default: () => [] },
 
         // Basic plot/ region
         chr: { type: String, default: null },
         start: { type: Number, default: null },
         end: { type: Number, default: null },
-        build: { type: String, default: 'GRCh37' },
+        genome_build: { type: String, default: 'GRCh37' },
 
         // Control optional features (this could be done more nicely)
         dynamic_urls: { type: Boolean, default: false }, // Change URL when plot updates
@@ -55,10 +53,10 @@ export default {
     computed: {
         allow_phewas() {
             // Our current phewas api only has build 37 datasets; disable option for build 38
-            return this.build === 'GRCh37';
+            return this.genome_build === 'GRCh37';
         },
         has_studies() {
-            return !!this.study_names.length;
+            return !!this.known_tracks.length;
         },
     },
     beforeCreate() {
@@ -82,42 +80,28 @@ export default {
             }
 
             // TODO: Clean this up a bit to better match original display name
-            const variant_data = deNamespace(lzEvent.data, 'assoc');
+            const variant_data = lzEvent.data;
             // Internally, LZ broadcasts `plotname.assoc_study`. Convert to `study` for display
             this.tmp_phewas_study = panel_name.split('.')[1].replace(/^association_/, '');
-            this.tmp_phewas_variant = variant_data.variant;
-            this.tmp_phewas_logpvalue = variant_data.log_pvalue;
+            this.tmp_phewas_variant = variant_data['assoc:variant'];
+            this.tmp_phewas_logpvalue = variant_data['assoc:log_pvalue'];
         },
-        subscribeFields(fields) {
+
+        subscribeToData(layer_name) {
             // This method controls one table widget that draws data from one set of plot fields
             if (this.tmp_export_callback) {
-                this.$refs.assoc_plot.callPlot((plot) => plot.off('data_rendered', this.tmp_export_callback));
+                this.$refs.assoc_plot.callPlot((plot) => plot.off('data_from_layer', this.tmp_export_callback));
                 this.tmp_export_callback = null;
             }
-            if (!fields.length || !this.has_plot) {
+            if (!layer_name || !this.has_plot) {
                 return;
             }
             this.tmp_export_callback = this.$refs.assoc_plot.callPlot((plot) => {
-                plot.subscribeToData(fields, (data) => {
-                    this.table_data = data.map((item) => deNamespace(item, 'assoc'));
-                });
+                plot.subscribeToData({ from_layer: layer_name }, (data) => this.table_data = data);
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
-            this.$refs.assoc_plot.callPlot((plot) => plot.emit('data_rendered'));
-        },
-
-        /**
-         * LocusZoom automatically resizes when the window is resized. If this happens when a plot
-         *  is hidden, it causes weird display glitches.
-         */
-        fixDimensions(selected_tab) {
-            const { TABS } = this;
-            if (selected_tab === TABS.PHEWAS) {
-                this.$nextTick(() => this.$refs.phewas.callPlot((plot) => plot.rescaleSVG()));
-            } else if (selected_tab === TABS.PLOT) {
-                this.$nextTick(() => this.$refs.assoc_plot.callPlot((plot) => plot.rescaleSVG()));
-            }
+            this.$refs.assoc_plot.callPlot((plot) => plot.applyState());
         },
     },
 };
@@ -134,7 +118,6 @@ export default {
         style="min-height:1000px;"
         class="flex-nowrap"
         content-class="scroll-extra"
-        @input="fixDimensions"
       >
         <b-tab
           :active="selected_tab === TABS.PLOT"
@@ -144,8 +127,8 @@ export default {
             v-if="has_studies"
             ref="assoc_plot"
             :show_loading="true"
-            :base_layout="assoc_layout"
-            :base_sources="assoc_sources"
+            :base_layout="base_layout"
+            :base_sources="base_sources"
             :chr="chr"
             :start="start"
             :end="end"
@@ -159,7 +142,7 @@ export default {
             <span
               class="text-center"
               style="display: table-cell; vertical-align:middle">
-              Please add a GWAS track to continue
+              Please add data from a tabix file to continue
             </span>
           </div>
         </b-tab>
@@ -173,7 +156,7 @@ export default {
           <phewas-maker
             ref="phewas"
             :variant_name="tmp_phewas_variant"
-            :build="build"
+            :genome_build="genome_build"
             :your_study="tmp_phewas_study"
             :your_logpvalue="tmp_phewas_logpvalue"
             :allow_render="selected_tab === TABS.PHEWAS"/>
@@ -184,9 +167,9 @@ export default {
           title="Export">
           <export-data
             :has_credible_sets="has_credible_sets"
-            :study_names="study_names"
+            :known_tracks="known_tracks"
             :table_data="table_data"
-            @requested-data="subscribeFields"/>
+            @requested-data="subscribeToData"/>
         </b-tab>
 
       </b-tabs>
@@ -199,7 +182,7 @@ export default {
   .placeholder-plot {
     width: 100%;
     height: 500px;
-    border-style: dashed;
+    border-style: dotted;
   }
   .scroll-extra {
     overflow-x: scroll;

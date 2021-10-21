@@ -3,8 +3,7 @@
  *  that appear in a wide range of genetic datasets
  */
 
-import { REGEX_POSITION, REGEX_REGION } from './constants';
-
+import { DEFAULT_REGION_SIZE, REGEX_POSITION, REGEX_REGION } from './constants';
 
 /**
  * Parse a single position and return a range, based on the region size
@@ -12,9 +11,21 @@ import { REGEX_POSITION, REGEX_REGION } from './constants';
  * @param {Number} region_size
  * @returns {Number[]} [start, end]
  */
-function positionToRange(position, { region_size = 500000 }) {
+function positionToMidRange(position, { region_size = DEFAULT_REGION_SIZE } = {}) {
     const bounds = Math.floor(region_size / 2);
     return [Math.max(position - bounds, 1), position + bounds];
+}
+
+/**
+ * Parse a single position and return a range with this position near the start (with some padding)
+ * @param position
+ * @param DEFAULT_REGION_SIZE
+ * @returns {Number[]} [start, end]
+ */
+function positionToStartRange(position, { region_size = DEFAULT_REGION_SIZE, padding = 0.025 } = {}) {
+    const start = Math.max(1, position - region_size * padding);
+    const end = start + region_size * (1 + padding);
+    return [start, end];
 }
 
 /**
@@ -22,10 +33,10 @@ function positionToRange(position, { region_size = 500000 }) {
  * and end positions.
  *
  * @param {string} spec
- * @param {number} [region_size=500000] If specified, enforces a max region size.
+ * @param {number} [region_size=DEFAULT_REGION_SIZE] If specified, enforces a max region size.
  * @returns {[string, number, number]} [chr, start, end]
  */
-function parseRegion(spec, { region_size = 500000 }) {
+function parseRegion(spec, { region_size = DEFAULT_REGION_SIZE }) {
     const range_match = spec.match(REGEX_REGION);
     const single_match = spec.match(REGEX_POSITION);
     let chr;
@@ -40,7 +51,7 @@ function parseRegion(spec, { region_size = 500000 }) {
         let pos;
         [chr, pos] = single_match.slice(1);
         pos = +pos;
-        [start, end] = positionToRange(pos, { region_size });
+        [start, end] = positionToMidRange(pos, { region_size });
     } else {
         throw new Error(`Could not parse the specified range: ${spec}`);
     }
@@ -55,4 +66,4 @@ function parseRegion(spec, { region_size = 500000 }) {
     return { chr, start, end };
 }
 
-export { parseRegion, positionToRange };
+export { parseRegion, positionToMidRange, positionToStartRange };

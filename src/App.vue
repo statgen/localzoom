@@ -1,13 +1,12 @@
 <script>
 
 import 'locuszoom/dist/locuszoom.css';
-import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/esm/';
+import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/src/';
 
 import {
     getBasicSources, getBasicLayout,
-    createStudyTabixSources, createStudyLayout,
 } from './util/lz-helpers';
-import count_region_view, {setup_feature_metrics} from './util/metrics';
+import { count_add_track, count_region_view, setup_feature_metrics } from './util/metrics';
 
 import PlotPanes from './components/PlotPanes.vue';
 import GwasToolbar from './components/GwasToolbar.vue';
@@ -25,8 +24,8 @@ export default {
     data() {
         return {
             // Used to trigger the initial drawing of the plot
-            base_assoc_layout: null,
-            base_assoc_sources: null,
+            base_layout: null,
+            base_sources: null,
 
             // Current position/ shared state
             chr: null,
@@ -34,54 +33,44 @@ export default {
             end: null,
 
             // State to be tracked across all components
-            build: null,
-            study_names: [],
-            // Control specific display options TODO improve
-            has_credible_sets: false,
+            genome_build: 'GRCh37',
+            known_tracks: [],
+            // Control specific display options
+            has_credible_sets: true,
         };
     },
     methods: {
-        receiveAssocOptions(source_options, plot_options) {
-            const { label, reader, parser_config } = source_options;
-            const sources = createStudyTabixSources(label, reader, parser_config);
-            const { annotations, build, state } = plot_options;
-            const panels = createStudyLayout(label, annotations, build);
+        receiveTrackOptions(data_type, filename, display_name, source_configs, panel_configs, extra_plot_state) {
+            if (!this.known_tracks.length) {
+                // If this is the first track added, allow the new track to suggest a region of interest and navigate there if relevant (mostly just GWAS)
+                this.updateRegion(extra_plot_state);
 
-            if (annotations.credible_sets) {
-                // Tell the "export" feature that relevant plot options were used.
-                this.has_credible_sets = true;
-            }
+                this.base_sources = getBasicSources(source_configs);
+                this.base_layout = getBasicLayout(extra_plot_state, panel_configs);
 
-            this.updateRegion(state);
-
-            if (!this.study_names.length) {
-                // Creating the initial plot can be done by simply passing props directly
-                this.base_assoc_sources = getBasicSources(sources);
-                // Prevent weird resize behavior when switching tabs
-                this.base_assoc_layout = getBasicLayout(
-                    state,
-                    panels,
-                    { responsive_resize: true },
-                );
                 // Collect metrics for first plot loaded
                 count_region_view();
             } else {
-                // Adding subsequent panels is a more advanced usage; manipulate the child widget
-                this.$refs.plotWidget.addStudy(panels, sources);
+                // TODO: We presently ignore extra plot state (like region) when adding new tracks. Revisit for future data types.
+                this.$refs.plotWidget.addStudy(panel_configs, source_configs);
             }
-            this.study_names.push(label);
-            this.build = build;
+
+            count_add_track(data_type);
+            this.known_tracks.push({data_type, filename, display_name});
         },
         activateMetrics() {
             // After plot is created, initiate metrics capture
             // TODO: This is a mite finicky; consider further refactoring in the future?
             this.$refs.plotWidget.$refs.assoc_plot.callPlot(setup_feature_metrics);
         },
-        updateRegion(region) {
+        updateRegion({ chr, start, end }) {
             // Receive new region config from toolbar
-            this.chr = region.chr;
-            this.start = region.start;
-            this.end = region.end;
+            if (!chr || !start || !end) {
+                return;
+            }
+            this.chr = chr;
+            this.start = start;
+            this.end = end;
         },
     },
 };
@@ -95,7 +84,7 @@ export default {
         <hr>
         <button
           v-v-b-toggle.instructions
-          class="btn-link">Instructions</button>
+          class="btn btn-link">Instructions</button>
         <b-collapse
           id="instructions"
           class="mt-2">
@@ -120,9 +109,9 @@ export default {
                   to check</a>)
                 </li>
                 <li>Your file contains all of the information required to draw a plot. Chromosome, position,
-                ref, and alt alleles can be specified as either individual columns, or a SNP
-                marker (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
-                (or -log10 pvalue) for each SNP as a separate column. Beta, SE, and alt allele
+                ref, and alt alleles can be specified as either individual columns, or a variant
+                marker string (eg <code>chr:pos_ref/alt</code>); there must also be a p-value
+                (or -log10 pvalue) for each variant as a separate column. Beta, SE, and alt allele
                 frequency information are optional, but will be used on the plot if provided.
                 <em>Client-side plots cannot be generated from rsIDs.</em></li>
               </ol>
@@ -133,7 +122,7 @@ export default {
               </p>
 
               <p>
-                LD and overlay information is based on a specific build (<strong>build GRCh37</strong>
+                LD and overlay information is based on a specific human genome build (<strong>build GRCh37</strong>
                 or <strong>build GRCh38</strong> are supported). Exercise caution when interpreting
                 plots based on a GWAS with positions from a different build.
               </p>
@@ -153,9 +142,11 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <gwas-toolbar
-          :study_names="study_names"
-          :max_studies="4"
-          @config-ready="receiveAssocOptions"
+          :has_credible_sets.sync="has_credible_sets"
+          :genome_build.sync="genome_build"
+          :max_studies="6"
+          :known_tracks="known_tracks"
+          @add-tabix-track="receiveTrackOptions"
           @select-range="updateRegion"
         />
       </div>
@@ -165,12 +156,12 @@ export default {
       <div class="col-md-12">
         <plot-panes
           ref="plotWidget"
+          :base_layout="base_layout"
+          :base_sources="base_sources"
           :dynamic_urls="true"
-          :assoc_layout="base_assoc_layout"
-          :assoc_sources="base_assoc_sources"
-          :study_names="study_names"
+          :genome_build="genome_build"
           :has_credible_sets="has_credible_sets"
-          :build="build"
+          :known_tracks="known_tracks"
           :chr="chr"
           :start="start"
           :end="end"

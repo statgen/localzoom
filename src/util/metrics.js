@@ -91,5 +91,20 @@ if (window.gtag) {
     window.addEventListener('pushState', count_region_view);
 }
 
-export default count_region_view;
-export { setup_feature_metrics };
+/**
+ * Report when new tracks/ datatypes are added to the plot, so we can have a rough guess as
+ *  to which visualization features get used most.
+ * @param data_type
+ */
+const count_add_track = (data_type) => {
+    if (!window.gtag) {
+        return;
+    }
+
+    window.gtag('event', 'add_track', {
+        event_category: 'features',
+        event_label: data_type,
+    });
+};
+
+export { count_add_track, count_region_view, setup_feature_metrics };
