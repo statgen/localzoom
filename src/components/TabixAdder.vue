@@ -62,7 +62,7 @@ export default {
                     return;
                 }
                 try {
-                    short_name = new URL(tabix_gz_url).pathname;
+                    short_name = new URL(tabix_gz_url).pathname.split('/').pop().replace(/\.gz|.bgz|\.tbi/gi, '');
                 } catch (e) {
                     // Form validation should handle malformed URLs
                     return;
