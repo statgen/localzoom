@@ -100,7 +100,7 @@ export default {
 
             // Side effect in computed: sketchy but convenient. Since panels are consistently named, emit the name oif a panel with the desired data
             // Request to follow the data from a layer, which automatically takes into account "get extra data" options like credsets
-            // FIXME: incorporate datatype into sourcename caller; make sure listeners map to plot correctly
+            // FIXME: incorporate datatype into sourcename caller
             this.$emit('requested-data', `association_${source_name}.associationpvalues`);
         },
     },

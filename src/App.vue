@@ -45,8 +45,6 @@ export default {
                 // If this is the first track added, allow the new track to suggest a region of interest and navigate there if relevant (mostly just GWAS)
                 this.updateRegion(extra_plot_state);
 
-                // FIXME: don't pass existing sources to GBS or panels to GBL; limited use and too much cleverness
-                // FIXME: adding BED first causes problems because there is no default region; can we add one?
                 this.base_sources = getBasicSources(source_configs);
                 this.base_layout = getBasicLayout(extra_plot_state, panel_configs);
 
