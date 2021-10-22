@@ -147,8 +147,7 @@ export default {
           :max_studies="6"
           :known_tracks="known_tracks"
           @add-tabix-track="receiveTrackOptions"
-          @select-range="updateRegion"
-        />
+          @select-range="updateRegion"/>
       </div>
     </div>
 
