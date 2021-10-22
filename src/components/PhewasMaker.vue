@@ -93,7 +93,7 @@ export default {
 
             // Use listeners to warn when no variant data is available
             this.$refs.phewas_plot.callPlot((plot) => {
-                plot.subscribeToData(['phewas:id'], (data, plot) => {
+                plot.subscribeToData({ from_layer: 'phewas.phewaspvalues' }, (data, plot) => {
                     if (!data || !data.length) {
                         plot.curtain.show('There is no PheWAS data available for the requested variant. Please try another variant.');
                     }

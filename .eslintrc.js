@@ -48,7 +48,17 @@ module.exports = {
             'always'
         ],
         'space-before-blocks': 'error',
-        'space-infix-ops': 'error'
+        'space-infix-ops': 'error',
+        'vue/max-attributes-per-line': ['warning', {
+            'singleline': {
+              'max': 3,
+              'allowFirstLine': true
+            },
+            'multiline': {
+              'max': 1,
+              'allowFirstLine': false
+            }
+          }]
     },
     parserOptions: {
         parser: 'babel-eslint',

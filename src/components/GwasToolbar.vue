@@ -22,11 +22,12 @@ export default {
         TabixAdder,
     },
     props: {
-        genome_build: { // now now, use live binding in parent
+        // These two fields are sync bindings (this component notifies its parent of changes)
+        genome_build: {
             type: String,
             default: 'GRCh37',
         },
-        has_credible_sets: {   // for now, use sync binding to parent (to avoid single-property update events)
+        has_credible_sets: {
             type: Boolean,
             default: true,
         },
@@ -51,7 +52,7 @@ export default {
             message: '',
             message_class: '',
 
-            // Allow the user to customize the plot and select featured annotations. (credsets is a live binding to parent for now)
+            // Allow the user to customize the plot and select featured annotations.
             has_gwas_catalog: true,
 
             // Controls for "batch view" mode
@@ -62,6 +63,24 @@ export default {
     computed: {
         study_count() {
             return this.known_tracks.length;
+        },
+        // Certain props are passed in with sync bindings (this component is intended to modify its parent).
+        //   Allow form to mirror parent state without weird errors.
+        i_genome_build: {
+            get: function() {
+                return this.genome_build;
+            },
+            set: function(newValue) {
+                this.$emit('update:genome_build', newValue);
+            },
+        },
+        i_has_credible_sets: {
+            get: function() {
+                return this.has_credible_sets;
+            },
+            set: function(newValue) {
+                this.$emit('update:has_credible_sets', newValue);
+            },
         },
     },
     methods: {
@@ -168,7 +187,7 @@ export default {
             <div class="form-check form-check-inline">
               <input
                 id="show-credible-set"
-                v-model="has_credible_sets"
+                v-model="i_has_credible_sets"
                 class="form-check-input"
                 type="checkbox">
               <label
@@ -179,7 +198,7 @@ export default {
             <div class="form-check">
               <input
                 id="build-37"
-                v-model="genome_build"
+                v-model="i_genome_build"
                 class="form-check-input"
                 type="radio"
                 name="genome_build"
@@ -191,10 +210,10 @@ export default {
             <div class="form-check">
               <input
                 id="build-38"
-                v-model="genome_build"
+                v-model="i_genome_build"
                 class="form-check-input"
                 type="radio"
-                name="build"
+                name="genome_build"
                 value="GRCh38">
               <label
                 class="form-check-label"

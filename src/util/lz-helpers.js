@@ -54,8 +54,6 @@ function createGwasStudyLayout(
     // Other namespaces won't be overridden; they will be reused as is.
     const namespace = {
         assoc: `assoc_${track_id}`,
-        credset: `credset_${track_id}`,
-        catalog: 'catalog',
     };
 
     const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
@@ -74,7 +72,7 @@ function createGwasStudyLayout(
         ],
         style: { 'font-weight': 'bold' },
     };
-    assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label', { namespace });
+    assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label');
     const assoc_tooltip = assoc_layer.tooltip;
 
     assoc_tooltip.html += `{{#if assoc:beta|is_numeric}}<br>&beta;: <strong>{{assoc:beta|scinotation|htmlescape}}</strong>{{/if}}
@@ -102,19 +100,31 @@ function createGwasStudyLayout(
         const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         assoc_tooltip.html += '{{#if credset:posterior_prob}}<br>Posterior probability: <strong>{{credset:posterior_prob|scinotation}}{{/if}}</strong><br>';
+        // Tell the layer to fetch the extra data
+        assoc_layer.namespace.credset = `credset_${track_id}`;
+        LocusZoom.Layouts.mutate_attrs(assoc_layer, '$..data_operations[?(@.type === "fetch")].from', (old) => old.concat('credset(assoc)'));
     }
     if (annotations.has_gwas_catalog) {
-        // Grab the options object from a pre-existing layout
-        const basis = LocusZoom.Layouts.get('panel', 'association_catalog', { namespace });
-        // TODO Clarify this; make small registry pieces more reusable
+        assoc_layer.data_operations.push({
+            type: 'assoc_to_gwas_catalog',
+            name: 'assoc_catalog',
+            requires: ['assoc_plus_ld', 'catalog'],
+            params: ['assoc:position', 'catalog:pos', 'catalog:log_pvalue'],
+        });
+
+        // Grab the options object from a pre-existing layout, and add it to the dropdown menu
+        const basis = LocusZoom.Layouts.get('panel', 'association_catalog');
         dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
         assoc_tooltip.html += '{{#if catalog:rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{catalog:rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
+
+        // Tell this layer how to fetch the extra data required
+        assoc_layer.namespace.catalog = 'catalog';
+        LocusZoom.Layouts.mutate_attrs(assoc_layer, '$..data_operations[?(@.type === "fetch")].from', (old) => old.concat('catalog'));
     }
     assoc_panel.toolbar.widgets.push(...dash_extra);
 
     // After all custom options added, run mods through Layouts.get once more to apply namespacing
-    // TODO: rewrite this
-    new_panels.push(LocusZoom.Layouts.get('panel', 'association', assoc_panel));
+    new_panels.push(assoc_panel);
     if (annotations.has_gwas_catalog) {
         new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
             id: `catalog_${track_id}`,
