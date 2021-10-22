@@ -90,6 +90,12 @@ export default {
           class="mt-2">
           <b-card>
             <div class="card-text">
+              <p>
+                If you have found this tool useful, please cite our paper,
+                <a href="https://doi.org/10.1093/bioinformatics/btab186" target="_blank">LocusZoom.js:
+                interactive and embeddable visualization of genetic association study results</a> (Bioinformatics 2021).
+              </p>
+
               LocalZoom is a tool for generating region association plots via the web browser.
               It can be used on any Tabix-indexed file (including those stored on your hard drive), which
               makes it useful for sensitive or confidential data. If you are comfortable uploading
