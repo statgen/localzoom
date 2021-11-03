@@ -295,7 +295,7 @@ export default {
               name="data-type"
               value="plink_ld"
             >
-              PLINK 1.9 LD (overlay on GWAS)
+              PLINK 1.9 LD (overlay on GWAS; see guide above)
             </b-form-radio>
           </b-form-group>
 

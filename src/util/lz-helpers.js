@@ -286,7 +286,7 @@ function activateUserLD(plot, display_name, source_id) {
     }
     // Update the UI help button EVERY time user LD is added, eg let user swap out LD to a different file when they switch regions
     //  (I'd RATHER they provide LD into all one file for regions, while still being a small file. But let's expect the most kludgy workflows to win)
-    const caption = `This plot is being rendered with user-provided LD. The filename is: ${escape(display_name)}`;
+    const caption = `This plot is being rendered with user-provided LD. The filename is: <b>${escape(display_name)}</b>`;
     LocusZoom.Layouts.mutate_attrs(plot.layout, '$..widgets[?(@.tag === "user_ld_description")].menu_html', caption);
     widget.show();
 
