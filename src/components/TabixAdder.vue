@@ -145,10 +145,9 @@ export default {
                     });
                 } else {
                     // Not implemented for other datatypes
-                    return {};
+                    resolve({});
                 }
             });
-
         },
 
         createReader(event) {
@@ -172,11 +171,10 @@ export default {
                 if (data_type === DATA_TYPES.GWAS) {
                     // GWAS files are very messy, and so knowing where to find the file is not enough.
                     // After receiving the reader, we need to ask the user how to parse the file. (via UI)
-                    if (filename.includes('.bed')) {
+                    if (filename.includes('.bed') || filename.includes('.ld')) {
                         // Check in case the user does something unwise. (2500 unique BED lines would be bad!)
-                        throw new Error('Selected datatype GWAS does not match file extension .bed');
+                        throw new Error('Wrong file extension for selected data type "GWAS"');
                     }
-
                     this.filename = filename;
                     this.tabix_reader = reader;
                     this.show_gwas_modal = true;
@@ -191,6 +189,9 @@ export default {
                         }
                     } else if (data_type === DATA_TYPES.PLINK_LD) {
                         parser = makePlinkLdParser({normalize: true});
+                        if (!filename.includes('.ld')) {
+                            throw new Error('User PLINK LD file names must include extension .ld');
+                        }
                     } else {
                         throw new Error('Unrecognized datatype');
                     }
@@ -294,7 +295,7 @@ export default {
               name="data-type"
               value="plink_ld"
             >
-              PLINK 1.9 LD
+              PLINK 1.9 LD (overlay on GWAS)
             </b-form-radio>
           </b-form-group>
 

@@ -1,3 +1,4 @@
+import escape from 'lodash/escape';
 import LocusZoom from 'locuszoom';
 import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
 import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
@@ -156,7 +157,8 @@ function createStudyLayouts (data_type, filename, display_name, annotations) {
             }),
         ];
     } else if (data_type === DATA_TYPES.PLINK_LD) {
-        throw new Error('Not yet implemented');
+        // PLINK LD is overlaid onto the plot, but not shown as its own panel
+        return [];
     } else {
         throw new Error('Unrecognized datatype');
     }
@@ -194,7 +196,9 @@ function createStudySources(data_type, tabix_reader, filename, parser_func) {
             [track_id, ['TabixUrlSource', {reader: tabix_reader, parser_func }]],
         ];
     } else if (data_type === DATA_TYPES.PLINK_LD) {
-        throw new Error('Not yet implemented');
+        return [
+            [track_id, ['UserTabixLD', {reader: tabix_reader, parser_func }]],
+        ];
     } else {
         throw new Error('Unrecognized datatype');
     }
@@ -243,12 +247,63 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     return LocusZoom.Layouts.get('plot', 'standard_association', extra);
 }
 
+/**
+ * When user LD is received, update the plot (irreversibly) to activate custom LD features
+ * 1. Remove the 1000G "ld pop" toolbar button (because those pops aren't relevant for user provided LD)
+ * 2. Add a new toolbar button describing the study
+ * 3. Tell the plot to use the new LD datasource when rendering anything that uses ld
+ * @param {LocusZoom.Plot} plot A reference to the LZ plot instance
+ * @param {String} display_name Display name
+ */
+function activateUserLD(plot, display_name, source_id) {
+    const widgets = plot.toolbar.widgets;
+    // Remove the old ld_population toolbar widget if present
+    const ld_pop_index = widgets.findIndex((item) => item.layout.tag === 'ld_population');
+    if (ld_pop_index !== -1) {
+        const ld_widget = widgets[ld_pop_index];
+        ld_widget.destroy();
+        widgets.splice(ld_pop_index, 1);
+        plot.toolbar.update();
+    }
+
+    // Add an LD description if not present
+    const ld_desc_index = widgets.findIndex((item) => item.layout.tag === 'user_ld_description');
+    let widget;
+    if (ld_desc_index !== -1) {
+        widget = widgets[ld_desc_index];
+    } else {
+        const config = {
+            tag: 'user_ld_description',
+            type: 'menu',
+            color: 'blue',
+            position: 'right',
+            button_html: 'USER LD',
+            menu_html: '',
+        };
+        // Awkward API wart!
+        plot.layout.toolbar.widgets.push(config);
+        widget = plot.toolbar.addWidget(config);
+    }
+    // Update the UI help button EVERY time user LD is added, eg let user swap out LD to a different file when they switch regions
+    //  (I'd RATHER they provide LD into all one file for regions, while still being a small file. But let's expect the most kludgy workflows to win)
+    const caption = `This plot is being rendered with user-provided LD. The filename is: ${escape(display_name)}`;
+    LocusZoom.Layouts.mutate_attrs(plot.layout, '$..widgets[?(@.tag === "user_ld_description")].menu_html', caption);
+    widget.show();
+
+    // Tell the plot to use different data as the source of LD info. Update any UI captions
+    LocusZoom.Layouts.mutate_attrs(plot.layout, '$..namespace.ld', source_id);
+    plot.mutateLayout();
+    plot.toolbar.update();
+    // Re-render with the new data
+    plot.applyState();
+}
+
 export {
     // Basic definitions
     getBasicSources, getBasicLayout,
     createStudySources, createStudyLayouts,
     // Plot manipulation
-    sourceName, addPanels,
+    sourceName, activateUserLD, addPanels,
     // Constants
     stateUrlMapping,
 };

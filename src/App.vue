@@ -4,12 +4,13 @@ import 'locuszoom/dist/locuszoom.css';
 import { BCard, BCollapse, VBToggle } from 'bootstrap-vue/src/';
 
 import {
-    getBasicSources, getBasicLayout,
+    activateUserLD, getBasicSources, getBasicLayout,
 } from './util/lz-helpers';
 import { count_add_track, count_region_view, setup_feature_metrics } from './util/metrics';
 
 import PlotPanes from './components/PlotPanes.vue';
 import GwasToolbar from './components/GwasToolbar.vue';
+import { DATA_TYPES } from './util/constants';
 
 
 export default {
@@ -53,6 +54,13 @@ export default {
             } else {
                 // TODO: We presently ignore extra plot state (like region) when adding new tracks. Revisit for future data types.
                 this.$refs.plotWidget.addStudy(panel_configs, source_configs);
+                if (data_type === DATA_TYPES.PLINK_LD) {
+                    // Modify plot widget internals for LD. This implies a lot of coupling between pieces, but works for now.
+                    const source_name = source_configs[0][0]; // we happen to know that LD generates one datasource and name is first item of config
+                    this.$refs.plotWidget.$refs.assoc_plot.callPlot((plot) => {
+                        activateUserLD(plot, display_name, source_name);
+                    });
+                }
             }
 
             count_add_track(data_type);
