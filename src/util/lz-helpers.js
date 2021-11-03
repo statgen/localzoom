@@ -4,7 +4,7 @@ import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
 import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
 import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
-import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, DATA_TYPES } from './constants';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
@@ -145,9 +145,9 @@ function createGwasStudyLayout(
 function createStudyLayouts (data_type, filename, display_name, annotations) {
     const track_id = `${data_type}_${sourceName(filename)}`;
 
-    if (data_type === 'gwas') {
+    if (data_type === DATA_TYPES.GWAS) {
         return createGwasStudyLayout(track_id, display_name, annotations);
-    } else if (data_type === 'bed') {
+    } else if (data_type === DATA_TYPES.BED) {
         return [
             LocusZoom.Layouts.get('panel', 'bed_intervals', {
                 id: track_id,
@@ -155,7 +155,7 @@ function createStudyLayouts (data_type, filename, display_name, annotations) {
                 title: { text: display_name },
             }),
         ];
-    } else if (data_type === 'plink_ld') {
+    } else if (data_type === DATA_TYPES.PLINK_LD) {
         throw new Error('Not yet implemented');
     } else {
         throw new Error('Unrecognized datatype');
@@ -187,13 +187,13 @@ function createGwasTabixSources(track_id, tabix_reader, parser_func) {
 function createStudySources(data_type, tabix_reader, filename, parser_func) {
     // todo rename to GET from CREATE, for consistency
     const track_id = `${data_type}_${sourceName(filename)}`;
-    if (data_type === 'gwas') {
+    if (data_type === DATA_TYPES.GWAS) {
         return createGwasTabixSources(track_id, tabix_reader, parser_func);
-    } else if (data_type === 'bed') {
+    } else if (data_type === DATA_TYPES.BED) {
         return [
             [track_id, ['TabixUrlSource', {reader: tabix_reader, parser_func }]],
         ];
-    } else if (data_type === 'plink_ld') {
+    } else if (data_type === DATA_TYPES.PLINK_LD) {
         throw new Error('Not yet implemented');
     } else {
         throw new Error('Unrecognized datatype');
