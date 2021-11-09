@@ -175,7 +175,9 @@ export default {
                   <dl>
                     <dt>Sort file, compress, and tabix-index results</dt>
                     <dd>
-                      Assuming that your chromosome is in column 1 and position in column 2, with one header row (skipped in both the awk "NR" command and the tabix --skip-lines flag):
+                      Many programs already output summary statistics sorted by chromosome and position. If your tool does not, then you will need to sort the file before creating a tabix index (tabix is a tool that allows someone to query a file for all data in a contiguous genomic region).
+                      If your data is already sorted, then the "awk" step can be omitted, but you will still need to run <i>bgzip</i> and <i>tabix</i>.
+                      Assuming that your chromosome is in column 1 and position in column 2, with one header row (skipped in both the awk "NR" command and the tabix --skip-lines flag):<br>
                       <code>zcat &lt; summstats.tab.gz | awk 'NR&lt;=1{print $0;next}{print $0| "sort -k1,1V -k2,2n"}' | bgzip -c &gt; summstats.sorted.tab.gz && tabix -s1 -b 2 -e 2 --skip-lines 1 -f summstats.sorted.tab.gz</code><br>
                     </dd>
 
