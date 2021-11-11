@@ -142,7 +142,7 @@ export default {
         class="col-sm-6">
         <div v-if="study_count < max_studies">
           <tabix-adder
-            :allow_ld="false"
+            :allow_ld="study_count > 0"
             @ready="receiveTabixReader"
             @fail="showMessage"
           />
