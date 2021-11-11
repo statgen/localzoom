@@ -57,12 +57,16 @@ function createGwasStudyLayout(
         assoc: `assoc_${track_id}`,
     };
 
-    const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
+    let assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
         id: `association_${track_id}`,
         title: { text: display_name },
         height: 275,
         namespace,
     });
+
+    // The PortalDev API uses a different name for the SE field. LocalZoom is a bit more descriptive.
+    assoc_panel = LocusZoom.Layouts.renameField(assoc_panel, 'assoc:se', 'assoc:stderr_beta', false);
+
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     assoc_layer.label = {
         text: '{{#if assoc:rsid}}{{assoc:rsid}}{{#else}}{{assoc:variant}}{{/if}}',
