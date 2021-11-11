@@ -1,15 +1,17 @@
 <template>
-  <div class="form-inline">
+
+  <form class="form-inline" @submit.prevent="selectRegion">
     <vue-bootstrap-typeahead
       :data="search_results"
       v-model="region"
       :serializer="s => s.term"
       :min-matching-chars="3"
       placeholder="chr:start-end, rs, or gene"/>
-    <button
+    <input
       class="btn btn-primary"
-      @click="selectRegion">Go to region</button>
-  </div>
+      type="submit"
+      value="Go to region">
+  </form>
 </template>
 
 <script>

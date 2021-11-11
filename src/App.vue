@@ -57,10 +57,8 @@ export default {
                 // TODO: We presently ignore extra plot state (like region) when adding new tracks. Revisit for future data types.
                 this.$refs.plotWidget.addStudy(panel_configs, source_configs);
                 if (data_type === DATA_TYPES.PLINK_LD) {
-                    // Modify plot widget internals for LD. This implies a lot of coupling between pieces, but works for now.
-                    const source_name = source_configs[0][0]; // we happen to know that LD generates one datasource and name is first item of config
                     this.$refs.plotWidget.$refs.assoc_plot.callPlot((plot) => {
-                        activateUserLD(plot, display_name, source_name);
+                        activateUserLD(plot, display_name);
                     });
                 }
             }

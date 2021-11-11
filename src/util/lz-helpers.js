@@ -201,7 +201,9 @@ function createStudySources(data_type, tabix_reader, filename, parser_func) {
         ];
     } else if (data_type === DATA_TYPES.PLINK_LD) {
         return [
-            [track_id, ['UserTabixLD', {reader: tabix_reader, parser_func }]],
+            // We are overriding LD in-place, not naming the source instance dynamically based on filename
+            // Replacing the source completely removes what could otherwise be a big unused cache object, and makes it simpler to add new tracks with a stock layout
+            ['ld', ['UserTabixLD', {reader: tabix_reader, parser_func }]],
         ];
     } else {
         throw new Error('Unrecognized datatype');
@@ -211,9 +213,11 @@ function createStudySources(data_type, tabix_reader, filename, parser_func) {
 
 function addPanels(plot, data_sources, panel_options, source_options) {
     source_options.forEach(([name, options]) => {
-        if (!data_sources.has(name)) {
-            data_sources.add(name, options);
-        }
+        // If the same name is encountered twice, the new item will override.
+        // Elsewhere in this app, we also check if an item is duplicated and warn the user, so this shouldn't result in files being replaced.
+        // Relaxing the constraint internally allows us to override things like LD with a new source of exactly the same name
+        // TODO: Make more selective after lz-plot is rewritten to be more generic
+        data_sources.add(name, options, true);
     });
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
@@ -259,7 +263,7 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
  * @param {LocusZoom.Plot} plot A reference to the LZ plot instance
  * @param {String} display_name Display name
  */
-function activateUserLD(plot, display_name, source_id) {
+function activateUserLD(plot, display_name) {
     const widgets = plot.toolbar.widgets;
     // Remove the old ld_population toolbar widget if present
     const ld_pop_index = widgets.findIndex((item) => item.layout.tag === 'ld_population');
@@ -284,7 +288,7 @@ function activateUserLD(plot, display_name, source_id) {
             button_html: 'USER LD',
             menu_html: '',
         };
-        // Awkward API wart!
+        // Awkward API wart- dynamic toolbar needs to modify toolbar in two ways
         plot.layout.toolbar.widgets.push(config);
         widget = plot.toolbar.addWidget(config);
     }
@@ -294,8 +298,8 @@ function activateUserLD(plot, display_name, source_id) {
     LocusZoom.Layouts.mutate_attrs(plot.layout, '$..widgets[?(@.tag === "user_ld_description")].menu_html', caption);
     widget.show();
 
-    // Tell the plot to use different data as the source of LD info. Update any UI captions
-    LocusZoom.Layouts.mutate_attrs(plot.layout, '$..namespace.ld', source_id);
+    // Since the LD is swapped out, we need to tell the plot to re-parse data config (LZ caches datasource options until told not to)
+    // Also, Update any UI captions / toolbar widgets
     plot.mutateLayout();
     plot.toolbar.update();
     // Re-render with the new data
