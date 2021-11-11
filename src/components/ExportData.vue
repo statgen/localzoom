@@ -8,6 +8,7 @@ import LocusZoom from 'locuszoom';
 
 import { sourceName } from '../util/lz-helpers';
 import TabulatorTable from './TabulatorTable.vue';
+import { DATA_TYPES } from '../util/constants';
 
 function formatSciNotation(cell, params) {
     // Tabulator cell formatter using sci notation
@@ -39,7 +40,7 @@ export default {
         },
 
         gwas_tracks() {
-            return this.known_tracks.filter(({data_type}) => data_type === 'gwas');
+            return this.known_tracks.filter(({data_type}) => data_type === DATA_TYPES.GWAS);
         },
 
         table_config() {

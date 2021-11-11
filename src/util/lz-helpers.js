@@ -1,10 +1,11 @@
+import escape from 'lodash/escape';
 import LocusZoom from 'locuszoom';
 import credibleSets from 'locuszoom/esm/ext/lz-credible-sets';
 import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
 import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
 import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
-import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL } from './constants';
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, DATA_TYPES } from './constants';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
@@ -56,12 +57,16 @@ function createGwasStudyLayout(
         assoc: `assoc_${track_id}`,
     };
 
-    const assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
+    let assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
         id: `association_${track_id}`,
         title: { text: display_name },
         height: 275,
         namespace,
     });
+
+    // The PortalDev API uses a different name for the SE field. LocalZoom is a bit more descriptive.
+    assoc_panel = LocusZoom.Layouts.renameField(assoc_panel, 'assoc:se', 'assoc:stderr_beta', false);
+
     const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
     assoc_layer.label = {
         text: '{{#if assoc:rsid}}{{assoc:rsid}}{{#else}}{{assoc:variant}}{{/if}}',
@@ -145,9 +150,9 @@ function createGwasStudyLayout(
 function createStudyLayouts (data_type, filename, display_name, annotations) {
     const track_id = `${data_type}_${sourceName(filename)}`;
 
-    if (data_type === 'gwas') {
+    if (data_type === DATA_TYPES.GWAS) {
         return createGwasStudyLayout(track_id, display_name, annotations);
-    } else if (data_type === 'bed') {
+    } else if (data_type === DATA_TYPES.BED) {
         return [
             LocusZoom.Layouts.get('panel', 'bed_intervals', {
                 id: track_id,
@@ -155,8 +160,9 @@ function createStudyLayouts (data_type, filename, display_name, annotations) {
                 title: { text: display_name },
             }),
         ];
-    } else if (data_type === 'plink_ld') {
-        throw new Error('Not yet implemented');
+    } else if (data_type === DATA_TYPES.PLINK_LD) {
+        // PLINK LD is overlaid onto the plot, but not shown as its own panel
+        return [];
     } else {
         throw new Error('Unrecognized datatype');
     }
@@ -187,14 +193,18 @@ function createGwasTabixSources(track_id, tabix_reader, parser_func) {
 function createStudySources(data_type, tabix_reader, filename, parser_func) {
     // todo rename to GET from CREATE, for consistency
     const track_id = `${data_type}_${sourceName(filename)}`;
-    if (data_type === 'gwas') {
+    if (data_type === DATA_TYPES.GWAS) {
         return createGwasTabixSources(track_id, tabix_reader, parser_func);
-    } else if (data_type === 'bed') {
+    } else if (data_type === DATA_TYPES.BED) {
         return [
             [track_id, ['TabixUrlSource', {reader: tabix_reader, parser_func }]],
         ];
-    } else if (data_type === 'plink_ld') {
-        throw new Error('Not yet implemented');
+    } else if (data_type === DATA_TYPES.PLINK_LD) {
+        return [
+            // We are overriding LD in-place, not naming the source instance dynamically based on filename
+            // Replacing the source completely removes what could otherwise be a big unused cache object, and makes it simpler to add new tracks with a stock layout
+            ['ld', ['UserTabixLD', {reader: tabix_reader, parser_func }]],
+        ];
     } else {
         throw new Error('Unrecognized datatype');
     }
@@ -203,9 +213,11 @@ function createStudySources(data_type, tabix_reader, filename, parser_func) {
 
 function addPanels(plot, data_sources, panel_options, source_options) {
     source_options.forEach(([name, options]) => {
-        if (!data_sources.has(name)) {
-            data_sources.add(name, options);
-        }
+        // If the same name is encountered twice, the new item will override.
+        // Elsewhere in this app, we also check if an item is duplicated and warn the user, so this shouldn't result in files being replaced.
+        // Relaxing the constraint internally allows us to override things like LD with a new source of exactly the same name
+        // TODO: Make more selective after lz-plot is rewritten to be more generic
+        data_sources.add(name, options, true);
     });
     panel_options.forEach((panel_layout) => {
         panel_layout.y_index = -1; // Make sure genes track is always the last one
@@ -243,12 +255,63 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     return LocusZoom.Layouts.get('plot', 'standard_association', extra);
 }
 
+/**
+ * When user LD is received, update the plot (irreversibly) to activate custom LD features
+ * 1. Remove the 1000G "ld pop" toolbar button (because those pops aren't relevant for user provided LD)
+ * 2. Add a new toolbar button describing the study
+ * 3. Tell the plot to use the new LD datasource when rendering anything that uses ld
+ * @param {LocusZoom.Plot} plot A reference to the LZ plot instance
+ * @param {String} display_name Display name
+ */
+function activateUserLD(plot, display_name) {
+    const widgets = plot.toolbar.widgets;
+    // Remove the old ld_population toolbar widget if present
+    const ld_pop_index = widgets.findIndex((item) => item.layout.tag === 'ld_population');
+    if (ld_pop_index !== -1) {
+        const ld_widget = widgets[ld_pop_index];
+        ld_widget.destroy();
+        widgets.splice(ld_pop_index, 1);
+        plot.toolbar.update();
+    }
+
+    // Add an LD description if not present
+    const ld_desc_index = widgets.findIndex((item) => item.layout.tag === 'user_ld_description');
+    let widget;
+    if (ld_desc_index !== -1) {
+        widget = widgets[ld_desc_index];
+    } else {
+        const config = {
+            tag: 'user_ld_description',
+            type: 'menu',
+            color: 'blue',
+            position: 'right',
+            button_html: 'USER LD',
+            menu_html: '',
+        };
+        // Awkward API wart- dynamic toolbar needs to modify toolbar in two ways
+        plot.layout.toolbar.widgets.push(config);
+        widget = plot.toolbar.addWidget(config);
+    }
+    // Update the UI help button EVERY time user LD is added, eg let user swap out LD to a different file when they switch regions
+    //  (I'd RATHER they provide LD into all one file for regions, while still being a small file. But let's expect the most kludgy workflows to win)
+    const caption = `This plot is being rendered with user-provided LD. The filename is: <b>${escape(display_name)}</b>`;
+    LocusZoom.Layouts.mutate_attrs(plot.layout, '$..widgets[?(@.tag === "user_ld_description")].menu_html', caption);
+    widget.show();
+
+    // Since the LD is swapped out, we need to tell the plot to re-parse data config (LZ caches datasource options until told not to)
+    // Also, Update any UI captions / toolbar widgets
+    plot.mutateLayout();
+    plot.toolbar.update();
+    // Re-render with the new data
+    plot.applyState();
+}
+
 export {
     // Basic definitions
     getBasicSources, getBasicLayout,
     createStudySources, createStudyLayouts,
     // Plot manipulation
-    sourceName, addPanels,
+    sourceName, activateUserLD, addPanels,
     // Constants
     stateUrlMapping,
 };

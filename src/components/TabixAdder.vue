@@ -7,6 +7,7 @@ import { makeBed12Parser, makeGWASParser, makePlinkLdParser } from 'locuszoom/es
 import { blobReader, urlReader } from 'tabix-reader';
 
 import GwasParserOptions from './GwasParserOptions.vue';
+import { DATA_TYPES } from '../util/constants';
 import { positionToStartRange } from '../util/entity-helpers';
 
 
@@ -21,13 +22,16 @@ export default {
         return {
             tabix_mode: 'file',
             display_name: '',
-            data_type: 'gwas',
+            data_type: DATA_TYPES.GWAS,
             tabix_gz_url: '',
             // Options required to pass props to the GWAS modal
             filename: '',
             show_gwas_modal: false,
             tabix_reader: null,
         };
+    },
+    beforeCreate() {
+        this.DATA_TYPES = DATA_TYPES;
     },
     methods: {
         reset() {
@@ -105,7 +109,7 @@ export default {
         suggestRegion(data_type, reader, parser) {
             // Note; the GWAS modal does this for GWAS data internally.
             return new Promise((resolve, reject) => {
-                if (data_type === 'bed') {
+                if (data_type === DATA_TYPES.BED) {
                     // 1. Find headers (has tabs, does not begin with "browser", "track", or comment mark)
                     // 2. Get first data row and return the coordinates for that row. This method assumes the LZ parser with field names according to UCSC BED spec
                     const header_prefixes = /^(browser | track |#)/;
@@ -141,10 +145,9 @@ export default {
                     });
                 } else {
                     // Not implemented for other datatypes
-                    return {};
+                    resolve({});
                 }
             });
-
         },
 
         createReader(event) {
@@ -165,14 +168,13 @@ export default {
             }
 
             reader_promise.then(([reader, filename]) => {
-                if (data_type === 'gwas') {
+                if (data_type === DATA_TYPES.GWAS) {
                     // GWAS files are very messy, and so knowing where to find the file is not enough.
                     // After receiving the reader, we need to ask the user how to parse the file. (via UI)
-                    if (filename.includes('.bed')) {
+                    if (filename.includes('.bed') || filename.includes('.ld')) {
                         // Check in case the user does something unwise. (2500 unique BED lines would be bad!)
-                        throw new Error('Selected datatype GWAS does not match file extension .bed');
+                        throw new Error('Wrong file extension for selected data type "GWAS"');
                     }
-
                     this.filename = filename;
                     this.tabix_reader = reader;
                     this.show_gwas_modal = true;
@@ -180,13 +182,16 @@ export default {
                     // All other data types are quasi-standardized, and hence we can declare this
                     //  new track immediately after verifying that a valid reader exists
                     let parser;
-                    if (data_type === 'bed') {
+                    if (data_type === DATA_TYPES.BED) {
                         parser = makeBed12Parser({normalize: true});
                         if (!filename.includes('.bed')) {
                             throw new Error('BED interval file names must include extension .bed');
                         }
-                    } else if (data_type === 'plink_ld') {
+                    } else if (data_type === DATA_TYPES.PLINK_LD) {
                         parser = makePlinkLdParser({normalize: true});
+                        if (!filename.includes('.ld')) {
+                            throw new Error('User PLINK LD file names must include extension .ld');
+                        }
                     } else {
                         throw new Error('Unrecognized datatype');
                     }
@@ -208,7 +213,7 @@ export default {
             const { tabix_reader, filename, display_name } = this;
             // Receive GWAS options and declare a new track for this datatype
             const parser = makeGWASParser(parser_config);
-            this.sendTrackOptions('gwas', tabix_reader, parser, filename, display_name, region_config);
+            this.sendTrackOptions(DATA_TYPES.GWAS, tabix_reader, parser, filename, display_name, region_config);
             this.reset();
         },
 
@@ -290,7 +295,7 @@ export default {
               name="data-type"
               value="plink_ld"
             >
-              PLINK 1.9 LD
+              PLINK 1.9 LD (overlay on GWAS; see guide above)
             </b-form-radio>
           </b-form-group>
 
