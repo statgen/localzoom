@@ -1,5 +1,4 @@
 <template>
-
   <form class="form-inline" @submit.prevent="selectRegion">
     <vue-bootstrap-typeahead
       :data="search_results"
