@@ -138,28 +138,27 @@ export default {
       </div>
     </div>
 
-    <div v-if="selected_study">
-      <div class="row">
-        <div class="col-md-12">
-          <button
-            :disabled="!selected_study"
-            class="btn btn-info float-right"
-            @click="exportCSV">Download</button>
-        </div>
-      </div>
+    <p v-if="!selected_study">Please select a GWAS dataset to use the "export" feature.</p>
 
-      <div class="row">
-        <div class="col-md-12">
-          <tabulator-table
-            :columns="table_config"
-            :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
-            :table_data="table_data"
-            height="300px"
-            @connected="table = $event" />
-        </div>
+    <div class="row">
+      <div class="col-md-12">
+        <button
+          :disabled="!selected_study"
+          class="btn btn-info float-right"
+          @click="exportCSV">Download</button>
       </div>
     </div>
-    <p v-else>Please select a GWAS dataset to use the "export" feature.</p>
+
+    <div class="row">
+      <div class="col-md-12">
+        <tabulator-table
+          :columns="table_config"
+          :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
+          :table_data="table_data"
+          height="300px"
+          @connected="table = $event" />
+      </div>
+    </div>
   </div>
 </template>
 

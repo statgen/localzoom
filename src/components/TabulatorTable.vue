@@ -1,6 +1,6 @@
 <script>
-import Tabulator from 'tabulator-tables';
-import 'tabulator-tables/dist/css/tabulator.min.css';
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import 'tabulator-tables/dist/css/tabulator_bootstrap4.css';
 
 export default {
     name: 'TabulatorTable',
@@ -32,14 +32,15 @@ export default {
         this.tabulator = null;
     },
     mounted() {
-        const {
-            table_data: data,
-            columns, initialSort, layout, layoutColumnsOnNewData, height,
-        } = this;
+        const { table_data, columns, initialSort, layout, layoutColumnsOnNewData, height } = this;
         this.tabulator = new Tabulator(
             this.$refs.table,
-            { data, columns, initialSort, layout, layoutColumnsOnNewData, height },
+            { data: [], columns, initialSort, layout, layoutColumnsOnNewData, height },
         );
+
+        this.tabulator.on('tableBuilt', () => {
+            this.tabulator.setData(table_data);
+        });
         // Expose a reference to the raw table object, for advanced usages such as click events
         this.$emit('connected', this.tabulator);
     },
