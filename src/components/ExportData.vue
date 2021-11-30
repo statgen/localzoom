@@ -138,7 +138,7 @@ export default {
       </div>
     </div>
 
-    <p v-if="!selected_study">Please select a GWAS dataset to use the "export" feature.</p>
+    <p v-if="!selected_study"><span style="color: red"><i>Please select a GWAS dataset to use the "export" feature.</i></span></p>
 
     <div class="row">
       <div class="col-md-12">
@@ -156,6 +156,7 @@ export default {
           :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
           :table_data="table_data"
           height="300px"
+          placeholder="No data available for selected study in the specified region"
           @connected="table = $event" />
       </div>
     </div>

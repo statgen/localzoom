@@ -6,6 +6,7 @@ export default {
     name: 'TabulatorTable',
     props: {
         table_data: { type: Array, default: () => [] },
+        placeholder: { type: String, default: null },
         columns: { type: Array, default: () => [] },
         initialSort: { type: Array, default: () => [] },
         layout: { type: String, default: 'fitData' },
@@ -32,10 +33,10 @@ export default {
         this.tabulator = null;
     },
     mounted() {
-        const { table_data, columns, initialSort, layout, layoutColumnsOnNewData, height } = this;
+        const { table_data, columns, initialSort, layout, layoutColumnsOnNewData, height, placeholder } = this;
         this.tabulator = new Tabulator(
             this.$refs.table,
-            { data: [], columns, initialSort, layout, layoutColumnsOnNewData, height },
+            { data: [], columns, initialSort, layout, layoutColumnsOnNewData, height, placeholder },
         );
 
         this.tabulator.on('tableBuilt', () => {
