@@ -1,3 +1,5 @@
+const path = require('path');
+
 const autoprefixer = require('autoprefixer');
 
 module.exports = {
@@ -12,6 +14,22 @@ module.exports = {
             .enforce('pre')
             .use('source-map-loader')
             .loader('source-map-loader')
+            .end();
+
+        // Tabulator v5 uses babel syntax that, by default, vue cli doesn't know how to transpile. Add support in.
+        //  TODO: This should be removable in the future as newer vue cli releases stabilize.
+        config.module
+            .rule('supportChaining')
+            .test(/\.js$/)
+            .include
+            .add(path.resolve('node_modules/tabulator-tables'))
+            .end()
+            .use('babel-loader')
+            .loader('babel-loader')
+            .tap((options) => ({
+                ...options,
+                plugins : ['@babel/plugin-proposal-optional-chaining'],
+            }))
             .end();
     },
     configureWebpack: {

@@ -94,10 +94,11 @@ export default {
                 this.tmp_export_callback = null;
             }
             if (!layer_name || !this.has_plot) {
+                this.table_data = [];
                 return;
             }
             this.tmp_export_callback = this.$refs.assoc_plot.callPlot((plot) => {
-                plot.subscribeToData({ from_layer: layer_name }, (data) => this.table_data = data);
+                return plot.subscribeToData({ from_layer: layer_name }, (data) => this.table_data = data);
             });
             // In this use case, the plot already has data; make sure it feeds data to the table
             // immediately
