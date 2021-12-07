@@ -9,11 +9,13 @@ import { blobReader, urlReader } from 'tabix-reader';
 import GwasParserOptions from './GwasParserOptions.vue';
 import { DATA_TYPES } from '../util/constants';
 import { positionToStartRange } from '../util/entity-helpers';
+import { VBTooltip } from 'bootstrap-vue/src/';
 
 
 export default {
     name: 'TabixAdder',
     components: { BDropdown, BFormGroup, BFormRadio, BFormRadioGroup, GwasParserOptions },
+    directives: { VBTooltip },
     props: {
         // Allow the user to add custom LD
         allow_ld: { type: Boolean, default: false },
@@ -230,9 +232,12 @@ export default {
     <b-dropdown
       ref="options_dropdown"
       :lazy="true"
-      text="Add tabix-indexed datafile"
       variant="success"
     >
+      <template #button-content>
+        <span v-v-b-tooltip.right="'This will plot data from local files. Nothing will be uploaded and these tracks will disappear when the page reloads.'">Add tabix-indexed datafile</span>
+      </template>
+
       <div
         class="px-3"
         style="width: 300px;">
