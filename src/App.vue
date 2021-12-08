@@ -42,6 +42,11 @@ export default {
             has_credible_sets: true,
         };
     },
+    computed: {
+        show_instructions() {
+            return window.location.hash.includes('instructions');
+        },
+    },
     methods: {
         receiveTrackOptions(data_type, filename, display_name, source_configs, panel_configs, extra_plot_state) {
             if (!this.known_tracks.length) {
@@ -95,6 +100,7 @@ export default {
           class="btn btn-link">Instructions</button>
         <b-collapse
           id="instructions"
+          :visible="show_instructions"
           class="mt-1 mb-4">
           <b-card>
             <div class="card-text">

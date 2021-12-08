@@ -300,7 +300,7 @@ export default {
               name="data-type"
               value="plink_ld"
             >
-              PLINK 1.9 LD (overlay on GWAS; see guide above)
+              PLINK 1.9 LD (overlay on GWAS; see <a target="_blank" href="https://statgen.github.io/localzoom#instructions">instructions</a>)
             </b-form-radio>
           </b-form-group>
 
