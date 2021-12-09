@@ -128,7 +128,7 @@ export default {
                     <li>The data is hosted in a place that is reachable by web browser (eg local files
                     or a service such as S3)
                     </li>
-                    <li>If using a remote URL, the host location must support byte range requests. (<a
+                    <li>If using a remote URL, the host location must support cross-origin byte range requests. (<a
                       href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
                       to check</a>) (<a href="https://docs.cancergenomicscloud.org/docs/enabling-cross-origin-resource-sharing-cors#CORS">how to configure cloud storage</a>)
                     </li>
