@@ -42,6 +42,11 @@ export default {
             has_credible_sets: true,
         };
     },
+    computed: {
+        show_instructions() {
+            return window.location.hash.includes('instructions');
+        },
+    },
     methods: {
         receiveTrackOptions(data_type, filename, display_name, source_configs, panel_configs, extra_plot_state) {
             if (!this.known_tracks.length) {
@@ -95,6 +100,7 @@ export default {
           class="btn btn-link">Instructions</button>
         <b-collapse
           id="instructions"
+          :visible="show_instructions"
           class="mt-1 mb-4">
           <b-card>
             <div class="card-text">
@@ -122,9 +128,9 @@ export default {
                     <li>The data is hosted in a place that is reachable by web browser (eg local files
                     or a service such as S3)
                     </li>
-                    <li>If using a remote URL, the host location must support byte range requests. (<a
+                    <li>If using a remote URL, the host location must support cross-origin byte range requests. (<a
                       href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests#Checking_if_a_server_supports_partial_requests">how
-                      to check</a>)
+                      to check</a>) (<a href="https://docs.cancergenomicscloud.org/docs/enabling-cross-origin-resource-sharing-cors#CORS">how to configure cloud storage</a>)
                     </li>
                     <li>Your file contains all of the information required to draw a plot (see individual file format instructions for details).</li>
                   </ol>

@@ -22,7 +22,6 @@ export default {
         TabixAdder,
     },
     props: {
-        // These two fields are sync bindings (this component notifies its parent of changes)
         genome_build: {
             type: String,
             default: 'GRCh37',
@@ -37,11 +36,13 @@ export default {
             default: 6,
         },
         // Track a list of studies that were added to the plot. Useful to prevent duplicates.
-        // TODO: move to live-binding provide/inject to support export widget / my.locuszoom.org ?
         known_tracks: {
             type: Array,
             default: () => [], // Each item is object of form { type, filename, display_name }
         },
+        // Get a list of suggested entries for batch mode (useful in my.locuszoom.org, which pre-calculates top loci genome wide)
+        //  Should fetch pre-computed top loci, and return list of [ {chr, start, end} ] entries
+        batch_region_getter: { type: Function, default: null },
     },
     data() {
         return {
@@ -146,8 +147,6 @@ export default {
             @ready="receiveTabixReader"
             @fail="showMessage"
           />
-
-
         </div>
       </div>
       <div
@@ -165,7 +164,11 @@ export default {
           <batch-spec
             :max_range="max_region_size"
             class="ml-1"
-            @ready="activateBatchMode"/>
+            @ready="activateBatchMode">
+            <template v-if="batch_region_getter" #preset-button="{updateRegions}">
+              <button class="btn btn-warning" @click="updateRegions(batch_region_getter())">Get top hits</button>
+            </template>
+          </batch-spec>
         </div>
         <b-dropdown
           v-else
