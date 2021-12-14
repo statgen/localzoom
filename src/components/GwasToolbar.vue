@@ -157,11 +157,10 @@ export default {
         </div>
         <b-dropdown
           v-else
-          text="Plot options"
+          text="Genome Build"
           variant="info"
           class="float-right">
           <div class="px-3">
-            <strong>Genome Build</strong><br>
             <div class="form-check">
               <input
                 id="build-37"

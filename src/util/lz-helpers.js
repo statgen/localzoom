@@ -41,21 +41,22 @@ const localzoom_assoc_layer = function () {
         namespace: { catalog: 'catalog', credset: 'credset' },
         data_operations: [
             // This combines many pieces of data into a single cohesive set of records
+            // NOTE: The credset adapter is a legacy item and it is a bit weird
             {
                 type: 'fetch',
-                from: ['assoc', 'catalog', 'ld(assoc)', 'credset(assoc)'],
+                from: ['assoc', 'catalog', 'credset(assoc)', 'ld(credset)'],
             },
             {
-                type: 'left_match',
-                name: 'credset_plus_ld',
-                requires: ['credset', 'ld'],
-                params: ['assoc:position', 'ld:position2'],
-            },
-            {
+                name: 'assoc_credset_catalog',
                 type: 'assoc_to_gwas_catalog',
-                name: 'assoc_catalog',
-                requires: ['credset_plus_ld', 'catalog'],
+                requires: ['credset', 'catalog'],
                 params: ['assoc:position', 'catalog:pos', 'catalog:log_pvalue'],
+            },
+            {
+                name: 'credset_plus_ld',
+                type: 'left_match',
+                requires: ['assoc_credset_catalog', 'ld'],
+                params: ['assoc:position', 'ld:position2'],
             },
         ],
         tooltip: assoc_tooltip,
