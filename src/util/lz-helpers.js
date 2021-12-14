@@ -26,6 +26,196 @@ class TabixAssociationLZ extends TabixUrlSource {
 
 LocusZoom.Adapters.add('TabixAssociationLZ', TabixAssociationLZ);
 
+
+const localzoom_assoc_layer = function () {
+    const assoc_tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label');
+    assoc_tooltip.html += `{{#if assoc:beta|is_numeric}}<br>&beta;: <strong>{{assoc:beta|scinotation|htmlescape}}</strong>{{/if}}
+{{#if assoc:stderr_beta|is_numeric}}<br>SE (&beta;): <strong>{{assoc:stderr_beta|scinotation|htmlescape}}</strong>{{/if}}
+{{#if assoc:alt_allele_freq|is_numeric}}<br>Alt. freq: <strong>{{assoc:alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}
+{{#if assoc:rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{assoc:rsid|htmlescape}}" target="_blank" rel="noopener">{{assoc:rsid|htmlescape}}</a>{{/if}}
+{{#if credset:posterior_prob}}<br>Posterior probability: <strong>{{credset:posterior_prob|scinotation}}{{/if}}</strong><br>
+
+{{#if catalog:rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{catalog:rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}`;
+
+    return LocusZoom.Layouts.get('data_layer', 'association_pvalues', {
+        namespace: { catalog: 'catalog', credset: 'credset' },
+        data_operations: [
+            // This combines many pieces of data into a single cohesive set of records
+            // NOTE: The credset adapter is a legacy item and it is a bit weird
+            {
+                type: 'fetch',
+                from: ['assoc', 'catalog', 'credset(assoc)', 'ld(credset)'],
+            },
+            {
+                name: 'assoc_credset_catalog',
+                type: 'assoc_to_gwas_catalog',
+                requires: ['credset', 'catalog'],
+                params: ['assoc:position', 'catalog:pos', 'catalog:log_pvalue'],
+            },
+            {
+                name: 'credset_plus_ld',
+                type: 'left_match',
+                requires: ['assoc_credset_catalog', 'ld'],
+                params: ['assoc:position', 'ld:position2'],
+            },
+        ],
+        tooltip: assoc_tooltip,
+        label: {
+            text: '{{#if assoc:rsid}}{{assoc:rsid}}{{#else}}{{assoc:variant}}{{/if}}',
+            spacing: 12,
+            lines: { style: { 'stroke-width': '2px', stroke: '#333333', 'stroke-dasharray': '2px 2px' } },
+            filters: [
+                { field: 'lz_show_label', operator: '=', value: true },
+            ],
+            style: { 'font-weight': 'bold' },
+        },
+    });
+}();
+
+
+// Register reusable rendering options for LocalZoom association tracks (a set of combined custom features)
+LocusZoom.Layouts.add('data_layer', 'localzoom_assoc', localzoom_assoc_layer);
+
+const localzoom_assoc_panel = function () {
+    // LocalZoom renders an association track with several annotations that are not combined anywhere else; we define a custom track
+    const base = LocusZoom.Layouts.get('panel', 'association', {
+        height: 300,
+        data_layers: [
+            LocusZoom.Layouts.get('data_layer', 'significance'),
+            LocusZoom.Layouts.get('data_layer', 'recomb_rate'),
+            LocusZoom.Layouts.get('data_layer', 'localzoom_assoc'),
+        ],
+    });
+    // Add display options for catalog + credsets
+    base.toolbar.widgets.push({
+        type: 'display_options',
+        custom_event_name: 'widget_association_display_options_choice',
+        position: 'right',
+        color: 'blue',
+        // Below: special config specific to this widget
+        button_html: 'Display options...',
+        button_title: 'Control how plot items are displayed',
+        layer_name: 'associationpvalues',
+        default_config_display_name: 'Default view',
+        options: [
+            {
+                // First dropdown menu item
+                display_name: '95% credible set (boolean)',  // Human readable representation of field name
+                display: {  // Specify layout directives that control display of the plot for this option
+                    point_shape: 'circle',
+                    point_size: 40,
+                    color: {
+                        field: 'credset:is_member',
+                        scale_function: 'if',
+                        parameters: {
+                            field_value: true,
+                            then: '#00CC00',
+                            else: '#CCCCCC',
+                        },
+                    },
+                    legend: [ // Tells the legend how to represent this display option
+                        {
+                            shape: 'circle',
+                            color: '#00CC00',
+                            size: 40,
+                            label: 'In credible set',
+                            class: 'lz-data_layer-scatter',
+                        },
+                        {
+                            shape: 'circle',
+                            color: '#CCCCCC',
+                            size: 40,
+                            label: 'Not in credible set',
+                            class: 'lz-data_layer-scatter',
+                        },
+                    ],
+                },
+            },
+            {
+                display_name: '95% credible set (gradient by contribution)',
+                display: {
+                    point_shape: 'circle',
+                    point_size: 40,
+                    color: [
+                        {
+                            field: 'credset:contrib_fraction',
+                            scale_function: 'if',
+                            parameters: {
+                                field_value: 0,
+                                then: '#777777',
+                            },
+                        },
+                        {
+                            scale_function: 'interpolate',
+                            field: 'credset:contrib_fraction',
+                            parameters: {
+                                breaks: [0, 1],
+                                values: ['#fafe87', '#9c0000'],
+                            },
+                        },
+                    ],
+                    legend: [
+                        {
+                            shape: 'circle',
+                            color: '#777777',
+                            size: 40,
+                            label: 'No contribution',
+                            class: 'lz-data_layer-scatter',
+                        },
+                        {
+                            shape: 'circle',
+                            color: '#fafe87',
+                            size: 40,
+                            label: 'Some contribution',
+                            class: 'lz-data_layer-scatter',
+                        },
+                        {
+                            shape: 'circle',
+                            color: '#9c0000',
+                            size: 40,
+                            label: 'Most contribution',
+                            class: 'lz-data_layer-scatter',
+                        },
+                    ],
+                },
+            },
+            {
+                display_name: 'Label catalog traits',
+                display: {  // Specify layout directives that control display of the plot for this option
+                    label: {
+                        text: '{{catalog:trait}}',
+                        spacing: 6,
+                        lines: {
+                            style: {
+                                'stroke-width': '2px',
+                                'stroke': '#333333',
+                                'stroke-dasharray': '2px 2px',
+                            },
+                        },
+                        filters: [
+                            // Only label points if they are significant for some trait in the catalog, AND in high LD
+                            //  with the top hit of interest
+                            { field: 'catalog:trait', operator: '!=', value: null },
+                            { field: 'catalog:log_pvalue', operator: '>', value: 7.301 },
+                            { field: 'ld:correlation', operator: '>', value: 0.4 },
+                        ],
+                        style: {
+                            'font-size': '12px',
+                            'font-weight': 'bold',
+                            'fill': '#333333',
+                        },
+                    },
+                },
+            },
+        ],
+    });
+    // LocalZoom field names are slightly more verbose than the PortalDev API; rename this field so everything works
+    LocusZoom.Layouts.renameField(base, 'assoc:se', 'assoc:stderr_beta', false);
+    return base;
+}();
+
+LocusZoom.Layouts.add('panel', 'localzoom_assoc', localzoom_assoc_panel);
+
 /**
  * A source name cannot contain special characters (this would break the layout)
  *
@@ -42,96 +232,23 @@ function sourceName(display_name) {
  *   of the features selected.
  * @param {string} track_id Internal track ID, expected to be unique across the entire plot.
  * @param {string} display_name
- * @param annotations
  * @return {*[]}
  */
 function createGwasStudyLayout(
     track_id,
     display_name,
-    annotations = { has_credible_sets: false, has_gwas_catalog: true },
 ) {
-    const new_panels = [];
 
-    // Other namespaces won't be overridden; they will be reused as is.
-    const namespace = {
-        assoc: `assoc_${track_id}`,
-    };
+    // Override the dataset-specific namespaces, so that each layer knows how to find data
+    const namespace = { assoc: `assoc_${track_id}`, credset: `credset_${track_id}` };
 
-    let assoc_panel = LocusZoom.Layouts.get('panel', 'association', {
-        id: `association_${track_id}`,
-        title: { text: display_name },
-        height: 275,
-        namespace,
-    });
-
-    // The PortalDev API uses a different name for the SE field. LocalZoom is a bit more descriptive.
-    assoc_panel = LocusZoom.Layouts.renameField(assoc_panel, 'assoc:se', 'assoc:stderr_beta', false);
-
-    const assoc_layer = assoc_panel.data_layers[2]; // layer 1 = recomb rate
-    assoc_layer.label = {
-        text: '{{#if assoc:rsid}}{{assoc:rsid}}{{#else}}{{assoc:variant}}{{/if}}',
-        spacing: 12,
-        lines: { style: { 'stroke-width': '2px', stroke: '#333333', 'stroke-dasharray': '2px 2px' } },
-        filters: [
-            { field: 'lz_show_label', operator: '=', value: true },
-        ],
-        style: { 'font-weight': 'bold' },
-    };
-    assoc_layer.tooltip = LocusZoom.Layouts.get('tooltip', 'standard_association_with_label');
-    const assoc_tooltip = assoc_layer.tooltip;
-
-    assoc_tooltip.html += `{{#if assoc:beta|is_numeric}}<br>&beta;: <strong>{{assoc:beta|scinotation|htmlescape}}</strong>{{/if}}
-{{#if assoc:stderr_beta|is_numeric}}<br>SE (&beta;): <strong>{{assoc:stderr_beta|scinotation|htmlescape}}</strong>{{/if}}
-{{#if assoc:alt_allele_freq|is_numeric}}<br>Alt. freq: <strong>{{assoc:alt_allele_freq|scinotation|htmlescape}} </strong>{{/if}}
-{{#if assoc:rsid}}<br>rsID: <a href="https://www.ncbi.nlm.nih.gov/snp/{{assoc:rsid|htmlescape}}" target="_blank" rel="noopener">{{assoc:rsid|htmlescape}}</a>{{/if}}`;
-
-    const dash_extra = []; // Build Display options widget & add to toolbar iff features selected
-    if (Object.values(annotations).some((item) => !!item)) {
-        dash_extra.push({
-            type: 'display_options',
-            custom_event_name: 'widget_association_display_options_choice',
-            position: 'right',
-            color: 'blue',
-            // Below: special config specific to this widget
-            button_html: 'Display options...',
-            button_title: 'Control how plot items are displayed',
-            layer_name: 'associationpvalues',
-            default_config_display_name: 'Default view',
-            options: [],
-        });
-    }
-    if (annotations.has_credible_sets) {
-        // Grab the options object from a pre-existing layout
-        const basis = LocusZoom.Layouts.get('panel', 'association_credible_set', { namespace });
-        dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
-        assoc_tooltip.html += '{{#if credset:posterior_prob}}<br>Posterior probability: <strong>{{credset:posterior_prob|scinotation}}{{/if}}</strong><br>';
-        // Tell the layer to fetch the extra data
-        assoc_layer.namespace.credset = `credset_${track_id}`;
-        LocusZoom.Layouts.mutate_attrs(assoc_layer, '$..data_operations[?(@.type === "fetch")].from', (old) => old.concat('credset(assoc)'));
-    }
-    if (annotations.has_gwas_catalog) {
-        assoc_layer.data_operations.push({
-            type: 'assoc_to_gwas_catalog',
-            name: 'assoc_catalog',
-            requires: ['assoc_plus_ld', 'catalog'],
-            params: ['assoc:position', 'catalog:pos', 'catalog:log_pvalue'],
-        });
-
-        // Grab the options object from a pre-existing layout, and add it to the dropdown menu
-        const basis = LocusZoom.Layouts.get('panel', 'association_catalog');
-        dash_extra[0].options.push(...basis.toolbar.widgets.pop().options);
-        assoc_tooltip.html += '{{#if catalog:rsid}}<br><a href="https://www.ebi.ac.uk/gwas/search?query={{catalog:rsid}}" target="_new">See hits in GWAS catalog</a>{{/if}}';
-
-        // Tell this layer how to fetch the extra data required
-        assoc_layer.namespace.catalog = 'catalog';
-        LocusZoom.Layouts.mutate_attrs(assoc_layer, '$..data_operations[?(@.type === "fetch")].from', (old) => old.concat('catalog'));
-    }
-    assoc_panel.toolbar.widgets.push(...dash_extra);
-
-    // After all custom options added, run mods through Layouts.get once more to apply namespacing
-    new_panels.push(assoc_panel);
-    if (annotations.has_gwas_catalog) {
-        new_panels.push(LocusZoom.Layouts.get('panel', 'annotation_catalog', {
+    return [
+        LocusZoom.Layouts.get('panel', 'localzoom_assoc', {
+            id: `association_${track_id}`,
+            namespace,
+            title: { text: display_name },
+        }),
+        LocusZoom.Layouts.get('panel', 'annotation_catalog', {
             id: `catalog_${track_id}`,
             namespace,
             title: {
@@ -139,19 +256,18 @@ function createGwasStudyLayout(
                 style: { 'font-size': '14px' },
                 x: 50,
             },
-        }));
-    }
-    return new_panels;
+        }),
+    ];
 }
 
 /**
  * Create an appropriate layout based on datatype
  */
-function createStudyLayouts (data_type, filename, display_name, annotations) {
+function createStudyLayouts (data_type, filename, display_name) {
     const track_id = `${data_type}_${sourceName(filename)}`;
 
     if (data_type === DATA_TYPES.GWAS) {
-        return createGwasStudyLayout(track_id, display_name, annotations);
+        return createGwasStudyLayout(track_id, display_name);
     } else if (data_type === DATA_TYPES.BED) {
         return [
             LocusZoom.Layouts.get('panel', 'bed_intervals', {

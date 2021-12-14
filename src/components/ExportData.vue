@@ -24,7 +24,6 @@ export default {
     components: { TabulatorTable },
     props: {
         known_tracks: { type: Array, default: () => [] },
-        has_credible_sets: { type: Boolean, default: true },
         table_data: { type: Array, default: () => [] },
     },
     data() {
@@ -78,13 +77,9 @@ export default {
                     formatterParams: { precision: 3 },
                     sorter: 'number',
                 },
+                { title: 'Cred. set', field: 'credset:is_member', formatter: 'tickCross' },
+                { title: 'Posterior probability', field: 'credset:posterior_prob', formatter: formatSciNotation },
             ];
-            if (this.has_credible_sets) {
-                base.push(
-                    { title: 'Cred. set', field: 'credset:is_member', formatter: 'tickCross' },
-                    { title: 'Posterior probability', field: 'credset:posterior_prob', formatter: formatSciNotation },
-                );
-            }
             return base;
         },
     },

@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "license": "MIT",
   "engines": {
     "node": ">=10.13.0"
@@ -20,7 +20,7 @@
     "@sentry/browser": "^4.5.2",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.21.2",
-    "locuszoom": "git+https://github.com/statgen/locuszoom.git#71720de",
+    "locuszoom": "git+https://github.com/statgen/locuszoom.git#33316cd",
     "lodash": "^4.17.11",
     "tabulator-tables": "^5.0.7",
     "vue": "^2.6.14",

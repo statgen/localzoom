@@ -38,8 +38,6 @@ export default {
             // State to be tracked across all components
             genome_build: 'GRCh37',
             known_tracks: [],
-            // Control specific display options
-            has_credible_sets: true,
         };
     },
     computed: {
@@ -295,7 +293,6 @@ export default {
     <div class="row">
       <div class="col-md-12">
         <gwas-toolbar
-          :has_credible_sets.sync="has_credible_sets"
           :genome_build.sync="genome_build"
           :max_studies="6"
           :known_tracks="known_tracks"
@@ -312,7 +309,6 @@ export default {
           :base_sources="base_sources"
           :dynamic_urls="true"
           :genome_build="genome_build"
-          :has_credible_sets="has_credible_sets"
           :known_tracks="known_tracks"
           :chr="chr"
           :start="start"

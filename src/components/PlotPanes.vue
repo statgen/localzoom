@@ -34,7 +34,6 @@ export default {
 
         // Control optional features (this could be done more nicely)
         dynamic_urls: { type: Boolean, default: false }, // Change URL when plot updates
-        has_credible_sets: { type: Boolean, default: true }, // export tool
     },
     data() {
         return {
@@ -167,7 +166,6 @@ export default {
           :disabled="!has_studies"
           title="Export">
           <export-data
-            :has_credible_sets="has_credible_sets"
             :known_tracks="known_tracks"
             :table_data="table_data"
             @requested-data="subscribeToData"/>

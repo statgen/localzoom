@@ -26,10 +26,6 @@ export default {
             type: String,
             default: 'GRCh37',
         },
-        has_credible_sets: {
-            type: Boolean,
-            default: true,
-        },
         // Limit how many studies can be added (due to browser performance)
         max_studies: {
             type: Number,
@@ -53,9 +49,6 @@ export default {
             message: '',
             message_class: '',
 
-            // Allow the user to customize the plot and select featured annotations.
-            has_gwas_catalog: true,
-
             // Controls for "batch view" mode
             batch_mode_active: false,
             batch_mode_regions: [],
@@ -73,14 +66,6 @@ export default {
             },
             set: function(newValue) {
                 this.$emit('update:genome_build', newValue);
-            },
-        },
-        i_has_credible_sets: {
-            get: function() {
-                return this.has_credible_sets;
-            },
-            set: function(newValue) {
-                this.$emit('update:has_credible_sets', newValue);
             },
         },
     },
@@ -116,11 +101,11 @@ export default {
                 return;
             }
 
-            const { genome_build, has_gwas_catalog, has_credible_sets } = this;
+            const { genome_build } = this;
 
 
             const track_sources = createStudySources(data_type, reader, filename, parser_func);
-            const panel_layouts = createStudyLayouts(data_type, filename, display_name, {has_gwas_catalog, has_credible_sets});
+            const panel_layouts = createStudyLayouts(data_type, filename, display_name);
             const new_plot_state = { genome_build, ...metadata };
 
             this.$emit('add-tabix-track', data_type, filename, display_name, track_sources, panel_layouts, new_plot_state);
@@ -172,32 +157,10 @@ export default {
         </div>
         <b-dropdown
           v-else
-          text="Plot options"
+          text="Genome Build"
           variant="info"
           class="float-right">
           <div class="px-3">
-            <strong>Annotations</strong><br>
-            <div class="form-check form-check-inline">
-              <input
-                id="show-catalog"
-                v-model="has_gwas_catalog"
-                class="form-check-input"
-                type="checkbox">
-              <label
-                class="form-check-label"
-                for="show-catalog">GWAS Catalog</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input
-                id="show-credible-set"
-                v-model="i_has_credible_sets"
-                class="form-check-input"
-                type="checkbox">
-              <label
-                class="form-check-label"
-                for="show-credible-set">95% credible set</label>
-            </div>
-            <strong>Genome Build</strong><br>
             <div class="form-check">
               <input
                 id="build-37"
