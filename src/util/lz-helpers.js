@@ -79,6 +79,7 @@ LocusZoom.Layouts.add('data_layer', 'localzoom_assoc', localzoom_assoc_layer);
 const localzoom_assoc_panel = function () {
     // LocalZoom renders an association track with several annotations that are not combined anywhere else; we define a custom track
     const base = LocusZoom.Layouts.get('panel', 'association', {
+        min_height: 300,
         height: 300,
         data_layers: [
             LocusZoom.Layouts.get('data_layer', 'significance'),
@@ -253,7 +254,7 @@ function createGwasStudyLayout(
             namespace,
             title: {
                 text: `GWAS Catalog hits for ${display_name}`,
-                style: { 'font-size': '14px' },
+                style: { 'font-size': '150%' },
                 x: 50,
             },
         }),

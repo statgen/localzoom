@@ -150,7 +150,7 @@ export default {
           :columns="table_config"
           :initial-sort="[{column: 'assoc:log_pvalue', dir: 'desc'}]"
           :table_data="table_data"
-          height="300px"
+          height="500px"
           placeholder="No data available for selected study in the specified region"
           @connected="table = $event" />
       </div>
