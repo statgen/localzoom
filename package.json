@@ -20,7 +20,7 @@
     "@sentry/browser": "^4.5.2",
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.21.2",
-    "locuszoom": "git+https://github.com/statgen/locuszoom.git#674d25c",
+    "locuszoom": "0.14.0",
     "lodash": "^4.17.11",
     "tabulator-tables": "^4.9.3",
     "vue": "^2.6.14",
