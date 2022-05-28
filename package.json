@@ -1,6 +1,6 @@
 {
   "name": "localzoom",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "license": "MIT",
   "engines": {
     "node": ">=10.13.0"
@@ -18,24 +18,24 @@
   },
   "dependencies": {
     "@sentry/browser": "^4.5.2",
-    "bootstrap": "^4.4.1",
-    "bootstrap-vue": "^2.21.2",
-    "locuszoom": "git+https://github.com/statgen/locuszoom.git#674d25c",
+    "bootstrap": "^4.6.1",
+    "bootstrap-vue": "2.21.2",
+    "locuszoom": "0.14.0",
     "lodash": "^4.17.11",
     "tabulator-tables": "^4.9.3",
     "vue": "^2.6.14",
     "vue-bootstrap-typeahead": "^0.2.6"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-optional-chaining": "^7.16.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.17.12",
     "@vue/cli-plugin-babel": "^3.0.0",
     "@vue/cli-plugin-eslint": "^3.0.0",
     "@vue/cli-plugin-unit-mocha": "^3.0.0",
     "@vue/cli-service": "^3.0.0",
     "@vue/eslint-config-airbnb": "^4.0.0",
-    "@vue/test-utils": "^1.2.2",
+    "@vue/test-utils": "^1.3.0",
     "autoprefixer": "^9.8.8",
-    "chai": "^4.3.4",
+    "chai": "^4.3.6",
     "source-map-loader": "^0.2.4",
     "vue-template-compiler": "^2.6.14"
   }

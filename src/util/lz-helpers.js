@@ -5,7 +5,7 @@ import tabixSource from 'locuszoom/esm/ext/lz-tabix-source';
 import intervalTracks from 'locuszoom/esm/ext/lz-intervals-track';
 import lzParsers from 'locuszoom/esm/ext/lz-parsers';
 
-import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, DATA_TYPES } from './constants';
+import { PORTAL_API_BASE_URL, LD_SERVER_BASE_URL, DATA_TYPES, MAX_REGION_SIZE } from './constants';
 
 LocusZoom.use(credibleSets);
 LocusZoom.use(tabixSource);
@@ -366,6 +366,7 @@ function getBasicLayout(initial_state = {}, study_panels = [], mods = {}) {
     ];
 
     const extra = Object.assign({
+        max_region_scale: MAX_REGION_SIZE,
         state: initial_state,
         panels,
     }, mods);

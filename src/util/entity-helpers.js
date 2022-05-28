@@ -36,9 +36,10 @@ function positionToStartRange(position, { region_size = DEFAULT_REGION_SIZE, pad
  * @param {number} [region_size=DEFAULT_REGION_SIZE] If specified, enforces a max region size.
  * @returns {[string, number, number]} [chr, start, end]
  */
-function parseRegion(spec, { region_size = DEFAULT_REGION_SIZE }) {
-    const range_match = spec.match(REGEX_REGION);
-    const single_match = spec.match(REGEX_POSITION);
+function parseRegion(spec, { region_size = DEFAULT_REGION_SIZE } = {}) {
+    const region = spec.replace(/,/g, '');
+    const range_match = region.match(REGEX_REGION);
+    const single_match = region.match(REGEX_POSITION);
     let chr;
     let start;
     let end;
