@@ -8,8 +8,8 @@ import RegionPicker from './RegionPicker.vue';
 import TabixAdder from './TabixAdder.vue';
 
 import { createStudySources, createStudyLayouts } from '../util/lz-helpers';
+import { MAX_REGION_SIZE } from '../util/constants';
 
-const MAX_REGION_SIZE = 1000000;
 
 export default {
     name: 'GwasToolbar',
