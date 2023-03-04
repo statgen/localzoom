@@ -30,7 +30,7 @@
     "@babel/plugin-proposal-optional-chaining": "^7.17.12",
     "@vue/cli-plugin-babel": "^3.0.0",
     "@vue/cli-plugin-eslint": "^3.0.0",
-    "@vue/cli-plugin-unit-mocha": "^3.0.0",
+    "@vue/cli-plugin-unit-mocha": "^5.0.8",
     "@vue/cli-service": "^3.0.0",
     "@vue/eslint-config-airbnb": "^4.0.0",
     "@vue/test-utils": "^1.3.0",
