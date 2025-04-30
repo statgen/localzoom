@@ -29,7 +29,7 @@ export default {
         },
         search_url: {
             type: String,
-            default: 'https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/',
+            default: 'https://services.locuszoom.org/api/v1/annotation/omnisearch/',
         },
         genome_build: {
             type: String,

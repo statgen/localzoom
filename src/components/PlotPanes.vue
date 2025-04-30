@@ -51,7 +51,6 @@ export default {
     },
     computed: {
         allow_phewas() {
-            // Our current phewas api only has build 37 datasets; disable option for build 38
             return this.genome_build === 'GRCh37';
         },
         has_studies() {
@@ -146,7 +145,7 @@ export default {
             </span>
           </div>
         </b-tab>
-        <b-tab
+        <!-- <b-tab
           :active="selected_tab === TABS.PHEWAS"
           :disabled="!has_studies || !allow_phewas"
         >
@@ -160,7 +159,7 @@ export default {
             :your_study="tmp_phewas_study"
             :your_logpvalue="tmp_phewas_logpvalue"
             :allow_render="selected_tab === TABS.PHEWAS"/>
-        </b-tab>
+        </b-tab> -->
         <b-tab
           :active="selected_tab === TABS.EXPORT"
           :disabled="!has_studies"

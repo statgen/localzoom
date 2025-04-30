@@ -1,5 +1,5 @@
-const PORTAL_API_BASE_URL = 'https://portaldev.sph.umich.edu/api/v1/';
-const LD_SERVER_BASE_URL = 'https://portaldev.sph.umich.edu/ld/';
+const PORTAL_API_BASE_URL = 'https://services.locuszoom.org/api/v1/';
+const LD_SERVER_BASE_URL = 'https://services.locuszoom.org/ld/';
 
 const REGEX_POSITION = /^(?:chr)?(\w+)\s*:\s*(\d+)$/;
 const REGEX_REGION = /^(?:chr)?(\w+)\s*:\s*(\d+)-(\d+)$/;
