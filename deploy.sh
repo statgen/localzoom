@@ -26,6 +26,6 @@ git add -A
 git commit -m 'Deploy newest version'
 
 # if you are deploying to https://<USERNAME>.github.io/<REPO>
-git push -f https://github.com/statgen/localzoom.git main:gh-pages
+git push -f git@github.com:statgen/localzoom.git main:gh-pages
 
 cd -
