@@ -143,7 +143,7 @@ export default {
           <region-picker
             :genome_build="genome_build"
             :max_range="max_region_size"
-            search_url="https://portaldev.sph.umich.edu/api/v1/annotation/omnisearch/"
+            search_url="https://services.locuszoom.org/api/v1/annotation/omnisearch/"
             @ready="selectRange"
             @fail="showMessage"/>
           <batch-spec
